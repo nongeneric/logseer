@@ -1,0 +1,6 @@
+[submodule "thirdparty/Catch2"]
+	path = thirdparty/Catch2
+	url = https://github.com/catchorg/Catch2
+[submodule "thirdparty/EWAHBoolArray"]
+	path = thirdparty/EWAHBoolArray
+	url = https://github.com/lemire/EWAHBoolArray
