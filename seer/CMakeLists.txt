@@ -12,6 +12,8 @@ set(SRC
     Log.cpp
     LineParserRepository.h
     LineParserRepository.cpp
+    OffsetIndex.h
+    OffsetIndex.cpp
 )
 add_library(seer STATIC ${SRC})
 target_link_libraries(seer pthread)

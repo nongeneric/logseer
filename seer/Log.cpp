@@ -1,6 +1,6 @@
 #include "Log.h"
 
-#ifdef __MINGW__
+#ifndef __MINGW32__
 
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_sinks.h>

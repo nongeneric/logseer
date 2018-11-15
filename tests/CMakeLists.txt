@@ -15,6 +15,7 @@ set(SRC
     FilterDialogModelTests.cpp
     LogTableModelTests.cpp
     LogFileTests.cpp
+    OffsetIndexTests.cpp
 )
 add_executable(tests ${SRC})
 target_link_libraries(tests gui)

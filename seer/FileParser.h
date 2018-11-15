@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ILineParser.h"
+#include "OffsetIndex.h"
 #include <functional>
 #include <istream>
 #include <string_view>
@@ -12,7 +13,7 @@ namespace seer {
         std::function<void(uint64_t, std::vector<std::string> const&)>;
 
     class FileParser {
-        std::vector<uint64_t> _lineOffsets;
+        OffsetIndex _lineOffsets;
         std::istream* _stream;
         ILineParser* _lineParser;
         bool _indexed = false;

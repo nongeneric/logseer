@@ -13,9 +13,15 @@ namespace seer {
         std::string line;
         std::vector<std::string> columns;
         uint64_t index = 0;
-        _lineOffsets.push_back(0);
+        _lineOffsets.reset(32, [=](uint64_t offset) {
+            _stream->seekg(offset);
+            std::string line;
+            std::getline(*_stream, line);
+            return _stream->tellg();
+        });
+        _lineOffsets.add(0);
         while (std::getline(*_stream, line)) {
-            _lineOffsets.push_back(_stream->tellg());
+            _lineOffsets.add(_stream->tellg());
             _lineParser->parseLine(line, columns);
             handler(index, columns);
             index++;
@@ -29,7 +35,7 @@ namespace seer {
 
     void FileParser::readLine(uint64_t index, std::vector<std::string>& line) {
         assert(index < _lineOffsets.size());
-        auto offset = _lineOffsets[index];
+        auto offset = _lineOffsets.map(index);
         _stream->seekg(offset);
         std::string text;
         std::getline(*_stream, text);
