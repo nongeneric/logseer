@@ -1,5 +1,7 @@
 #include "Log.h"
 
+#ifdef __MINGW__
+
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_sinks.h>
 
@@ -23,3 +25,7 @@ void seer::log_info(const char* message) {
     init();
     logger->info(message);
 }
+
+#else
+void seer::log_info(const char*) { }
+#endif

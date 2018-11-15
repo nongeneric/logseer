@@ -30,6 +30,6 @@ set(SRC
     grid/FilterHeaderView.cpp
 )
 add_library(gui STATIC ${SRC})
-target_link_libraries(gui Qt5::Core Qt5::Widgets seer)
+target_link_libraries(gui Qt5::Core Qt5::Widgets seer ${Boost_LIBRARIES})
 add_executable(logseer main.cpp ${QT_RESOURCES} resources/resources.qrc)
-target_link_libraries(logseer gui ${Boost_LIBRARIES})
+target_link_libraries(logseer gui)

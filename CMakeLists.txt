@@ -19,7 +19,7 @@ include_directories(SYSTEM thirdparty/EWAHBoolArray/headers)
 set(Boost_USE_STATIC_LIBS       OFF)
 set(Boost_USE_MULTITHREADED      ON)
 set(Boost_USE_STATIC_RUNTIME    OFF)
-find_package(Boost 1.50 COMPONENTS system program_options REQUIRED)
+find_package(Boost 1.50 COMPONENTS system program_options filesystem REQUIRED)
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 option(CMAKE_RELEASE "CMAKE_RELEASE" FALSE)
@@ -28,7 +28,7 @@ set(CMAKE_CXX_FLAGS "-Werror=return-type -Wall -Wextra -Werror -Wno-implicit-fal
 
 if(CMAKE_RELEASE)
     add_definitions(-DNDEBUG)
-    set(CMAKE_CXX_FLAGS "-O0 ${CMAKE_CXX_FLAGS}")
+    set(CMAKE_CXX_FLAGS "-O3 ${CMAKE_CXX_FLAGS}")
 else()
     set(CMAKE_CXX_FLAGS "-O0 -ggdb ${CMAKE_CXX_FLAGS}")
 endif()

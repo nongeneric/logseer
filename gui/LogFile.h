@@ -19,9 +19,11 @@ namespace gui {
         std::unique_ptr<LogTableModel> _logTableModel;
         std::map<int, std::vector<std::string>> _columnFilters;
         std::string _path;
+        bool _parsed = false;
 
     public:
         LogFile(std::string path);
+        ~LogFile() = default;
         void parse();
         void requestFilter(int column);
         void setColumnFilter(int column, std::vector<std::string> values);

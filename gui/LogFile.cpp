@@ -57,6 +57,7 @@ namespace gui {
         _index.reset(new seer::Index());
         _index->index(_fileParser.get(), _lineParser.get());
         _logTableModel.reset(new LogTableModel(_index.get(), _fileParser.get()));
+        _parsed = true;
     }
 
     LogTableModel* LogFile::logTableModel() {
@@ -64,7 +65,8 @@ namespace gui {
     }
 
     void LogFile::requestFilter(int column) {
-        if (column == 0 || !_lineParser->getColumnFormats()[column].indexed)
+        assert(_parsed);
+        if (!_lineParser->getColumnFormats()[column].indexed)
             return;
         auto filterModel = new FilterTableModel(_index->getValues(column));
         emit filterRequested(filterModel, column);

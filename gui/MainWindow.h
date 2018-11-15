@@ -1,9 +1,12 @@
 #pragma once
 
 #include "FilterDialog.h"
+#include "LogFile.h"
 #include <QMainWindow>
 #include <QTabWidget>
 #include <QTableView>
+#include <vector>
+#include <memory>
 
 namespace gui {
 
@@ -12,14 +15,15 @@ namespace gui {
 
         QTabWidget* _tabWidget;
         FilterDialog* _filterDialog;
+        std::vector<std::unique_ptr<LogFile>> _logs;
 
     public:
         explicit MainWindow(QWidget* parent = nullptr);
         void openLog(std::string path);
 
-    signals:
-
-    public slots:
+    protected:
+        void dragEnterEvent(QDragEnterEvent* event) override;
+        void dropEvent(QDropEvent* event) override;
     };
 
 } // namespace gui
