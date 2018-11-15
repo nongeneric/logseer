@@ -9,7 +9,8 @@ namespace gui {
 
     struct ColumnInfo {
         QString name;
-        bool indexed;
+        bool indexed = false;
+        bool filterActive = false;
     };
 
     enum class HeaderDataRole {
@@ -25,6 +26,7 @@ namespace gui {
     public:
         LogTableModel(seer::Index* index, seer::FileParser* parser);
         void invalidate();
+        void setFilterActive(int column, bool active);
         virtual int rowCount(const QModelIndex &parent) const override;
         virtual int columnCount(const QModelIndex &parent) const override;
         virtual QVariant data(const QModelIndex &index, int role) const override;

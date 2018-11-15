@@ -20,11 +20,18 @@ namespace gui {
         endResetModel();
     }
 
+    void LogTableModel::setFilterActive(int column, bool active) {
+        _columns[column].filterActive = active;
+    }
+
     QVariant LogTableModel::headerData(int section, Qt::Orientation orientation, int role) const {
         if (section == -1)
             return QVariant();
         if (role == (int)HeaderDataRole::IsIndexed) {
             return _columns[section].indexed;
+        }
+        if (role == (int)HeaderDataRole::IsFilterActive) {
+            return _columns[section].filterActive;
         }
         if (role == Qt::DisplayRole && orientation == Qt::Horizontal) {
             return _columns[section].name;

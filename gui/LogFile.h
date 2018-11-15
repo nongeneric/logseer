@@ -4,25 +4,29 @@
 #include "FilterTableModel.h"
 #include "seer/FileParser.h"
 #include "seer/ILineParser.h"
+#include "seer/ILineParserRepository.h"
 #include <QObject>
 #include <memory>
 #include <string>
 #include <map>
+#include <istream>
 
 namespace gui {
 
     class LogFile : public QObject {
         Q_OBJECT
         std::unique_ptr<seer::FileParser> _fileParser;
-        std::unique_ptr<seer::ILineParser> _lineParser;
+        std::shared_ptr<seer::ILineParser> _lineParser;
         std::unique_ptr<seer::Index> _index;
         std::unique_ptr<LogTableModel> _logTableModel;
         std::map<int, std::vector<std::string>> _columnFilters;
-        std::string _path;
         bool _parsed = false;
+        std::unique_ptr<std::istream> _stream;
+        std::shared_ptr<seer::ILineParserRepository> _repository;
 
     public:
-        LogFile(std::string path);
+        LogFile(std::unique_ptr<std::istream>&& stream,
+                std::shared_ptr<seer::ILineParserRepository> repository);
         ~LogFile() = default;
         void parse();
         void requestFilter(int column);

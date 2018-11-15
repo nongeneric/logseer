@@ -3,9 +3,9 @@
 #include "LogTableModel.h"
 #include "FilterTableModel.h"
 #include "grid/FilterHeaderView.h"
+#include "seer/LineParserRepository.h"
 #include <QDragEnterEvent>
 #include <QMimeData>
-#include <QMessageBox>
 #include <fstream>
 #include <boost/filesystem.hpp>
 
@@ -19,7 +19,9 @@ namespace gui {
     }
 
     void MainWindow::openLog(std::string path) {
-        auto file = std::make_unique<LogFile>(path);
+        auto stream = std::make_unique<std::ifstream>(path);
+        auto file = std::make_unique<LogFile>(
+            std::move(stream), std::make_shared<seer::LineParserRepository>());
         file->parse();
 
         auto table = new QTableView();
