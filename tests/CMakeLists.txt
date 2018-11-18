@@ -16,6 +16,7 @@ set(SRC
     LogTableModelTests.cpp
     LogFileTests.cpp
     OffsetIndexTests.cpp
+    RandomBitArrayTests.cpp
 )
 add_executable(tests ${SRC})
 target_link_libraries(tests gui)

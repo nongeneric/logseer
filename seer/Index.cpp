@@ -5,7 +5,9 @@
 
 namespace seer {
 
-    void Index::filter(const std::vector<ColumnFilter>& filters) {
+Index::Index() : _lineMap(1024) { }
+
+void Index::filter(const std::vector<ColumnFilter>& filters) {
         if (filters.empty()) {
             _filtered = false;
             return;
@@ -33,7 +35,7 @@ namespace seer {
         _lineCount = 0;
         _lineMap.clear();
         for (auto index : _filter) {
-            _lineMap.push_back(index);
+            _lineMap.add(index);
             _lineCount++;
         }
 
@@ -49,8 +51,7 @@ namespace seer {
     uint64_t Index::mapIndex(uint64_t index) {
         if (!_filtered)
             return index;
-        assert(index < _lineMap.size());
-        return _lineMap[index];
+        return _lineMap.get(index);
     }
 
     void Index::index(FileParser* fileParser, ILineParser* lineParser) {

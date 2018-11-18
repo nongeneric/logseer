@@ -9,7 +9,7 @@ namespace gui::grid {
 
     public:
         FilterHeaderView(Qt::Orientation orientation, QWidget* parent = 0);
-        virtual void mousePressEvent(QMouseEvent *event) override;
+        void mousePressEvent(QMouseEvent *event) override;
     };
 
 } // namespace gui

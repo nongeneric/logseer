@@ -14,6 +14,8 @@ set(SRC
     LineParserRepository.cpp
     OffsetIndex.h
     OffsetIndex.cpp
+    RandomBitArray.h
+    RandomBitArray.cpp
 )
 add_library(seer STATIC ${SRC})
 target_link_libraries(seer pthread)

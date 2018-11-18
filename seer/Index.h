@@ -2,6 +2,7 @@
 
 #include "FileParser.h"
 #include "ILineParser.h"
+#include "RandomBitArray.h"
 #include <ewah.h>
 #include <stdint.h>
 #include <string>
@@ -23,7 +24,7 @@ namespace seer {
     };
 
     class Index {
-        std::vector<uint64_t> _lineMap;
+        RandomBitArray _lineMap;
         std::vector<ColumnInfo> _columns;
         uint64_t _unfilteredLineCount = 0;
         uint64_t _lineCount = 0;
@@ -31,6 +32,7 @@ namespace seer {
         ewah_bitset _filter;
 
     public:
+        Index();
         void filter(const std::vector<ColumnFilter>& filters);
         uint64_t getLineCount();
         uint64_t mapIndex(uint64_t index);

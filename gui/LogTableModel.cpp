@@ -25,7 +25,7 @@ namespace gui {
     }
 
     QVariant LogTableModel::headerData(int section, Qt::Orientation orientation, int role) const {
-        if (section == -1)
+        if (section == -1 || orientation != Qt::Horizontal)
             return QVariant();
         if (role == (int)HeaderDataRole::IsIndexed) {
             return _columns[section].indexed;
