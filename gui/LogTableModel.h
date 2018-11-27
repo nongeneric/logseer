@@ -15,7 +15,8 @@ namespace gui {
 
     enum class HeaderDataRole {
         IsIndexed = Qt::UserRole,
-        IsFilterActive
+        IsFilterActive,
+        FirstLine,
     };
 
     class LogTableModel : public QAbstractTableModel {

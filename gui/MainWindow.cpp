@@ -3,6 +3,7 @@
 #include "LogTableModel.h"
 #include "FilterTableModel.h"
 #include "grid/FilterHeaderView.h"
+#include "grid/LogTable.h"
 #include "seer/LineParserRepository.h"
 #include <QDragEnterEvent>
 #include <QMimeData>
@@ -24,22 +25,8 @@ namespace gui {
             std::move(stream), std::make_shared<seer::LineParserRepository>());
         file->parse();
 
-        auto table = new QTableView();
+        auto table = new grid::LogTable();
         table->setModel(file->logTableModel());
-        table->setHorizontalHeader(new grid::FilterHeaderView(Qt::Horizontal, table));
-
-        auto count = file->logTableModel()->columnCount(QModelIndex());
-        for (auto i = 0; i < count - 1; ++i) {
-            table->horizontalHeader()->setSectionResizeMode(
-                i, QHeaderView::ResizeMode::Interactive);
-        }
-        table->horizontalHeader()->setSectionResizeMode(
-            count - 1, QHeaderView::ResizeMode::Stretch);
-        table->setSelectionMode(QAbstractItemView::SelectionMode::ContiguousSelection);
-        table->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
-        table->verticalHeader()->hide();
-        table->setShowGrid(false);
-        table->setWordWrap(false);
 
         connect(
             file.get(),
@@ -54,14 +41,10 @@ namespace gui {
                 _filterDialog->exec();
             });
 
-        connect(table->horizontalHeader(),
-                &QHeaderView::sectionClicked,
+        connect(table,
+                &grid::LogTable::requestFilter,
                 this,
-                [file = file.get()](int column) {
-                    if (column != 0) {
-                        file->requestFilter(column - 1);
-                    }
-                });
+                [file = file.get()](int column) { file->requestFilter(column); });
 
         auto fileName = boost::filesystem::path(path).stem().string();
         _tabWidget->addTab(table, QString::fromStdString(fileName));

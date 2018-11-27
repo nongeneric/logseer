@@ -28,6 +28,10 @@ set(SRC
     LogFile.cpp
     grid/FilterHeaderView.h
     grid/FilterHeaderView.cpp
+    grid/LogTable.h
+    grid/LogTable.cpp
+    grid/LogTableView.h
+    grid/LogTableView.cpp
 )
 add_library(gui STATIC ${SRC})
 target_link_libraries(gui Qt5::Core Qt5::Widgets seer ${Boost_LIBRARIES})

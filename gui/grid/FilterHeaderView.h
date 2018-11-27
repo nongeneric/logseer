@@ -5,11 +5,15 @@
 
 namespace gui::grid {
 
+    class LogTable;
+
     class FilterHeaderView : public QHeaderView {
+        LogTable* _table;
 
     public:
-        FilterHeaderView(Qt::Orientation orientation, QWidget* parent = 0);
+        FilterHeaderView(LogTable* table);
         void mousePressEvent(QMouseEvent *event) override;
+        LogTable* logTable() const;
     };
 
 } // namespace gui

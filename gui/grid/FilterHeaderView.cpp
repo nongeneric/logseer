@@ -1,6 +1,7 @@
 #include "FilterHeaderView.h"
 
 #include "LogTableModel.h"
+#include "LogTable.h"
 #include <QMouseEvent>
 #include <QPainter>
 #include <QProxyStyle>
@@ -30,7 +31,7 @@ namespace gui::grid {
                     p->setFont(fnt);
                 }
 
-                auto model = dynamic_cast<QTableView*>(_parent->parentWidget())->model();
+                auto model = _parent->logTable()->model();
                 auto isIndexed = model->headerData(header->section,
                                                    Qt::Orientation::Horizontal,
                                                    (int)HeaderDataRole::IsIndexed).toBool();
@@ -63,8 +64,8 @@ namespace gui::grid {
         }
     };
 
-    FilterHeaderView::FilterHeaderView(Qt::Orientation orientation, QWidget* parent)
-        : QHeaderView(orientation, parent) {
+    FilterHeaderView::FilterHeaderView(LogTable* table)
+        : QHeaderView(Qt::Horizontal, table), _table(table) {
         this->setStyle(new MyStyle(this));
         setSectionsClickable(true);
         setMouseTracking(true);
@@ -72,6 +73,10 @@ namespace gui::grid {
 
     void FilterHeaderView::mousePressEvent(QMouseEvent* event) {
         QHeaderView::mousePressEvent(event);
+    }
+
+    LogTable *FilterHeaderView::logTable() const {
+        return _table;
     }
 
 } // namespace gui::grid
