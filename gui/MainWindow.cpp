@@ -2,11 +2,14 @@
 
 #include "LogTableModel.h"
 #include "FilterTableModel.h"
+#include "SearchLine.h"
 #include "grid/FilterHeaderView.h"
 #include "grid/LogTable.h"
 #include "seer/LineParserRepository.h"
 #include <QDragEnterEvent>
 #include <QMimeData>
+#include <QVBoxLayout>
+#include <QSplitter>
 #include <fstream>
 #include <boost/filesystem.hpp>
 
@@ -28,6 +31,29 @@ namespace gui {
         auto table = new grid::LogTable();
         table->setModel(file->logTableModel());
 
+        auto mainTableAndSearch = new QWidget();
+        auto vbox = new QVBoxLayout();
+        auto searchLine = new SearchLine();
+        mainTableAndSearch->setLayout(vbox);
+
+        vbox->addWidget(table);
+        vbox->addWidget(searchLine);
+
+        auto splitter = new QSplitter();
+        splitter->setOrientation(Qt::Vertical);
+        splitter->addWidget(mainTableAndSearch);
+
+        auto searchTable = new grid::LogTable();
+        splitter->addWidget(searchTable);
+
+        connect(searchLine,
+                &SearchLine::requestSearch,
+                this,
+                [=, file = file.get()] (std::string text) {
+            auto model = file->searchLogTableModel(text);
+            searchTable->setModel(model);
+        });
+
         connect(
             file.get(),
             &LogFile::filterRequested,
@@ -47,7 +73,7 @@ namespace gui {
                 [file = file.get()](int column) { file->requestFilter(column); });
 
         auto fileName = boost::filesystem::path(path).stem().string();
-        _tabWidget->addTab(table, QString::fromStdString(fileName));
+        _tabWidget->addTab(splitter, QString::fromStdString(fileName));
 
         _logs.push_back(std::move(file));
     }

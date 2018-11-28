@@ -27,13 +27,13 @@ namespace seer {
         RandomBitArray _lineMap;
         std::vector<ColumnInfo> _columns;
         uint64_t _unfilteredLineCount = 0;
-        uint64_t _lineCount = 0;
         bool _filtered = false;
         ewah_bitset _filter;
 
     public:
         Index();
         void filter(const std::vector<ColumnFilter>& filters);
+        void search(FileParser* fileParser, std::string text, bool caseSensitive);
         uint64_t getLineCount();
         uint64_t mapIndex(uint64_t index);
         void index(FileParser* fileParser, ILineParser* lineParser);

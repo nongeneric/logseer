@@ -24,6 +24,12 @@ namespace seer {
         return *it;
     }
 
+    uint64_t RandomBitArray::size() const {
+        if (_buckets.empty())
+            return 0;
+        return (_buckets.size() - 1) * _bucketSize + _currentBucketSize;
+    }
+
     void RandomBitArray::clear() {
         _lastValue = 0;
         _buckets.clear();

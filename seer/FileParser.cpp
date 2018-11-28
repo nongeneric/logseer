@@ -34,12 +34,16 @@ namespace seer {
     }
 
     void FileParser::readLine(uint64_t index, std::vector<std::string>& line) {
+        std::string text;
+        readLine(index, text);
+        _lineParser->parseLine(text, line);
+    }
+
+    void FileParser::readLine(uint64_t index, std::string &line) {
         assert(index < _lineOffsets.size());
         auto offset = _lineOffsets.map(index);
         _stream->seekg(offset);
-        std::string text;
-        std::getline(*_stream, text);
-        _lineParser->parseLine(text, line);
+        std::getline(*_stream, line);
     }
 
     ILineParser* FileParser::lineParser() const {

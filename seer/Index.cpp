@@ -5,9 +5,9 @@
 
 namespace seer {
 
-Index::Index() : _lineMap(1024) { }
+    Index::Index() : _lineMap(1024) { }
 
-void Index::filter(const std::vector<ColumnFilter>& filters) {
+    void Index::filter(const std::vector<ColumnFilter>& filters) {
         if (filters.empty()) {
             _filtered = false;
             return;
@@ -32,19 +32,42 @@ void Index::filter(const std::vector<ColumnFilter>& filters) {
 
         log_info("filtering complete");
 
-        _lineCount = 0;
         _lineMap.clear();
         for (auto index : _filter) {
             _lineMap.add(index);
-            _lineCount++;
         }
 
         log_info("building lineMap complete");
     }
 
+    void Index::search(FileParser* fileParser, std::string text, bool caseSensitive) {
+        _lineMap.clear();
+        std::string line;
+        auto pred = caseSensitive
+                ? [](char a, char b) { return a == b; }
+                : [](char a, char b) { return std::toupper(a) == std::toupper(b); };
+        auto add = [&] (auto index) {
+            fileParser->readLine(index, line);
+            auto it = std::search(begin(line), end(line), begin(text), end(text), pred);
+            if (it != end(line)) {
+                _lineMap.add(index);
+            }
+        };
+        if (_filtered) {
+            for (auto index : _filter) {
+                add(index);
+            }
+        } else {
+            for (uint64_t i = 0; i < _unfilteredLineCount; ++i) {
+                add(i);
+            }
+            _filtered = true;
+        }
+    }
+
     uint64_t Index::getLineCount() {
         if (_filtered)
-            return _lineCount;
+            return _lineMap.size();
         return _unfilteredLineCount;
     }
 

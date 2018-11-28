@@ -23,6 +23,7 @@ namespace seer {
         void index(LineHandler handler);
         uint64_t lineCount();
         void readLine(uint64_t index, std::vector<std::string>& line);
+        void readLine(uint64_t index, std::string& line);
         ILineParser* lineParser() const;
     };
 

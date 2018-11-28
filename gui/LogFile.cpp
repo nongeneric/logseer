@@ -20,6 +20,13 @@ namespace gui {
         return _logTableModel.get();
     }
 
+    LogTableModel *LogFile::searchLogTableModel(std::string text) {
+        _searchIndex.reset(new seer::Index(*_index));
+        _searchIndex->search(_fileParser.get(), text, false);
+        _searchLogTableModel.reset(new LogTableModel(_searchIndex.get(), _fileParser.get()));
+        return _searchLogTableModel.get();
+    }
+
     void LogFile::requestFilter(int column) {
         assert(_parsed);
         if (!_lineParser->getColumnFormats()[column].indexed)

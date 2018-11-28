@@ -18,7 +18,9 @@ namespace gui {
         std::unique_ptr<seer::FileParser> _fileParser;
         std::shared_ptr<seer::ILineParser> _lineParser;
         std::unique_ptr<seer::Index> _index;
+        std::unique_ptr<seer::Index> _searchIndex;
         std::unique_ptr<LogTableModel> _logTableModel;
+        std::unique_ptr<LogTableModel> _searchLogTableModel;
         std::map<int, std::vector<std::string>> _columnFilters;
         bool _parsed = false;
         std::unique_ptr<std::istream> _stream;
@@ -32,6 +34,7 @@ namespace gui {
         void requestFilter(int column);
         void setColumnFilter(int column, std::vector<std::string> values);
         LogTableModel* logTableModel();
+        LogTableModel *searchLogTableModel(std::string text);
 
     signals:
         void filterRequested(FilterTableModel* model, int column);

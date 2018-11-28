@@ -26,6 +26,8 @@ set(SRC
     FilterTableModel.cpp
     LogFile.h
     LogFile.cpp
+    SearchLine.h
+    SearchLine.cpp
     grid/FilterHeaderView.h
     grid/FilterHeaderView.cpp
     grid/LogTable.h

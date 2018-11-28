@@ -100,3 +100,45 @@ TEST_CASE("get_values") {
     REQUIRE( values[0] == "SUB" );
     REQUIRE( values[1] == "CORE" );
 }
+
+TEST_CASE("search") {
+    std::stringstream ss(simpleLog);
+    TestLineParser lineParser;
+    FileParser fileParser(&ss, &lineParser);
+
+    Index index;
+    index.index(&fileParser, &lineParser);
+    REQUIRE( index.getLineCount() == 6 );
+    REQUIRE( index.mapIndex(0) == 0 );
+    REQUIRE( index.mapIndex(5) == 5 );
+
+    auto indexCopy = index;
+    std::vector<ColumnFilter> filters;
+    filters = {{1, {"INFO"}}};
+    indexCopy.filter(filters);
+    REQUIRE( indexCopy.getLineCount() == 3 );
+    REQUIRE( indexCopy.mapIndex(0) == 0 );
+    REQUIRE( indexCopy.mapIndex(1) == 1 );
+    REQUIRE( indexCopy.mapIndex(2) == 3 );
+
+    indexCopy.search(&fileParser, "4", true);
+    REQUIRE( indexCopy.getLineCount() == 1 );
+    REQUIRE( indexCopy.mapIndex(0) == 3 );
+
+    indexCopy = index;
+    indexCopy.search(&fileParser, "4", true);
+    REQUIRE( indexCopy.getLineCount() == 2 );
+    REQUIRE( indexCopy.mapIndex(0) == 3 );
+    REQUIRE( indexCopy.mapIndex(1) == 5 );
+
+    indexCopy = index;
+    indexCopy.search(&fileParser, "inf", true);
+    REQUIRE( indexCopy.getLineCount() == 0 );
+
+    indexCopy = index;
+    indexCopy.search(&fileParser, "inf", false);
+    REQUIRE( indexCopy.getLineCount() == 3 );
+    REQUIRE( indexCopy.mapIndex(0) == 0 );
+    REQUIRE( indexCopy.mapIndex(1) == 1 );
+    REQUIRE( indexCopy.mapIndex(2) == 3 );
+}

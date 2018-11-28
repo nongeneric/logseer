@@ -15,6 +15,7 @@ namespace seer {
         RandomBitArray(unsigned bucketSize);
         void add(uint64_t value);
         uint64_t get(uint64_t index);
+        uint64_t size() const;
         void clear();
     };
 
