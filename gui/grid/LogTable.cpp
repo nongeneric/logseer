@@ -2,6 +2,7 @@
 
 #include <QSizePolicy>
 #include <QVBoxLayout>
+
 #include "LogTableView.h"
 
 namespace gui::grid {
@@ -9,6 +10,7 @@ namespace gui::grid {
     LogTable::LogTable(QWidget* parent) : QWidget(parent) {
         _header = new FilterHeaderView(this);
         _header->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+        _header->setMinimumHeight(0);
         _view = new LogTableView(this);
         _scrollArea = new QScrollArea(this);
         _scrollArea->setWidget(_view);

@@ -34,7 +34,7 @@ namespace gui {
         void requestFilter(int column);
         void setColumnFilter(int column, std::vector<std::string> values);
         LogTableModel* logTableModel();
-        LogTableModel *searchLogTableModel(std::string text);
+        LogTableModel *searchLogTableModel(std::string text, bool caseSensitive);
 
     signals:
         void filterRequested(FilterTableModel* model, int column);

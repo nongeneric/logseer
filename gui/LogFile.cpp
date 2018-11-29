@@ -20,9 +20,9 @@ namespace gui {
         return _logTableModel.get();
     }
 
-    LogTableModel *LogFile::searchLogTableModel(std::string text) {
+    LogTableModel *LogFile::searchLogTableModel(std::string text, bool caseSensitive) {
         _searchIndex.reset(new seer::Index(*_index));
-        _searchIndex->search(_fileParser.get(), text, false);
+        _searchIndex->search(_fileParser.get(), text, caseSensitive);
         _searchLogTableModel.reset(new LogTableModel(_searchIndex.get(), _fileParser.get()));
         return _searchLogTableModel.get();
     }

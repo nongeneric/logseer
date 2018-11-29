@@ -52,7 +52,7 @@ namespace gui {
             return {};
         auto lineIndex = _index->mapIndex(index.row());
         if (index.column() == LineNumber)
-            return QVariant::fromValue(lineIndex);
+            return QString("%0").arg(lineIndex);
 
         std::vector<std::string> line;
         _parser->readLine(lineIndex, line);

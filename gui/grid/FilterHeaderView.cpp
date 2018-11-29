@@ -79,4 +79,8 @@ namespace gui::grid {
         return _table;
     }
 
+    QSize FilterHeaderView::minimumSizeHint() const {
+        return sizeHint();
+    }
+
 } // namespace gui::grid

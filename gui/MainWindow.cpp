@@ -6,6 +6,7 @@
 #include "grid/FilterHeaderView.h"
 #include "grid/LogTable.h"
 #include "seer/LineParserRepository.h"
+#include "version.h"
 #include <QDragEnterEvent>
 #include <QMimeData>
 #include <QVBoxLayout>
@@ -19,6 +20,7 @@ namespace gui {
         _tabWidget = new QTabWidget(this);
         setCentralWidget(_tabWidget);
         setAcceptDrops(true);
+        setWindowTitle(QString("logseer %0").arg(g_version));
         resize(800, 600);
     }
 
@@ -38,6 +40,7 @@ namespace gui {
 
         vbox->addWidget(table);
         vbox->addWidget(searchLine);
+        vbox->setMargin(0);
 
         auto splitter = new QSplitter();
         splitter->setOrientation(Qt::Vertical);
@@ -49,8 +52,8 @@ namespace gui {
         connect(searchLine,
                 &SearchLine::requestSearch,
                 this,
-                [=, file = file.get()] (std::string text) {
-            auto model = file->searchLogTableModel(text);
+                [=, file = file.get()] (std::string text, bool caseSensitive) {
+            auto model = file->searchLogTableModel(text, caseSensitive);
             searchTable->setModel(model);
         });
 

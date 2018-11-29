@@ -12,7 +12,7 @@ namespace gui {
         explicit SearchLine(QWidget* parent = nullptr);
 
     signals:
-        void requestSearch(std::string string);
+        void requestSearch(std::string string, bool caseSensitive);
     };
 
 } // namespace gui

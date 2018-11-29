@@ -14,6 +14,7 @@ namespace gui::grid {
         FilterHeaderView(LogTable* table);
         void mousePressEvent(QMouseEvent *event) override;
         LogTable* logTable() const;
+        QSize minimumSizeHint() const override;
     };
 
 } // namespace gui
