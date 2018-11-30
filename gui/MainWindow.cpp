@@ -18,6 +18,13 @@ namespace gui {
 
     MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
         _tabWidget = new QTabWidget(this);
+        _tabWidget->setTabsClosable(true);
+
+        connect(_tabWidget,
+                &QTabWidget::tabCloseRequested,
+                _tabWidget,
+                &QTabWidget::removeTab);
+
         setCentralWidget(_tabWidget);
         setAcceptDrops(true);
         setWindowTitle(QString("logseer %0").arg(g_version));

@@ -12,6 +12,7 @@ namespace gui::grid {
         _header->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
         _header->setMinimumHeight(0);
         _view = new LogTableView(this);
+        _view->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
         _scrollArea = new QScrollArea(this);
         _scrollArea->setWidget(_view);
         _scrollArea->setBackgroundRole(QPalette::Light);
@@ -37,6 +38,14 @@ namespace gui::grid {
                 });
     }
 
+    void emulateResize(QWidget* widget) {
+        auto size = widget->size();
+        size.rheight()++;
+        widget->resize(size);
+        size.rheight()--;
+        widget->resize(size);
+    }
+
     void LogTable::setModel(LogTableModel* model) {
         _model = model;
         _header->setModel(model);
@@ -52,6 +61,7 @@ namespace gui::grid {
                 this,
                 [=] {
             _view->update();
+            emulateResize(_scrollArea);
         });
     }
 
