@@ -8,7 +8,8 @@ namespace seer {
     FileParser::FileParser(std::istream* stream, ILineParser* lineParser)
         : _stream(stream), _lineParser(lineParser) {}
 
-    void FileParser::index(LineHandler handler) {
+    void FileParser::index(std::function<void(uint64_t, uint64_t)> progress) {
+        auto lock = std::lock_guard(_mutex);
         _indexed = true;
         std::string line;
         std::vector<std::string> columns;
@@ -20,16 +21,24 @@ namespace seer {
             return _stream->tellg();
         });
         _lineOffsets.add(0);
+
+        _stream->seekg(0, std::ios_base::end);
+        auto fileSize = _stream->tellg();
+        _stream->seekg(0);
+
         while (std::getline(*_stream, line)) {
-            _lineOffsets.add(_stream->tellg());
-            _lineParser->parseLine(line, columns);
-            handler(index, columns);
+            auto pos = _stream->tellg();
+            _lineOffsets.add(pos);
+            if (pos != -1) {
+                progress(pos, fileSize);
+            }
             index++;
         }
         _stream->clear();
     }
 
     uint64_t FileParser::lineCount() {
+        auto lock = std::lock_guard(_mutex);
         return _lineOffsets.size() - 1;
     }
 
@@ -40,6 +49,7 @@ namespace seer {
     }
 
     void FileParser::readLine(uint64_t index, std::string &line) {
+        auto lock = std::lock_guard(_mutex);
         assert(index < _lineOffsets.size());
         auto offset = _lineOffsets.map(index);
         _stream->seekg(offset);

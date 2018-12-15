@@ -11,6 +11,7 @@
 #include <QMimeData>
 #include <QVBoxLayout>
 #include <QSplitter>
+#include <QStatusBar>
 #include <fstream>
 #include <boost/filesystem.hpp>
 
@@ -35,15 +36,47 @@ namespace gui {
         auto stream = std::make_unique<std::ifstream>(path);
         auto file = std::make_unique<LogFile>(
             std::move(stream), std::make_shared<seer::LineParserRepository>());
-        file->parse();
 
         auto table = new grid::LogTable();
-        table->setModel(file->logTableModel());
 
         auto mainTableAndSearch = new QWidget();
         auto vbox = new QVBoxLayout();
         auto searchLine = new SearchLine();
         mainTableAndSearch->setLayout(vbox);
+
+        connect(file.get(),
+                &LogFile::parsingComplete,
+                this,
+                [=, file = file.get()] {
+            searchLine->setStatus("Indexing...");
+            table->setModel(file->logTableModel());
+            file->index();
+        }, Qt::QueuedConnection);
+
+        connect(file.get(),
+                &LogFile::parsingProgress,
+                this,
+                [=, file = file.get()] (auto progress) {
+            searchLine->setProgress(progress);
+        }, Qt::QueuedConnection);
+
+        connect(file.get(),
+                &LogFile::indexingComplete,
+                this,
+                [=, file = file.get()] {
+            searchLine->setStatus("");
+            searchLine->setProgress(-1);
+        }, Qt::QueuedConnection);
+
+        connect(file.get(),
+                &LogFile::indexingProgress,
+                this,
+                [=, file = file.get()] (auto progress) {
+            searchLine->setProgress(progress);
+        }, Qt::QueuedConnection);
+
+        searchLine->setStatus("Parsing...");
+        file->parse();
 
         vbox->addWidget(table);
         vbox->addWidget(searchLine);
@@ -57,7 +90,7 @@ namespace gui {
         splitter->addWidget(searchTable);
 
         connect(searchLine,
-                &SearchLine::requestSearch,
+                &SearchLine::searchRequested,
                 this,
                 [=, file = file.get()] (std::string text, bool caseSensitive) {
             auto model = file->searchLogTableModel(text, caseSensitive);

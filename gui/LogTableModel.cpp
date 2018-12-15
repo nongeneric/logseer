@@ -7,8 +7,8 @@ namespace gui {
         Regular = 1
     };
 
-    LogTableModel::LogTableModel(seer::Index* index, seer::FileParser* parser)
-        : _index(index), _parser(parser) {
+    LogTableModel::LogTableModel(seer::FileParser* parser)
+        : _parser(parser) {
         _columns.push_back({"#", false});
         for (auto& column : parser->lineParser()->getColumnFormats()) {
             _columns.push_back(
@@ -22,6 +22,11 @@ namespace gui {
 
     void LogTableModel::setFilterActive(int column, bool active) {
         _columns[column].filterActive = active;
+    }
+
+    void LogTableModel::setIndex(seer::Index* index) {
+        _index = index;
+        invalidate();
     }
 
     QVariant LogTableModel::headerData(int section, Qt::Orientation orientation, int role) const {
@@ -40,6 +45,8 @@ namespace gui {
     }
 
     int LogTableModel::rowCount([[maybe_unused]] const QModelIndex& parent) const {
+        if (!_index)
+            return _parser->lineCount();
         return _index->getLineCount();
     }
 
@@ -50,7 +57,7 @@ namespace gui {
     QVariant LogTableModel::data(const QModelIndex& index, int role) const {
         if (role != Qt::DisplayRole)
             return {};
-        auto lineIndex = _index->mapIndex(index.row());
+        auto lineIndex = _index ? _index->mapIndex(index.row()) : index.row();
         if (index.column() == LineNumber)
             return QString("%0").arg(lineIndex);
 

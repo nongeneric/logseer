@@ -8,6 +8,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <functional>
 
 namespace seer {
 
@@ -36,7 +37,9 @@ namespace seer {
         void search(FileParser* fileParser, std::string text, bool caseSensitive);
         uint64_t getLineCount();
         uint64_t mapIndex(uint64_t index);
-        void index(FileParser* fileParser, ILineParser* lineParser);
+        void index(FileParser* fileParser,
+                   ILineParser* lineParser,
+                   std::function<void(uint64_t, uint64_t)> progress = {});
         std::vector<std::string> getValues(int column);
     };
 

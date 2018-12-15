@@ -55,6 +55,7 @@ namespace gui::grid {
         }
         _header->setSectionResizeMode(count - 1, QHeaderView::ResizeMode::Stretch);
         _view->update();
+        _header->updateGeometry();
 
         connect(_model,
                 &QAbstractTableModel::modelReset,

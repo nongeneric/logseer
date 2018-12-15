@@ -12,7 +12,7 @@ TEST_CASE("simple_parser") {
     std::stringstream ss(simpleLog);
     TestLineParser lineParser;
     FileParser fileParser(&ss, &lineParser);
-    fileParser.index([](auto, auto&){ return true; });
+    fileParser.index();
 
     REQUIRE(fileParser.lineCount() == 6);
     std::vector<std::string> line;
@@ -45,6 +45,7 @@ TEST_CASE("simple_index") {
     std::stringstream ss(simpleLog);
     TestLineParser lineParser;
     FileParser fileParser(&ss, &lineParser);
+    fileParser.index();
 
     Index index;
     index.index(&fileParser, &lineParser);
@@ -86,6 +87,7 @@ TEST_CASE("get_values") {
     std::stringstream ss(simpleLog);
     TestLineParser lineParser;
     FileParser fileParser(&ss, &lineParser);
+    fileParser.index();
 
     Index index;
     index.index(&fileParser, &lineParser);
@@ -105,6 +107,7 @@ TEST_CASE("search") {
     std::stringstream ss(simpleLog);
     TestLineParser lineParser;
     FileParser fileParser(&ss, &lineParser);
+    fileParser.index();
 
     Index index;
     index.index(&fileParser, &lineParser);

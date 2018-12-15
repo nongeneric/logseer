@@ -13,9 +13,12 @@ TEST_CASE("return_roles") {
     std::stringstream ss(simpleLog);
     TestLineParser lineParser;
     FileParser fileParser(&ss, &lineParser);
+    fileParser.index();
+
     Index index;
     index.index(&fileParser, &lineParser);
-    LogTableModel model(&index, &fileParser);
+    LogTableModel model(&fileParser);
+    model.setIndex(&index);
     REQUIRE( model.headerData(0, Qt::Horizontal, (int)HeaderDataRole::IsIndexed).toBool() == false );
     REQUIRE( model.headerData(1, Qt::Horizontal, (int)HeaderDataRole::IsIndexed).toBool() == false );
     REQUIRE( model.headerData(2, Qt::Horizontal, (int)HeaderDataRole::IsIndexed).toBool() == true );

@@ -7,28 +7,63 @@ namespace gui {
         : _stream(std::move(stream)), _repository(std::move(repository)) {}
 
     void LogFile::parse() {
+        _state = LogFileState::Parsing;
         _lineParser = _repository->resolve(*_stream);
         _fileParser.reset(new seer::FileParser(_stream.get(), _lineParser.get()));
         _index.reset(new seer::Index());
-        _index->index(_fileParser.get(), _lineParser.get());
-        _logTableModel.reset(new LogTableModel(_index.get(), _fileParser.get()));
-        _parsed = true;
+        _parsingTask.reset(new seer::ParsingTask(_fileParser.get()));
+        _parsingTask->setStateChanged([=] (auto state) {
+            assert(state != seer::TaskState::Failed);
+            if (state == seer::TaskState::Finished) {
+                _state = LogFileState::Parsed;
+                emit parsingComplete();
+            }
+        });
+        _parsingTask->setProgressChanged([=] (auto progress) {
+            emit parsingProgress(progress);
+        });
+        _parsingTask->start();
+    }
+
+    void LogFile::index() {
+        assert(_state == LogFileState::Parsed);
+        _state = LogFileState::Indexing;
+
+        _indexingTask.reset(new seer::IndexingTask(_index.get(), _fileParser.get(), _lineParser.get()));
+        _indexingTask->setStateChanged([=] (auto state) {
+            assert(state != seer::TaskState::Failed);
+            if (state == seer::TaskState::Finished) {
+                _state = LogFileState::Complete;
+                emit indexingComplete();
+            }
+        });
+        _indexingTask->setProgressChanged([=] (auto progress) {
+            emit indexingProgress(progress);
+        });
+        _indexingTask->start();
     }
 
     LogTableModel* LogFile::logTableModel() {
-        assert(_parsed);
+        assert(_state == LogFileState::Complete ||
+               _state == LogFileState::Indexing || _state == LogFileState::Parsed);
+        if (!_logTableModel) {
+            _logTableModel.reset(new LogTableModel(_fileParser.get()));
+        }
         return _logTableModel.get();
     }
 
     LogTableModel *LogFile::searchLogTableModel(std::string text, bool caseSensitive) {
         _searchIndex.reset(new seer::Index(*_index));
         _searchIndex->search(_fileParser.get(), text, caseSensitive);
-        _searchLogTableModel.reset(new LogTableModel(_searchIndex.get(), _fileParser.get()));
+        _searchLogTableModel.reset(new LogTableModel(_fileParser.get()));
         return _searchLogTableModel.get();
     }
 
+    LogFileState LogFile::state() const {
+        return _state;
+    }
+
     void LogFile::requestFilter(int column) {
-        assert(_parsed);
         if (!_lineParser->getColumnFormats()[column].indexed)
             return;
         auto filterModel = new FilterTableModel(_index->getValues(column));

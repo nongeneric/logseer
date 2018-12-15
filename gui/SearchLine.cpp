@@ -5,7 +5,6 @@
 #include <QPushButton>
 #include <QLineEdit>
 #include <QCheckBox>
-#include <QSpacerItem>
 
 namespace gui {
 
@@ -14,16 +13,27 @@ namespace gui {
         auto button = new QPushButton();
         button->setText("Search");
 
-        auto hbox = new QHBoxLayout();
-        hbox->addWidget(edit);
-        hbox->addWidget(button);
+        auto topHbox = new QHBoxLayout();
+        topHbox->addWidget(edit);
+        topHbox->addWidget(button);
 
         auto caseSensitive = new QCheckBox();
         caseSensitive->setText("Case-sensitive");
 
+        _status = new QLabel();
+        _progress = new QProgressBar();
+        _progress->setMaximum(100);
+        _progress->hide();
+
+        auto bottomHbox = new QHBoxLayout();
+        bottomHbox->addWidget(_status);
+        bottomHbox->addWidget(_progress);
+        bottomHbox->addStretch();
+        bottomHbox->addWidget(caseSensitive);
+
         auto vbox = new QVBoxLayout();
-        vbox->addLayout(hbox);
-        vbox->addWidget(caseSensitive);
+        vbox->addLayout(topHbox);
+        vbox->addLayout(bottomHbox);
         vbox->setAlignment(caseSensitive, Qt::AlignRight);
         setLayout(vbox);
 
@@ -31,8 +41,21 @@ namespace gui {
                 &QPushButton::clicked,
                 this,
                 [=] {
-            emit requestSearch(edit->text().toStdString(), caseSensitive->isChecked());
+            emit searchRequested(edit->text().toStdString(), caseSensitive->isChecked());
         });
+    }
+
+    void SearchLine::setStatus(std::string status) {
+        _status->setText(QString::fromStdString(status));
+    }
+
+    void SearchLine::setProgress(int progress) {
+        if (progress == -1) {
+            _progress->hide();
+            return;
+        }
+        _progress->show();
+        _progress->setValue(progress);
     }
 
 } // namespace gui

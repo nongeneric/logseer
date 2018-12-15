@@ -6,21 +6,20 @@
 #include <istream>
 #include <string_view>
 #include <vector>
+#include <mutex>
 
 namespace seer {
-
-    using LineHandler =
-        std::function<void(uint64_t, std::vector<std::string> const&)>;
 
     class FileParser {
         OffsetIndex _lineOffsets;
         std::istream* _stream;
         ILineParser* _lineParser;
         bool _indexed = false;
+        std::mutex _mutex;
 
     public:
         FileParser(std::istream* stream, ILineParser* lineParser);
-        void index(LineHandler handler);
+        void index(std::function<void(uint64_t, uint64_t)> progress = {});
         uint64_t lineCount();
         void readLine(uint64_t index, std::vector<std::string>& line);
         void readLine(uint64_t index, std::string& line);
