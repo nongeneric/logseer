@@ -15,6 +15,7 @@ namespace seer {
         std::istream* _stream;
         ILineParser* _lineParser;
         bool _indexed = false;
+        size_t _currentPos = 0;
         std::mutex _mutex;
 
     public:
@@ -23,6 +24,7 @@ namespace seer {
         uint64_t lineCount();
         void readLine(uint64_t index, std::vector<std::string>& line);
         void readLine(uint64_t index, std::string& line);
+        void readNextLine(std::string& line);
         ILineParser* lineParser() const;
     };
 

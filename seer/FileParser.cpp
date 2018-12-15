@@ -56,6 +56,11 @@ namespace seer {
         std::getline(*_stream, line);
     }
 
+    void FileParser::readNextLine(std::string &line) {
+        auto lock = std::lock_guard(_mutex);
+        std::getline(*_stream, line);
+    }
+
     ILineParser* FileParser::lineParser() const {
         return _lineParser;
     }
