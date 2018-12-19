@@ -130,13 +130,11 @@ namespace seer {
         std::vector<std::string> columns;
         std::string line;
         for (auto index = 0ul, count = fileParser->lineCount(); index < count; ++index) {
-            if (index) {
-                fileParser->readNextLine(line);
-            } else {
-                fileParser->readLine(index, line);
-            }
+            fileParser->readLine(index, line);
             queue.push(std::tuple(line, index));
-            progress(index, count);
+            if (progress) {
+                progress(index, count);
+            }
         }
 
         for (auto i = 0u; i < threadCount; ++i) {

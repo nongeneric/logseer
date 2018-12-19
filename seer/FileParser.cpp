@@ -29,7 +29,7 @@ namespace seer {
         while (std::getline(*_stream, line)) {
             auto pos = _stream->tellg();
             _lineOffsets.add(pos);
-            if (pos != -1) {
+            if (pos != -1 && progress) {
                 progress(pos, fileSize);
             }
             index++;
@@ -51,14 +51,13 @@ namespace seer {
     void FileParser::readLine(uint64_t index, std::string &line) {
         auto lock = std::lock_guard(_mutex);
         assert(index < _lineOffsets.size());
-        auto offset = _lineOffsets.map(index);
-        _stream->seekg(offset);
+        if (index != _currentIndex) {
+            auto offset = _lineOffsets.map(index);
+            _stream->seekg(offset);
+            _currentIndex = index;
+        }
         std::getline(*_stream, line);
-    }
-
-    void FileParser::readNextLine(std::string &line) {
-        auto lock = std::lock_guard(_mutex);
-        std::getline(*_stream, line);
+        _currentIndex++;
     }
 
     ILineParser* FileParser::lineParser() const {

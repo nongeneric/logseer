@@ -12,6 +12,7 @@ namespace seer {
     void IndexingTask::body() {
         _index->index(_fileParser, _lineParser, [=] (auto done, auto total) {
             reportProgress((done * 100) / total);
+            waitPause();
         });
     }
 } // namespace seer

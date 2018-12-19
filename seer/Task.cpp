@@ -4,8 +4,20 @@
 namespace seer {
 
     void Task::changeState(TaskState state) {
+        auto lock = std::lock_guard(_mState);
+        _cvPause.notify_all();
+        _state = state;
         if (_stateChanged)
             _stateChanged(state);
+    }
+
+    void Task::waitPause() {
+        auto lock = std::unique_lock(_mState);
+        if (_isPauseRequested) {
+            changeState(TaskState::Paused);
+            _isPauseRequested = false;
+        }
+        _cvPause.wait(lock, [=] { return _state != TaskState::Paused; });
     }
 
     void Task::reportProgress(int progress) {
@@ -35,6 +47,8 @@ namespace seer {
 
     void Task::start() {
         changeState(TaskState::Running);
+        if (_thread.joinable())
+            return;
         _thread = std::thread([=] {
             body();
             if (_state != TaskState::Failed)
@@ -44,6 +58,10 @@ namespace seer {
 
     void Task::stop() {
         _isStopRequested = true;
+    }
+
+    void Task::pause() {
+        _isPauseRequested = true;
     }
 
     Task::~Task() {
