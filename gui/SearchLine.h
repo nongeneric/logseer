@@ -4,6 +4,7 @@
 #include <string>
 #include <QProgressBar>
 #include <QLabel>
+#include <QPushButton>
 
 namespace gui {
 
@@ -12,11 +13,13 @@ namespace gui {
 
         QLabel* _status;
         QProgressBar* _progress;
+        QPushButton* _button;
 
     public:
         explicit SearchLine(QWidget* parent = nullptr);
         void setStatus(std::string status);
         void setProgress(int progress);
+        void setSearchEnabled(bool enabled);
 
     signals:
         void searchRequested(std::string string, bool caseSensitive);

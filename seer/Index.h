@@ -32,13 +32,14 @@ namespace seer {
         ewah_bitset _filter;
 
     public:
-        Index();
+        Index(uint64_t unfilteredLineCount = 0);
         void filter(const std::vector<ColumnFilter>& filters);
         void search(FileParser* fileParser, std::string text, bool caseSensitive);
         uint64_t getLineCount();
         uint64_t mapIndex(uint64_t index);
-        void index(FileParser* fileParser,
+        bool index(FileParser* fileParser,
                    ILineParser* lineParser,
+                   std::function<bool()> stopRequested,
                    std::function<void(uint64_t, uint64_t)> progress = {});
         std::vector<std::string> getValues(int column);
     };

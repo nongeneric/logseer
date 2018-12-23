@@ -34,6 +34,10 @@ set(SRC
     grid/LogTable.cpp
     grid/LogTableView.h
     grid/LogTableView.cpp
+    sm/Logger.h
+    sm/StateMachine.h
+    ThreadDispatcher.h
+    ThreadDispatcher.cpp
 )
 add_library(gui STATIC ${SRC})
 target_link_libraries(gui Qt5::Core Qt5::Widgets seer ${Boost_LIBRARIES})

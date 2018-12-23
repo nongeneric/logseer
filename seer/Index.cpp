@@ -9,7 +9,8 @@
 
 namespace seer {
 
-    Index::Index() : _lineMap(1024) { }
+    Index::Index(uint64_t unfilteredLineCount)
+        : _lineMap(1024), _unfilteredLineCount(unfilteredLineCount) {}
 
     void Index::filter(const std::vector<ColumnFilter>& filters) {
         if (filters.empty()) {
@@ -81,8 +82,9 @@ namespace seer {
         return _lineMap.get(index);
     }
 
-    void Index::index(FileParser* fileParser,
+    bool Index::index(FileParser* fileParser,
                       ILineParser* lineParser,
+                      std::function<bool()> stopRequested,
                       std::function<void(uint64_t, uint64_t)> progress)
     {
         log_info("started indexing");
@@ -127,9 +129,23 @@ namespace seer {
             threadId++;
         }
 
+        auto stopThreads = [&] {
+            for (auto i = 0u; i < threadCount; ++i) {
+                queue.push({});
+            }
+
+            for (auto& th : threads) {
+                th.join();
+            }
+        };
+
         std::vector<std::string> columns;
         std::string line;
         for (auto index = 0ul, count = fileParser->lineCount(); index < count; ++index) {
+            if (stopRequested()) {
+                stopThreads();
+                return false;
+            }
             fileParser->readLine(index, line);
             queue.push(std::tuple(line, index));
             if (progress) {
@@ -137,13 +153,7 @@ namespace seer {
             }
         }
 
-        for (auto i = 0u; i < threadCount; ++i) {
-            queue.push({});
-        }
-
-        for (auto& th : threads) {
-            th.join();
-        }
+        stopThreads();
 
         _columns = emptyIndex;
         for (auto& result : results) {
@@ -165,6 +175,8 @@ namespace seer {
         _unfilteredLineCount = fileParser->lineCount();
 
         log_info("indexing complete");
+
+        return true;
     }
 
     std::vector<std::string> Index::getValues(int column) {

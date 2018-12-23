@@ -5,8 +5,8 @@
 #include <QMainWindow>
 #include <QTabWidget>
 #include <QTableView>
-#include <vector>
 #include <memory>
+#include <vector>
 
 namespace gui {
 
@@ -17,6 +17,8 @@ namespace gui {
         FilterDialog* _filterDialog;
         std::vector<std::unique_ptr<LogFile>> _logs;
 
+        void closeTab(int index);
+
     public:
         explicit MainWindow(QWidget* parent = nullptr);
         void openLog(std::string path);
@@ -24,6 +26,7 @@ namespace gui {
     protected:
         void dragEnterEvent(QDragEnterEvent* event) override;
         void dropEvent(QDropEvent* event) override;
+        void closeEvent(QCloseEvent* event) override;
     };
 
 } // namespace gui

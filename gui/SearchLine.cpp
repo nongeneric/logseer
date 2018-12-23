@@ -2,7 +2,6 @@
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>
-#include <QPushButton>
 #include <QLineEdit>
 #include <QCheckBox>
 
@@ -10,12 +9,12 @@ namespace gui {
 
     SearchLine::SearchLine(QWidget* parent) : QWidget(parent) {
         auto edit = new QLineEdit();
-        auto button = new QPushButton();
-        button->setText("Search");
+        _button = new QPushButton();
+        _button->setText("Search");
 
         auto topHbox = new QHBoxLayout();
         topHbox->addWidget(edit);
-        topHbox->addWidget(button);
+        topHbox->addWidget(_button);
 
         auto caseSensitive = new QCheckBox();
         caseSensitive->setText("Case-sensitive");
@@ -37,7 +36,7 @@ namespace gui {
         vbox->setAlignment(caseSensitive, Qt::AlignRight);
         setLayout(vbox);
 
-        connect(button,
+        connect(_button,
                 &QPushButton::clicked,
                 this,
                 [=] {
@@ -56,6 +55,10 @@ namespace gui {
         }
         _progress->show();
         _progress->setValue(progress);
+    }
+
+    void SearchLine::setSearchEnabled(bool enabled) {
+        _button->setEnabled(enabled);
     }
 
 } // namespace gui

@@ -1,7 +1,7 @@
 #include "MainWindow.h"
 
-#include "LogTableModel.h"
 #include "FilterTableModel.h"
+#include "LogTableModel.h"
 #include "SearchLine.h"
 #include "grid/FilterHeaderView.h"
 #include "grid/LogTable.h"
@@ -9,13 +9,49 @@
 #include "version.h"
 #include <QDragEnterEvent>
 #include <QMimeData>
-#include <QVBoxLayout>
 #include <QSplitter>
 #include <QStatusBar>
-#include <fstream>
+#include <QVBoxLayout>
 #include <boost/filesystem.hpp>
+#include <fstream>
 
 namespace gui {
+
+    void handleStateChanged(LogFile* file,
+                            grid::LogTable* table,
+                            grid::LogTable* searchTable,
+                            SearchLine* searchLine,
+                            std::function<void()> close) {
+        searchLine->setSearchEnabled(false);
+        auto searchModel = file->searchLogTableModel();
+        if (searchModel) {
+            searchTable->setModel(searchModel);
+        }
+
+        if (file->isState(sm::ParsingState)) {
+            searchLine->setStatus("Parsing...");
+        } else if (file->isState(sm::IndexingState)) {
+            searchLine->setStatus("Indexing...");
+            table->setModel(file->logTableModel());
+            searchLine->setSearchEnabled(true);
+        } else if (file->isState(sm::SearchingState)) {
+            searchLine->setStatus("Searching...");
+            searchLine->setProgress(-1);
+        } else if (file->isState(sm::CompleteState)) {
+            searchLine->setStatus("");
+            searchLine->setProgress(-1);
+            searchLine->setSearchEnabled(true);
+        } else if (file->isState(sm::InterruptedState)) {
+            close();
+        }
+    }
+
+    void MainWindow::closeTab(int index) {
+        _tabWidget->removeTab(index);
+        auto& logFile = _logs[index];
+        logFile->interrupt();
+        _logs.erase(begin(_logs) + index);
+    }
 
     MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
         _tabWidget = new QTabWidget(this);
@@ -23,8 +59,8 @@ namespace gui {
 
         connect(_tabWidget,
                 &QTabWidget::tabCloseRequested,
-                _tabWidget,
-                &QTabWidget::removeTab);
+                this,
+                &MainWindow::closeTab);
 
         setCentralWidget(_tabWidget);
         setAcceptDrops(true);
@@ -44,38 +80,25 @@ namespace gui {
         auto searchLine = new SearchLine();
         mainTableAndSearch->setLayout(vbox);
 
-        connect(file.get(),
-                &LogFile::parsingComplete,
-                this,
-                [=, file = file.get()] {
-            searchLine->setStatus("Indexing...");
-            table->setModel(file->logTableModel());
-            file->index();
-        }, Qt::QueuedConnection);
+        auto searchTable = new grid::LogTable();
+
+        connect(file.get(), &LogFile::stateChanged, this, [=, file = file.get()] {
+            handleStateChanged(file, table, searchTable, searchLine, [=] {
+                auto it = std::find_if(begin(_logs), end(_logs), [=] (auto& x) {
+                    return x.get() == file;
+                });
+                assert(it != end(_logs));
+                this->closeTab(std::distance(begin(_logs), it));
+            });
+        });
 
         connect(file.get(),
-                &LogFile::parsingProgress,
-                this,
-                [=, file = file.get()] (auto progress) {
-            searchLine->setProgress(progress);
-        }, Qt::QueuedConnection);
-
-        connect(file.get(),
-                &LogFile::indexingComplete,
-                this,
-                [=, file = file.get()] {
-            searchLine->setStatus("");
-            searchLine->setProgress(-1);
-        }, Qt::QueuedConnection);
-
-        connect(file.get(),
-                &LogFile::indexingProgress,
+                &LogFile::progressChanged,
                 this,
                 [=, file = file.get()] (auto progress) {
             searchLine->setProgress(progress);
-        }, Qt::QueuedConnection);
+        });
 
-        searchLine->setStatus("Parsing...");
         file->parse();
 
         vbox->addWidget(table);
@@ -85,16 +108,13 @@ namespace gui {
         auto splitter = new QSplitter();
         splitter->setOrientation(Qt::Vertical);
         splitter->addWidget(mainTableAndSearch);
-
-        auto searchTable = new grid::LogTable();
         splitter->addWidget(searchTable);
 
         connect(searchLine,
                 &SearchLine::searchRequested,
                 this,
                 [=, file = file.get()] (std::string text, bool caseSensitive) {
-            auto model = file->searchLogTableModel(text, caseSensitive);
-            searchTable->setModel(model);
+            file->search(text, caseSensitive);
         });
 
         connect(
@@ -131,6 +151,12 @@ namespace gui {
         if (event->mimeData()->hasUrls()) {
             auto uri = event->mimeData()->urls().first();
             openLog(uri.toLocalFile().toStdString());
+        }
+    }
+
+    void MainWindow::closeEvent(QCloseEvent*) {
+        for (auto& logFile : _logs) {
+            logFile->interrupt();
         }
     }
 

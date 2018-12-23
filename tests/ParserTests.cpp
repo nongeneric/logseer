@@ -48,7 +48,7 @@ TEST_CASE("simple_index") {
     fileParser.index();
 
     Index index;
-    index.index(&fileParser, &lineParser);
+    index.index(&fileParser, &lineParser, []{ return false; }, [](auto, auto){});
     REQUIRE( index.getLineCount() == 6 );
     REQUIRE( index.mapIndex(0) == 0 );
     REQUIRE( index.mapIndex(5) == 5 );
@@ -90,7 +90,7 @@ TEST_CASE("get_values") {
     fileParser.index();
 
     Index index;
-    index.index(&fileParser, &lineParser);
+    index.index(&fileParser, &lineParser, []{ return false; }, [](auto, auto){});
     auto values = index.getValues(1);
     REQUIRE( values.size() == 3 );
     REQUIRE( values[0] == "ERR" );
@@ -110,7 +110,7 @@ TEST_CASE("search") {
     fileParser.index();
 
     Index index;
-    index.index(&fileParser, &lineParser);
+    index.index(&fileParser, &lineParser, []{ return false; }, [](auto, auto){});
     REQUIRE( index.getLineCount() == 6 );
     REQUIRE( index.mapIndex(0) == 0 );
     REQUIRE( index.mapIndex(5) == 5 );

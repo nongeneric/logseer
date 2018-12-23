@@ -4,3 +4,6 @@
 [submodule "thirdparty/EWAHBoolArray"]
 	path = thirdparty/EWAHBoolArray
 	url = https://github.com/lemire/EWAHBoolArray
+[submodule "thirdparty/sml"]
+	path = thirdparty/sml
+	url = https://github.com/boost-experimental/sml.git

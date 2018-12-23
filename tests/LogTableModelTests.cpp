@@ -16,7 +16,7 @@ TEST_CASE("return_roles") {
     fileParser.index();
 
     Index index;
-    index.index(&fileParser, &lineParser);
+    index.index(&fileParser, &lineParser, []{ return false; }, [](auto, auto){});
     LogTableModel model(&fileParser);
     model.setIndex(&index);
     REQUIRE( model.headerData(0, Qt::Horizontal, (int)HeaderDataRole::IsIndexed).toBool() == false );

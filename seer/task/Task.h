@@ -6,10 +6,10 @@
 #include <mutex>
 #include <condition_variable>
 
-namespace seer {
+namespace seer::task {
 
     enum class TaskState {
-        Idle, Running, Paused, Finished, Failed
+        Idle, Running, Paused, Finished, Failed, Stopped
     };
 
     class Task {
@@ -20,8 +20,8 @@ namespace seer {
         std::thread _thread;
         TaskState _state = TaskState::Idle;
         std::atomic<int> _progress = -1;
-        std::mutex _mState;
-        std::condition_variable _cvPause;
+        std::recursive_mutex _mState;
+        std::condition_variable_any _cvPause;
         void changeState(TaskState state);
 
     protected:
@@ -29,6 +29,7 @@ namespace seer {
         void waitPause();
         void reportProgress(int progress);
         void reportError();
+        void reportStopped();
         bool isStopRequested();
 
     public:

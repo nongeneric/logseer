@@ -1,7 +1,7 @@
 #include "Task.h"
 #include <assert.h>
 
-namespace seer {
+namespace seer::task {
 
     void Task::changeState(TaskState state) {
         auto lock = std::lock_guard(_mState);
@@ -31,6 +31,10 @@ namespace seer {
 
     void Task::reportError() {
         changeState(TaskState::Failed);
+    }
+
+    void Task::reportStopped() {
+        changeState(TaskState::Stopped);
     }
 
     bool Task::isStopRequested() {

@@ -1,7 +1,7 @@
 #include "ParsingTask.h"
-#include "FileParser.h"
+#include "seer/FileParser.h"
 
-namespace seer {
+namespace seer::task {
 
     ParsingTask::ParsingTask(FileParser* fileParser) : _fileParser(fileParser) {}
 

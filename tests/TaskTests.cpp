@@ -1,13 +1,13 @@
 #include <catch2/catch.hpp>
 
-#include "seer/Task.h"
+#include "seer/task/Task.h"
 #include <atomic>
 #include <vector>
 #include <string>
 #include <mutex>
 #include <condition_variable>
 
-class TestTask : public seer::Task {
+class TestTask : public seer::task::Task {
 protected:
     void body() override {
         reportProgress(0);
@@ -30,15 +30,15 @@ TEST_CASE("collapse_repeated_progress_states") {
     bool finished = false;
 
     task.setStateChanged([&](auto state) {
-        auto stateStr = state == seer::TaskState::Idle ? "Idle"
-                      : state == seer::TaskState::Running ? "Running"
-                      : state == seer::TaskState::Failed ? "Failed"
-                      : state == seer::TaskState::Finished ? "Finished"
+        auto stateStr = state == seer::task::TaskState::Idle ? "Idle"
+                      : state == seer::task::TaskState::Running ? "Running"
+                      : state == seer::task::TaskState::Failed ? "Failed"
+                      : state == seer::task::TaskState::Finished ? "Finished"
                       : "Unknown";
         auto str = std::to_string(timestamp++) + " " + stateStr;
         auto lock = std::lock_guard(m);
         events.push_back(str);
-        finished = state == seer::TaskState::Finished;
+        finished = state == seer::task::TaskState::Finished;
         cv.notify_all();
     });
 
