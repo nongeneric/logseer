@@ -10,6 +10,9 @@ namespace gui::grid {
     void LogTableView::paintRow(QPainter* painter, int row, int y) {
         auto model = _table->model();
         auto columns = _table->header()->count();
+        if (row == _selectedRow) {
+            painter->drawRect(0, y, width(), _rowHeight);
+        }
         QFontMetrics metrics(font());
         for (auto column = 0; column < columns; ++column) {
             auto x = _table->header()->sectionPosition(column);
@@ -18,9 +21,6 @@ namespace gui::grid {
             auto elided = metrics.elidedText(text, Qt::ElideRight, sectionSize);
             painter->drawText(x, y, sectionSize, 40, 0, elided);
         }
-        (void)painter;
-        (void)row;
-        (void)y;
     }
 
     LogTableView::LogTableView(LogTable* parent) : QWidget(parent), _table(parent) {
@@ -48,6 +48,16 @@ namespace gui::grid {
             if (y > maxY)
                 break;
         }
+    }
+
+    void LogTableView::mousePressEvent(QMouseEvent *event) {
+        auto model = _table->model();
+        if (!model)
+            return;
+        auto y = event->y() + _table->scrollArea()->y() - _table->header()->height();
+        auto row = y / _rowHeight;
+        _selectedRow = row < model->rowCount({}) ? row : -1;
+        update();
     }
 
     QSize LogTableView::sizeHint() const {

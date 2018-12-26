@@ -33,7 +33,7 @@ namespace gui::grid {
                 this,
                 [=](int column) {
                     if (column != 0) {
-                        emit requestFilter(column - 1);
+                        emit requestFilter(column);
                     }
                 });
     }

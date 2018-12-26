@@ -34,8 +34,8 @@ namespace gui {
         std::map<int, std::vector<std::string>> _columnFilters;
         std::unique_ptr<std::istream> _stream;
         std::shared_ptr<seer::ILineParserRepository> _repository;
-        std::unique_ptr<seer::task::ParsingTask> _parsingTask;
-        std::unique_ptr<seer::task::IndexingTask> _indexingTask;
+        std::unique_ptr<seer::task::Task> _parsingTask;
+        std::unique_ptr<seer::task::Task> _indexingTask;
         std::unique_ptr<seer::task::SearchingTask> _searchingTask;
         sm::Logger _smLogger;
         boost::sml::sm<sm::StateMachine, boost::sml::logger<sm::Logger>> _sm;
@@ -67,6 +67,14 @@ namespace gui {
         inline void fail() {
             _sm.process_event(sm::FailEvent{});
         }
+
+    protected:
+        virtual seer::task::Task* createIndexingTask(
+            seer::Index* index,
+            seer::FileParser* fileParser,
+            seer::ILineParser* lineParser);
+
+        virtual seer::task::Task* createParsingTask(seer::FileParser* fileParser);
 
     public:
         LogFile(std::unique_ptr<std::istream>&& stream,

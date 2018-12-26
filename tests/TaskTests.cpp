@@ -7,18 +7,22 @@
 #include <mutex>
 #include <condition_variable>
 
-class TestTask : public seer::task::Task {
-protected:
-    void body() override {
-        reportProgress(0);
-        reportProgress(20);
-        reportProgress(20);
-        reportProgress(30);
-        reportProgress(30);
-        reportProgress(30);
-        reportProgress(80);
-    }
-};
+namespace {
+
+    class TestTask : public seer::task::Task {
+    protected:
+        void body() override {
+            reportProgress(0);
+            reportProgress(20);
+            reportProgress(20);
+            reportProgress(30);
+            reportProgress(30);
+            reportProgress(30);
+            reportProgress(80);
+        }
+    };
+
+} // namespace
 
 TEST_CASE("collapse_repeated_progress_states") {
     TestTask task;

@@ -65,7 +65,7 @@ namespace gui {
                     SearchingState + event<FinishEvent> / ACTION(resumeIndexing) = IndexingState,
                     SearchingState + event<FailEvent> / ACTION(enterFailed) = FailedState,
                     CompleteState + event<SearchEvent> / ACTION_E(searchFromComplete) = SearchingState,
-                    CompleteState + event<FinishEvent> / ACTION(enterInterrupted) = InterruptedState,
+                    CompleteState + event<InterruptEvent> / ACTION(enterInterrupted) = InterruptedState,
                     FailedState + event<InterruptEvent> / ACTION(enterInterrupted) = InterruptedState,
                     InterruptingState + event<FinishEvent> / ACTION(doneInterrupted) = InterruptedState);
                 // clang-format on

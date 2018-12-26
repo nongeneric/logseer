@@ -44,3 +44,5 @@ public:
         return std::make_shared<TestLineParser>();
     }
 };
+
+inline constexpr int g_TestLogColumns = 4;

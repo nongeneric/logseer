@@ -23,12 +23,14 @@ namespace gui {
         seer::Index* _index = nullptr;
         seer::FileParser* _parser;
         std::vector<ColumnInfo> _columns;
+        bool _showIndexedColumns = false;
 
     public:
         LogTableModel(seer::FileParser* parser);
         void invalidate();
         void setFilterActive(int column, bool active);
         void setIndex(seer::Index* index);
+        void showIndexedColumns();
         virtual int rowCount(const QModelIndex &parent) const override;
         virtual int columnCount(const QModelIndex &parent) const override;
         virtual QVariant data(const QModelIndex &index, int role) const override;

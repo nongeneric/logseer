@@ -13,7 +13,7 @@ namespace gui {
         emit stateChanged();
         _lineParser = _repository->resolve(*_stream);
         _fileParser.reset(new seer::FileParser(_stream.get(), _lineParser.get()));
-        _parsingTask.reset(new ParsingTask(_fileParser.get()));
+        _parsingTask.reset(createParsingTask(_fileParser.get()));
         _parsingTask->setStateChanged([=](auto state) {
             assert(state != TaskState::Failed);
             if (state == TaskState::Finished) {
@@ -28,13 +28,14 @@ namespace gui {
 
     void LogFile::interruptParsing() {
         emit stateChanged();
+        _parsingTask->stop();
     }
 
     void LogFile::enterIndexing() {
         emit stateChanged();
         _index.reset(new seer::Index(_fileParser->lineCount()));
         _indexingTask.reset(
-            new IndexingTask(_index.get(), _fileParser.get(), _lineParser.get()));
+            createIndexingTask(_index.get(), _fileParser.get(), _lineParser.get()));
         _indexingTask->setStateChanged([=](auto state) {
             assert(state != TaskState::Failed);
             if (state == TaskState::Finished) {
@@ -99,6 +100,7 @@ namespace gui {
 
     void LogFile::enterComplete() {
         _indexingComplete = true;
+        logTableModel()->showIndexedColumns();
         emit stateChanged();
     }
 
@@ -109,6 +111,16 @@ namespace gui {
     void LogFile::searchFromPaused() {
         emit stateChanged();
         searchFromComplete(*_scheduledSearchEvent);
+    }
+
+    seer::task::Task* LogFile::createIndexingTask(seer::Index* index,
+                                                  seer::FileParser* fileParser,
+                                                  seer::ILineParser* lineParser) {
+        return new IndexingTask(index, fileParser, lineParser);
+    }
+
+    seer::task::Task* LogFile::createParsingTask(seer::FileParser* fileParser) {
+        return new ParsingTask(fileParser);
     }
 
     LogTableModel* LogFile::logTableModel() {
@@ -123,9 +135,11 @@ namespace gui {
     }
 
     void LogFile::requestFilter(int column) {
-        if (!_lineParser->getColumnFormats()[column].indexed)
+        if (column == 0 || !_indexingComplete)
             return;
-        auto filterModel = new FilterTableModel(_index->getValues(column));
+        if (!_lineParser->getColumnFormats().at(column - 1).indexed)
+            return;
+        auto filterModel = new FilterTableModel(_index->getValues(column - 1));
         emit filterRequested(filterModel, column);
     }
 

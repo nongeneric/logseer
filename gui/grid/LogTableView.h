@@ -10,6 +10,7 @@ namespace gui::grid {
 
         LogTable* _table;
         int _rowHeight;
+        int _selectedRow = -1;
 
         void paintRow(QPainter* painter, int row, int y);
 
@@ -24,6 +25,7 @@ namespace gui::grid {
 
     protected:
         void paintEvent(QPaintEvent *event) override;
+        void mousePressEvent(QMouseEvent *event) override;
     };
 
 } // namespace gui::grid

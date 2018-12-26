@@ -29,11 +29,15 @@ namespace gui {
         invalidate();
     }
 
+    void LogTableModel::showIndexedColumns() {
+        _showIndexedColumns = true;
+    }
+
     QVariant LogTableModel::headerData(int section, Qt::Orientation orientation, int role) const {
         if (section == -1 || orientation != Qt::Horizontal)
             return QVariant();
         if (role == (int)HeaderDataRole::IsIndexed) {
-            return _columns[section].indexed;
+            return _showIndexedColumns && _columns[section].indexed;
         }
         if (role == (int)HeaderDataRole::IsFilterActive) {
             return _columns[section].filterActive;
