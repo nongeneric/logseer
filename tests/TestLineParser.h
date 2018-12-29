@@ -2,6 +2,7 @@
 
 #include "seer/ILineParser.h"
 #include "seer/ILineParserRepository.h"
+#include "seer/RegexLineParser.h"
 #include <sstream>
 
 inline std::string simpleLog = "10 INFO CORE message 1\n"
@@ -23,37 +24,45 @@ inline std::string multilineLog = "10 INFO CORE message 1\n"
                                   "message 5 c\n"
                                   "40 WARN SUB message 6\n";
 
-class TestLineParser : public seer::ILineParser {
-public:
-    inline bool parseLine(std::string_view line,
-                          std::vector<std::string>& columns) override {
-        std::stringstream ss{std::string(line)};
-        std::string c1, c2, c3, c4;
-        std::getline(ss, c1, ' ');
-        std::getline(ss, c2, ' ');
-        std::getline(ss, c3, ' ');
-        std::getline(ss, c4);
-        columns = {c1, c2, c3, c4};
-        return !c4.empty();
-    }
-
-    inline std::vector<seer::ColumnFormat> getColumnFormats() override {
-        return {{"Timestamp", false},
-                {"Level", true},
-                {"Component", true},
-                {"Message", false}};
-    }
-
-    inline bool isMatch([[maybe_unused]] std::string_view sample,
-                        [[maybe_unused]] std::string_view fileName) override {
-        return true;
-    }
-};
+inline std::shared_ptr<seer::ILineParser> createTestParser() {
+    auto config =
+        R"_(
+            {
+                "description": "test description",
+                "regex": "(\\d+) (.*?) (.*?) (.*)",
+                "columns": [
+                    {
+                        "name": "Timestamp",
+                        "group": 1,
+                        "indexed": false
+                    },
+                    {
+                        "name": "Level",
+                        "group": 2,
+                        "indexed": true
+                    },
+                    {
+                        "name": "Component",
+                        "group": 3,
+                        "indexed": true
+                    },
+                    {
+                        "name": "Message",
+                        "group": 4,
+                        "indexed": false
+                    }
+                ]
+            }
+        )_";
+    auto parser = std::make_shared<seer::RegexLineParser>();
+    parser->load(config);
+    return parser;
+}
 
 class TestLineParserRepository : public seer::ILineParserRepository {
 public:
     inline std::shared_ptr<seer::ILineParser> resolve(std::istream&) override {
-        return std::make_shared<TestLineParser>();
+        return createTestParser();
     }
 };
 

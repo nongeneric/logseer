@@ -11,12 +11,12 @@ using namespace gui;
 
 TEST_CASE("return_roles") {
     std::stringstream ss(simpleLog);
-    TestLineParser lineParser;
-    FileParser fileParser(&ss, &lineParser);
+    auto lineParser = createTestParser();;
+    FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
 
     Index index;
-    index.index(&fileParser, &lineParser, []{ return false; }, [](auto, auto){});
+    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
     LogTableModel model(&fileParser);
     model.showIndexedColumns();
     model.setIndex(&index);

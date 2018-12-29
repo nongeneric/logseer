@@ -1,53 +1,62 @@
 #include "LineParserRepository.h"
+#include "RegexLineParser.h"
 
+#include <filesystem>
+#include <fstream>
 #include <regex>
+
+using namespace std::filesystem;
+
+namespace {
+    std::vector<uint8_t> read_all_bytes(std::string_view path) {
+        auto f = fopen(begin(path), "r");
+        if (!f)
+            throw std::runtime_error("can't open file");
+        fseek(f, 0, SEEK_END);
+        auto filesize = ftell(f);
+        std::vector<uint8_t> res(filesize);
+        fseek(f, 0, SEEK_SET);
+        fread(&res[0], 1, res.size(), f);
+        fclose(f);
+        return res;
+    }
+
+    std::string read_all_text(std::string_view path) {
+        auto vec = read_all_bytes(path);
+        return std::string((const char*)&vec[0], vec.size());
+    }
+}
 
 namespace seer {
 
-    class Ps3EmuLineParser : public seer::ILineParser {
-        std::regex _re;
+    void LineParserRepository::init() {
+        auto dir = path(std::getenv("HOME")) / ".logseer" / "regex";
+        if (!exists(dir))
+            return;
 
-    public:
-        Ps3EmuLineParser() {
-            _re = R"(^((\d+:\d+\.\d+) )?(\w+)( \[(.*?)\])?( ([0-9a-f]*?))? (\w+): (.*))";
-        }
+        std::regex rxFileName{R"(^(\d\d\d)_(.*?)\.json$)"};
 
-        bool parseLine([[maybe_unused]] std::string_view line,
-                       [[maybe_unused]] std::vector<std::string>& columns) override {
-
+        for (auto& p : directory_iterator(dir)) {
+            if (!p.is_regular_file())
+                continue;
             std::smatch match;
-            auto s = std::string(line);
-            if (std::regex_search(s, match, _re) && match.size() > 1) {
-                columns = {
-                    match.str(2),
-                    match.str(3),
-                    match.str(5),
-                    match.str(7),
-                    match.str(8),
-                    match.str(9),
-                };
-            }
-
-            return true;
+            auto fileName = p.path().filename().string();
+            if (!std::regex_search(fileName, match, rxFileName))
+                continue;
+            auto priority = std::stoi(match.str(1));
+            //auto name = match.str(2);
+            auto parser = std::make_shared<RegexLineParser>();
+            parser->load(read_all_text(p.path().string()));
+            _parsers[priority] = parser;
         }
-
-        std::vector<seer::ColumnFormat> getColumnFormats() override {
-            return {{"Timestamp", false},
-                    {"Component", true},
-                    {"Thread", true},
-                    {"Offset", false},
-                    {"Level", true},
-                    {"Message", false}};
-        }
-
-        bool isMatch([[maybe_unused]] std::string_view sample,
-                     [[maybe_unused]] std::string_view fileName) override {
-            return true;
-        }
-    };
+    }
 
     std::shared_ptr<ILineParser> LineParserRepository::resolve(std::istream&) {
-        return std::make_shared<Ps3EmuLineParser>();
+        for (auto& [_, parser] : _parsers) {
+            if (parser->isMatch("", ""))
+                return parser;
+        }
+        return nullptr;
     }
 
 } // namespace seer

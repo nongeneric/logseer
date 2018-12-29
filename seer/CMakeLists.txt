@@ -16,6 +16,8 @@ set(SRC
     OffsetIndex.cpp
     RandomBitArray.h
     RandomBitArray.cpp
+    RegexLineParser.h
+    RegexLineParser.cpp
     task/Task.h
     task/Task.cpp
     task/ParsingTask.h
@@ -26,4 +28,4 @@ set(SRC
     task/SearchingTask.cpp
 )
 add_library(seer STATIC ${SRC})
-target_link_libraries(seer pthread tbb)
+target_link_libraries(seer pthread tbb stdc++fs)

@@ -71,7 +71,12 @@ namespace gui {
         if (columnIndex < line.size()) {
             return QString::fromStdString(line[columnIndex]);
         }
-        return "###";
+        if (index.column() == (int)_columns.size() - 1) {
+            std::string rawLine;
+            _parser->readLine(lineIndex, rawLine);
+            return QString::fromStdString(rawLine);
+        }
+        return "";
     }
 
 } // namespace gui

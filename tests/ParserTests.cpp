@@ -10,8 +10,8 @@ using namespace seer;
 
 TEST_CASE("simple_parser") {
     std::stringstream ss(simpleLog);
-    TestLineParser lineParser;
-    FileParser fileParser(&ss, &lineParser);
+    auto lineParser = createTestParser();
+    FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
 
     REQUIRE(fileParser.lineCount() == 6);
@@ -43,12 +43,12 @@ TEST_CASE("simple_parser") {
 
 TEST_CASE("simple_index") {
     std::stringstream ss(simpleLog);
-    TestLineParser lineParser;
-    FileParser fileParser(&ss, &lineParser);
+    auto lineParser = createTestParser();
+    FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
 
     Index index;
-    index.index(&fileParser, &lineParser, []{ return false; }, [](auto, auto){});
+    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
     REQUIRE( index.getLineCount() == 6 );
     REQUIRE( index.mapIndex(0) == 0 );
     REQUIRE( index.mapIndex(5) == 5 );
@@ -85,12 +85,12 @@ TEST_CASE("simple_index") {
 
 TEST_CASE("get_values") {
     std::stringstream ss(simpleLog);
-    TestLineParser lineParser;
-    FileParser fileParser(&ss, &lineParser);
+    auto lineParser = createTestParser();
+    FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
 
     Index index;
-    index.index(&fileParser, &lineParser, []{ return false; }, [](auto, auto){});
+    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
     auto values = index.getValues(1);
     REQUIRE( values.size() == 3 );
     REQUIRE( values[0] == "ERR" );
@@ -105,12 +105,12 @@ TEST_CASE("get_values") {
 
 TEST_CASE("search") {
     std::stringstream ss(simpleLog);
-    TestLineParser lineParser;
-    FileParser fileParser(&ss, &lineParser);
+    auto lineParser = createTestParser();
+    FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
 
     Index index;
-    index.index(&fileParser, &lineParser, []{ return false; }, [](auto, auto){});
+    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
     REQUIRE( index.getLineCount() == 6 );
     REQUIRE( index.mapIndex(0) == 0 );
     REQUIRE( index.mapIndex(5) == 5 );
@@ -148,12 +148,12 @@ TEST_CASE("search") {
 
 TEST_CASE("multiline_index") {
     std::stringstream ss(multilineLog);
-    TestLineParser lineParser;
-    FileParser fileParser(&ss, &lineParser);
+    auto lineParser = createTestParser();
+    FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
 
     Index index;
-    index.index(&fileParser, &lineParser, []{ return false; }, [](auto, auto){});
+    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
     REQUIRE( index.getLineCount() == 11 );
     REQUIRE( index.mapIndex(0) == 0 );
     REQUIRE( index.mapIndex(5) == 5 );

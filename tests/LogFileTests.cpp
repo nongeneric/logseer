@@ -266,3 +266,30 @@ TEST_CASE("log_file_filtering") {
     file.setColumnFilter(2, {"INFO"});
     REQUIRE( model->rowCount({}) == 3 );
 }
+
+TEST_CASE("log_file_multiline") {
+    char arg[] = "arg";
+    int count = 1; char* args[] = { arg };
+    QApplication app(count, args);
+
+    auto ss = std::make_unique<std::stringstream>(multilineLog);
+    auto repository = std::make_shared<TestLineParserRepository>();
+    LogFile file(std::move(ss), repository);
+    waitParsingAndIndexing(file);
+
+    auto model = file.logTableModel();
+    REQUIRE( model->rowCount({}) == 11 );
+
+    REQUIRE(model->data(model->index(0, 0), Qt::DisplayRole).toString() == "0");
+    REQUIRE(model->data(model->index(0, 1), Qt::DisplayRole).toString() == "10");
+    REQUIRE(model->data(model->index(0, 2), Qt::DisplayRole).toString() == "INFO");
+    REQUIRE(model->data(model->index(0, 3), Qt::DisplayRole).toString() == "CORE");
+    REQUIRE(model->data(model->index(0, 4), Qt::DisplayRole).toString() == "message 1");
+
+    REQUIRE(model->data(model->index(1, 0), Qt::DisplayRole).toString() == "1");
+    REQUIRE(model->data(model->index(1, 1), Qt::DisplayRole).toString() == "");
+    REQUIRE(model->data(model->index(1, 2), Qt::DisplayRole).toString() == "");
+    REQUIRE(model->data(model->index(1, 3), Qt::DisplayRole).toString() == "");
+    REQUIRE(model->data(model->index(1, 4), Qt::DisplayRole).toString() == "message 1 a");
+}
+

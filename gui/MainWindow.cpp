@@ -70,8 +70,9 @@ namespace gui {
 
     void MainWindow::openLog(std::string path) {
         auto stream = std::make_unique<std::ifstream>(path);
-        auto file = std::make_unique<LogFile>(
-            std::move(stream), std::make_shared<seer::LineParserRepository>());
+        auto repository = std::make_shared<seer::LineParserRepository>();
+        repository->init();
+        auto file = std::make_unique<LogFile>(std::move(stream), repository);
 
         auto table = new grid::LogTable();
 
