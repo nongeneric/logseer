@@ -158,7 +158,7 @@ TEST_CASE("set_is_filter_active") {
     REQUIRE(model->headerData(4, Qt::Horizontal, (int)HeaderDataRole::IsFilterActive)
                 .toBool() == false);
 
-    file.setColumnFilter(1, {"INFO"}); // a single value
+    file.setColumnFilter(2, {"INFO"}); // a single value
 
     REQUIRE(model->headerData(0, Qt::Horizontal, (int)HeaderDataRole::IsFilterActive)
                 .toBool() == false);
@@ -171,7 +171,7 @@ TEST_CASE("set_is_filter_active") {
     REQUIRE(model->headerData(4, Qt::Horizontal, (int)HeaderDataRole::IsFilterActive)
                 .toBool() == false);
 
-    file.setColumnFilter(1, {"INFO", "WARN", "ERR"}); // all values
+    file.setColumnFilter(2, {"INFO", "WARN", "ERR"}); // all values
 
     REQUIRE(model->headerData(0, Qt::Horizontal, (int)HeaderDataRole::IsFilterActive)
                 .toBool() == false);
@@ -226,6 +226,9 @@ TEST_CASE("headers_should_not_be_clickable_until_file_indexed") {
 
     waitFor([&] { return file.isState(gui::sm::CompleteState); });
 
+    file.setColumnFilter(2, {});
+    file.setColumnFilter(3, {});
+
     REQUIRE(model->headerData(0, Qt::Horizontal, (int)HeaderDataRole::IsIndexed)
                        .toBool() == false);
     REQUIRE(model->headerData(1, Qt::Horizontal, (int)HeaderDataRole::IsIndexed)
@@ -245,4 +248,21 @@ TEST_CASE("headers_should_not_be_clickable_until_file_indexed") {
     file.interrupt();
 
     waitFor([&] { return file.isState(gui::sm::InterruptedState); });
+}
+
+TEST_CASE("log_file_filtering") {
+    char arg[] = "arg";
+    int count = 1; char* args[] = { arg };
+    QApplication app(count, args);
+
+    auto ss = std::make_unique<std::stringstream>(simpleLog);
+    auto repository = std::make_shared<TestLineParserRepository>();
+    LogFile file(std::move(ss), repository);
+    waitParsingAndIndexing(file);
+
+    auto model = file.logTableModel();
+    REQUIRE( model->rowCount({}) == 6 );
+
+    file.setColumnFilter(2, {"INFO"});
+    REQUIRE( model->rowCount({}) == 3 );
 }

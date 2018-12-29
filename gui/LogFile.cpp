@@ -144,15 +144,17 @@ namespace gui {
     }
 
     void LogFile::setColumnFilter(int column, std::vector<std::string> values) {
+        if (column == 0)
+            return;
         _logTableModel->setFilterActive(
-            column + 1, values.size() != _index->getValues(column).size());
-        _columnFilters[column] = values;
+            column, values.size() != _index->getValues(column - 1).size());
+        _columnFilters[column - 1] = values;
         std::vector<seer::ColumnFilter> filters;
         for (auto& [c, v] : _columnFilters) {
             filters.push_back({c, v});
         }
         _index->filter(filters);
-        _logTableModel->invalidate();
+        _logTableModel->setIndex(_index.get());
     }
 
 } // namespace gui

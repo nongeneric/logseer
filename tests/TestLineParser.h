@@ -11,6 +11,18 @@ inline std::string simpleLog = "10 INFO CORE message 1\n"
                                "30 ERR CORE message 5\n"
                                "40 WARN SUB message 6\n";
 
+inline std::string multilineLog = "10 INFO CORE message 1\n"
+                                  "message 1 a\n"
+                                  "message 1 b\n"
+                                  "15 INFO SUB message 2\n"
+                                  "17 WARN CORE message 3\n"
+                                  "20 INFO SUB message 4\n"
+                                  "30 ERR CORE message 5\n"
+                                  "message 5 a\n"
+                                  "message 5 b\n"
+                                  "message 5 c\n"
+                                  "40 WARN SUB message 6\n";
+
 class TestLineParser : public seer::ILineParser {
 public:
     inline bool parseLine(std::string_view line,
@@ -22,7 +34,7 @@ public:
         std::getline(ss, c3, ' ');
         std::getline(ss, c4);
         columns = {c1, c2, c3, c4};
-        return true;
+        return !c4.empty();
     }
 
     inline std::vector<seer::ColumnFormat> getColumnFormats() override {

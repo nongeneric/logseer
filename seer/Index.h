@@ -30,6 +30,7 @@ namespace seer {
         uint64_t _unfilteredLineCount = 0;
         bool _filtered = false;
         ewah_bitset _filter;
+        ewah_bitset _multilines;
 
     public:
         Index(uint64_t unfilteredLineCount = 0);

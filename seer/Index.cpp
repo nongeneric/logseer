@@ -104,6 +104,7 @@ namespace seer {
 
         std::vector<Result> results(threadCount, emptyIndex);
         std::vector<std::thread> threads(threadCount);
+        std::vector<ewah_bitset> failures(threadCount);
         int threadId = 0;
         for (auto& th : threads) {
             th = std::thread([&, id = threadId] {
@@ -117,12 +118,15 @@ namespace seer {
                     auto& [line, lineIndex] = *item;
                     assert(lineIndex >= lastLineIndex);
                     lastLineIndex = lineIndex;
-                    lineParser->parseLine(line, columns);
-                    auto& index = results[id];
-                    for (auto i = 0u; i < columns.size(); ++i) {
-                        if (index[i].indexed) {
-                            index[i].index[columns[i]].set(lineIndex);
+                    if (lineParser->parseLine(line, columns)) {
+                        auto& index = results[id];
+                        for (auto i = 0u; i < columns.size(); ++i) {
+                            if (index[i].indexed) {
+                                index[i].index[columns[i]].set(lineIndex);
+                            }
                         }
+                    } else {
+                        failures[id].set(lineIndex);
                     }
                 }
             });
@@ -154,6 +158,38 @@ namespace seer {
         }
 
         stopThreads();
+
+        log_info("indexing multilines");
+
+        std::vector<const ewah_bitset*> failurePointers;
+        for (auto& failure : failures) {
+            failurePointers.push_back(&failure);
+        }
+        _multilines = fast_logicalor(failurePointers.size(), &failurePointers[0]);
+
+        auto lineCount = fileParser->lineCount();
+        for (auto tid = 0u; tid < threadCount; ++tid) {
+            auto& result = results[tid];
+            for (auto& column : result) {
+                for (auto& [_, index] : column.index) {
+                    ewah_bitset multilines;
+                    for (auto val : _multilines) {
+                        if (val == 0)
+                            continue;
+                        if (index.get(val - 1)) {
+                            auto i = val;
+                            while (i < lineCount && _multilines.get(val)) {
+                                index.set(val);
+                                i++;
+                            }
+                        }
+                    }
+                    index = index | multilines;
+                }
+            }
+        }
+
+        log_info("consolidating indexes");
 
         _columns = emptyIndex;
         for (auto& result : results) {

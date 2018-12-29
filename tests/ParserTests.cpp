@@ -145,3 +145,50 @@ TEST_CASE("search") {
     REQUIRE( indexCopy.mapIndex(1) == 1 );
     REQUIRE( indexCopy.mapIndex(2) == 3 );
 }
+
+TEST_CASE("multiline_index") {
+    std::stringstream ss(multilineLog);
+    TestLineParser lineParser;
+    FileParser fileParser(&ss, &lineParser);
+    fileParser.index();
+
+    Index index;
+    index.index(&fileParser, &lineParser, []{ return false; }, [](auto, auto){});
+    REQUIRE( index.getLineCount() == 11 );
+    REQUIRE( index.mapIndex(0) == 0 );
+    REQUIRE( index.mapIndex(5) == 5 );
+    REQUIRE( index.mapIndex(10) == 10 );
+
+    std::vector<ColumnFilter> filters;
+    filters = {{1, {"INFO"}}};
+    index.filter(filters);
+    REQUIRE( index.getLineCount() == 5 );
+    REQUIRE( index.mapIndex(0) == 0 );
+    REQUIRE( index.mapIndex(1) == 1 );
+    REQUIRE( index.mapIndex(2) == 2 );
+    REQUIRE( index.mapIndex(3) == 3 );
+    REQUIRE( index.mapIndex(4) == 5 );
+
+    filters = {{1, {"INFO", "ERR"}}};
+    index.filter(filters);
+    REQUIRE( index.getLineCount() == 9 );
+    REQUIRE( index.mapIndex(0) == 0 );
+    REQUIRE( index.mapIndex(1) == 1 );
+    REQUIRE( index.mapIndex(4) == 5 );
+    REQUIRE( index.mapIndex(5) == 6 );
+    REQUIRE( index.mapIndex(8) == 9 );
+
+    filters = {{1, {"INFO", "ERR"}}, {2, {"CORE"}}};
+    index.filter(filters);
+    REQUIRE( index.getLineCount() == 7 );
+    REQUIRE( index.mapIndex(0) == 0 );
+    REQUIRE( index.mapIndex(3) == 6 );
+    REQUIRE( index.mapIndex(6) == 9 );
+
+    filters = {{2, {"CORE"}}};
+    index.filter(filters);
+    REQUIRE( index.getLineCount() == 8 );
+    REQUIRE( index.mapIndex(0) == 0 );
+    REQUIRE( index.mapIndex(3) == 4 );
+    REQUIRE( index.mapIndex(6) == 8 );
+}
