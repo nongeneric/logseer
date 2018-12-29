@@ -2,6 +2,7 @@
 
 #include "Log.h"
 #include <tbb/concurrent_queue.h>
+#include <tbb/parallel_for_each.h>
 #include <numeric>
 #include <optional>
 #include <thread>
@@ -165,29 +166,52 @@ namespace seer {
         for (auto& failure : failures) {
             failurePointers.push_back(&failure);
         }
-        _multilines = fast_logicalor(failurePointers.size(), &failurePointers[0]);
 
-        auto lineCount = fileParser->lineCount();
+        _multilines = fast_logicalor(failurePointers.size(), &failurePointers[0]);
+        std::vector<ewah_bitset*> allIndexes;
         for (auto tid = 0u; tid < threadCount; ++tid) {
             auto& result = results[tid];
             for (auto& column : result) {
                 for (auto& [_, index] : column.index) {
-                    ewah_bitset multilines;
-                    for (auto val : _multilines) {
-                        if (val == 0)
-                            continue;
-                        if (index.get(val - 1)) {
-                            auto i = val;
-                            while (i < lineCount && _multilines.get(val)) {
-                                index.set(val);
-                                i++;
-                            }
-                        }
-                    }
-                    index = index | multilines;
+                    allIndexes.push_back(&index);
                 }
             }
         }
+
+        auto combine = [] (auto& index, auto& failed, auto& result) {
+            auto i = index.begin();
+            auto f = failed.begin();
+            while (i != index.end()) {
+                result.set(*i);
+                while (f != failed.end() && *f < *i) {
+                    ++f;
+                }
+                if (f == failed.end()) {
+                    ++i;
+                    while (i != index.end()) {
+                        result.set(*i);
+                    }
+                    break;
+                }
+                if (*i + 1 == *f) {
+                    auto delta = 1;
+                    while (f != failed.end() && delta == 1) {
+                        result.set(*f);
+                        auto pf = *f;
+                        ++f;
+                        delta = *f - pf;
+                    }
+                }
+                ++i;
+            }
+        };
+
+        tbb::parallel_for(size_t{}, allIndexes.size(), [&] (auto i) {
+            ewah_bitset combined;
+            auto index = allIndexes[i];
+            combine(*index, _multilines, combined);
+            *index = combined;
+        });
 
         log_info("consolidating indexes");
 
