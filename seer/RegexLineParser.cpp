@@ -1,6 +1,7 @@
 #include "RegexLineParser.h"
 
 #include <json.hpp>
+#include <boost/algorithm/string.hpp>
 #include <sstream>
 
 using namespace nlohmann;
@@ -16,6 +17,10 @@ namespace seer {
         auto description = j["description"].get<std::string>();
         _re = j["regex"].get<std::string>();
         auto& columns = j["columns"];
+        auto magic = j["magic"];
+        if (!magic.is_null()) {
+            _magic = magic.get<std::string>();
+        }
         for (auto it = begin(columns); it != end(columns); ++it) {
             auto name = (*it)["name"].get<std::string>();
             auto group = (*it)["group"].get<int>();
@@ -46,9 +51,15 @@ namespace seer {
         return formats;
     }
 
-    bool RegexLineParser::isMatch([[maybe_unused]] std::string_view sample,
+    bool RegexLineParser::isMatch([[maybe_unused]] std::vector<std::string> sample,
                                   [[maybe_unused]] std::string_view fileName) {
-        return true;
+        if (sample.empty())
+            return false;
+        if (!_magic.empty()) {
+            return boost::starts_with(sample.front(), _magic);
+        }
+        std::vector<std::string> columns;
+        return parseLine(sample[0], columns);
     }
 
 } // namespace seer

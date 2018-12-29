@@ -51,9 +51,14 @@ namespace seer {
         }
     }
 
-    std::shared_ptr<ILineParser> LineParserRepository::resolve(std::istream&) {
+    std::shared_ptr<ILineParser> LineParserRepository::resolve(std::istream& stream) {
+        std::vector<std::string> sample;
+        std::string line;
+        while (sample.size() < 10 && std::getline(stream, line)) {
+            sample.push_back(line);
+        }
         for (auto& [_, parser] : _parsers) {
-            if (parser->isMatch("", ""))
+            if (parser->isMatch(sample, ""))
                 return parser;
         }
         return nullptr;

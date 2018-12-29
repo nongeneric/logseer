@@ -181,6 +181,7 @@ namespace seer {
         auto combine = [] (auto& index, auto& failed, auto& result) {
             auto i = index.begin();
             auto f = failed.begin();
+            auto ii = index.toArray();
             while (i != index.end()) {
                 result.set(*i);
                 while (f != failed.end() && *f < *i) {
@@ -189,7 +190,7 @@ namespace seer {
                 if (f == failed.end()) {
                     ++i;
                     while (i != index.end()) {
-                        result.set(*i);
+                        result.set(*i++);
                     }
                     break;
                 }

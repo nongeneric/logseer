@@ -292,4 +292,3 @@ TEST_CASE("log_file_multiline") {
     REQUIRE(model->data(model->index(1, 3), Qt::DisplayRole).toString() == "");
     REQUIRE(model->data(model->index(1, 4), Qt::DisplayRole).toString() == "message 1 a");
 }
-

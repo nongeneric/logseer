@@ -192,3 +192,19 @@ TEST_CASE("multiline_index") {
     REQUIRE( index.mapIndex(3) == 4 );
     REQUIRE( index.mapIndex(6) == 8 );
 }
+
+TEST_CASE("get_values_adjacent") {
+    std::string adjacentLog;
+    for (int i = 0; i < 10000; ++i) {
+        adjacentLog += "10 INFO CORE message 1\n";
+    }
+    std::stringstream ss(adjacentLog);
+    auto lineParser = createTestParser();
+    FileParser fileParser(&ss, lineParser.get());
+    fileParser.index();
+
+    Index index;
+    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+
+    REQUIRE( true );
+}
