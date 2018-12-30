@@ -7,6 +7,7 @@
 #include <optional>
 #include <thread>
 #include <tuple>
+#include <experimental/ranges/algorithm>
 
 namespace seer {
 
@@ -220,6 +221,23 @@ namespace seer {
         }
     };
 
+    ewah_bitset Index::makeIndex(std::vector<ColumnFilter>::const_iterator first,
+                                 std::vector<ColumnFilter>::const_iterator last) {
+        std::vector<ewah_bitset> perColumn;
+        for (auto filter = first; filter != last; ++filter) {
+            std::vector<const ewah_bitset*> perValue;
+            assert(_columns[filter->column].indexed);
+            auto& column = _columns[filter->column];
+            for (auto& value : filter->selected) {
+                perValue.push_back(&column.index[value]);
+            }
+            perColumn.push_back(fast_logicalor(perValue.size(), &perValue[0]));
+        }
+
+        return std::accumulate(
+            begin(perColumn) + 1, end(perColumn), perColumn[0], std::bit_and<>());
+    }
+
     Index::Index(uint64_t unfilteredLineCount)
         : _lineMap(1024), _unfilteredLineCount(unfilteredLineCount) {}
 
@@ -234,19 +252,7 @@ namespace seer {
 
         log_info("started filtering");
 
-        std::vector<ewah_bitset> perColumn;
-        for (auto& filter : filters) {
-            std::vector<const ewah_bitset*> perValue;
-            assert(_columns[filter.column].indexed);
-            auto& column = _columns[filter.column];
-            for (auto& value : filter.selected) {
-                perValue.push_back(&column.index[value]);
-            }
-            perColumn.push_back(fast_logicalor(perValue.size(), &perValue[0]));
-        }
-
-        _filter = std::accumulate(
-            begin(perColumn) + 1, end(perColumn), perColumn[0], std::bit_and<>());
+        _filter = makeIndex(begin(filters), end(filters));
 
         log_info("filtering complete");
 
@@ -317,8 +323,26 @@ namespace seer {
                 auto& selected = filter->selected;
                 checked = selected.find(value) != end(selected);
             }
-            values.push_back({value, checked, index.numberOfOnes()});
+
+            auto first = begin(_filters);
+            auto last = end(_filters);
+            if (filter != end(_filters)) {
+                std::swap(*filter, end(_filters)[-1]);
+                --last;
+            }
+
+            size_t count = 0;
+            if (first == last) {
+                count = index.numberOfOnes();
+            } else {
+                auto otherColumnsIndex = makeIndex(first, last);
+                count = (otherColumnsIndex & index).numberOfOnes();
+            }
+            values.push_back({value, checked, count});
         }
+
+        std::experimental::ranges::sort(values, std::less{}, &ColumnIndexInfo::value);
+
         return values;
     }
 

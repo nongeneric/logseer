@@ -91,11 +91,13 @@ namespace gui {
                                           Qt::Orientation orientation,
                                           int role) const {
         if (orientation != Qt::Horizontal || role != Qt::DisplayRole)
-            return "";
+            return {};
         switch (section) {
+            case 0: return "";
             case 1: return "Value";
             case 2: return "Count";
         }
+        assert(false);
         return "";
     }
 

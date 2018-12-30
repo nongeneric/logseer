@@ -16,6 +16,7 @@ include_directories("${CMAKE_SOURCE_DIR}")
 include_directories(SYSTEM thirdparty/Catch2/single_include)
 include_directories(SYSTEM thirdparty/EWAHBoolArray/headers)
 include_directories(SYSTEM thirdparty/sml/include/boost)
+include_directories(SYSTEM thirdparty/cmcstl2/include)
 
 set(Boost_USE_STATIC_LIBS       OFF)
 set(Boost_USE_MULTITHREADED      ON)

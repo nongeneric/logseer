@@ -2,6 +2,7 @@
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
+#include <QHeaderView>
 
 namespace gui {
 
@@ -16,6 +17,8 @@ namespace gui {
         _selectFound = new QPushButton(this);
         _table = new QTableView(this);
         _table->setModel(model);
+        _table->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+        _table->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
 
         hbox->addWidget(_selectAll);
         hbox->addWidget(_selectNone);
@@ -23,6 +26,10 @@ namespace gui {
         vbox->addWidget(_search);
         vbox->addLayout(hbox);
         vbox->addWidget(_table);
+
+        _selectAll->setText("All");
+        _selectNone->setText("None");
+        _selectFound->setText("Found");
 
         setLayout(vbox);
 

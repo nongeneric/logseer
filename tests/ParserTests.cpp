@@ -105,8 +105,8 @@ TEST_CASE("get_values") {
 
     values = index.getValues(2);
     REQUIRE( values.size() == 2 );
-    REQUIRE( values[0].value == "SUB" );
-    REQUIRE( values[1].value == "CORE" );
+    REQUIRE( values[0].value == "CORE" );
+    REQUIRE( values[1].value == "SUB" );
     REQUIRE( values[0].count == 3 );
     REQUIRE( values[1].count == 3 );
     REQUIRE( values[0].checked == true );
@@ -231,4 +231,81 @@ TEST_CASE("get_values_adjacent") {
     index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
 
     REQUIRE( true );
+}
+
+TEST_CASE("get_values_counts") {
+    std::stringstream ss(simpleLog);
+    auto lineParser = createTestParser();
+    FileParser fileParser(&ss, lineParser.get());
+    fileParser.index();
+
+    /*
+        10 INFO CORE message 1
+        15 INFO SUB  message 2
+        17 WARN CORE message 3
+        20 INFO SUB  message 4
+        30 ERR  CORE message 5
+        40 WARN SUB  message 6
+
+        column 1 values: ERROR INFO WARN
+        column 2 values: CORE SUB
+    */
+
+    const auto ERROR = 0;
+    const auto INFO = 1;
+    const auto WARN = 2;
+    const auto CORE = 0;
+    const auto SUB = 1;
+
+    Index index;
+    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+    auto values = index.getValues(1);
+    REQUIRE( values.size() == 3 );
+    REQUIRE( values[ERROR].count == 1 );
+    REQUIRE( values[INFO].count == 3 );
+    REQUIRE( values[WARN].count == 2 );
+
+    values = index.getValues(2);
+    REQUIRE( values.size() == 2 );
+    REQUIRE( values[CORE].count == 3 );
+    REQUIRE( values[SUB].count == 3 );
+
+    /*
+        10 INFO CORE message 1
+        15 INFO SUB  message 2
+        20 INFO SUB  message 4
+    */
+
+    std::vector<ColumnFilter> filters;
+    filters = {{1, {"INFO"}}};
+    index.filter(filters);
+    values = index.getValues(1);
+    REQUIRE( values.size() == 3 );
+    REQUIRE( values[ERROR].count == 1 );
+    REQUIRE( values[INFO].count == 3 );
+    REQUIRE( values[WARN].count == 2 );
+
+    values = index.getValues(2);
+    REQUIRE( values.size() == 2 );
+    REQUIRE( values[CORE].count == 1 );
+    REQUIRE( values[SUB].count == 2 );
+
+    /*
+        10 INFO CORE message 1
+        17 WARN CORE message 3
+        30 ERR  CORE message 5
+    */
+
+    filters = {{2, {"CORE"}}};
+    index.filter(filters);
+    values = index.getValues(1);
+    REQUIRE( values.size() == 3 );
+    REQUIRE( values[ERROR].count == 1 );
+    REQUIRE( values[INFO].count == 1 );
+    REQUIRE( values[WARN].count == 1 );
+
+    values = index.getValues(2);
+    REQUIRE( values.size() == 2 );
+    REQUIRE( values[CORE].count == 3 );
+    REQUIRE( values[SUB].count == 3 );
 }

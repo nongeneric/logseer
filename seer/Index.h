@@ -11,6 +11,7 @@
 #include <functional>
 #include <tuple>
 #include <set>
+#include <experimental/ranges/range>
 
 namespace seer {
 
@@ -39,6 +40,8 @@ namespace seer {
         bool _filtered = false;
         ewah_bitset _filter;
         std::vector<ColumnFilter> _filters;
+        ewah_bitset makeIndex(std::vector<ColumnFilter>::const_iterator first,
+                              std::vector<ColumnFilter>::const_iterator last);
 
     public:
         Index(uint64_t unfilteredLineCount = 0);
