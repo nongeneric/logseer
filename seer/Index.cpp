@@ -311,7 +311,7 @@ namespace seer {
         for (auto& [value, index] : _columns[column].index) {
             auto checked = true;
             auto filter = std::find_if(begin(_filters), end(_filters), [=](auto& f) {
-                return f.column = column;
+                return f.column == column;
             });
             if (filter != end(_filters)) {
                 auto& selected = filter->selected;

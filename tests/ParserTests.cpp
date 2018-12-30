@@ -116,9 +116,15 @@ TEST_CASE("get_values") {
     filters = {{1, {"INFO"}}};
     index.filter(filters);
     values = index.getValues(1);
+    REQUIRE( values.size() == 3 );
     REQUIRE( values[0].checked == false );
     REQUIRE( values[1].checked == true );
     REQUIRE( values[2].checked == false );
+
+    values = index.getValues(2);
+    REQUIRE( values.size() == 2 );
+    REQUIRE( values[0].checked == true );
+    REQUIRE( values[1].checked == true );
 }
 
 TEST_CASE("search") {
