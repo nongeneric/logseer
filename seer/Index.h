@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <vector>
 #include <functional>
+#include <tuple>
 
 namespace seer {
 
@@ -41,7 +42,7 @@ namespace seer {
                    ILineParser* lineParser,
                    std::function<bool()> stopRequested,
                    std::function<void(uint64_t, uint64_t)> progress = {});
-        std::vector<std::string> getValues(int column);
+        std::vector<std::tuple<std::string, int64_t>> getValues(int column);
     };
 
 } // namespace seer

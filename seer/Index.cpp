@@ -303,11 +303,11 @@ namespace seer {
         return indexer.index();
     }
 
-    std::vector<std::string> Index::getValues(int column) {
+    std::vector<std::tuple<std::string, int64_t>> Index::getValues(int column) {
         assert(_columns.at(column).indexed);
-        std::vector<std::string> values;
-        for (auto& pair : _columns[column].index) {
-            values.push_back(pair.first);
+        std::vector<std::tuple<std::string, int64_t>> values;
+        for (auto& [value, index] : _columns[column].index) {
+            values.push_back({value, index.numberOfOnes()});
         }
         return values;
     }

@@ -16,9 +16,11 @@ namespace gui {
         emit checkedChanged();
     }
 
-    FilterTableModel::FilterTableModel(const std::vector<std::string>& values) {
-        for (auto& value : values) {
-            _infos.push_back({value});
+    FilterTableModel::FilterTableModel(
+        const std::vector<std::tuple<std::string, int64_t>>& values)
+    {
+        for (auto& [value, count] : values) {
+            _infos.push_back({value, true, count});
         }
         for (auto i = 0u; i < _infos.size(); ++i) {
             _visibleSet.insert(i);
@@ -67,13 +69,13 @@ namespace gui {
     }
 
     QVariant FilterTableModel::data(const QModelIndex& index, int role) const {
+        auto& info = _infos[_visibleVec[index.row()]];
         if (index.column() == 0 && role == Qt::CheckStateRole) {
-            return _infos[_visibleVec[index.row()]].checked ? Qt::Checked
-                                                            : Qt::Unchecked;
+            return info.checked ? Qt::Checked : Qt::Unchecked;
         } else if (index.column() == 1 && role == Qt::DisplayRole) {
-            return QString::fromStdString(_infos[_visibleVec[index.row()]].value);
+            return QString::fromStdString(info.value);
         } else if (index.column() == 2 && role == Qt::DisplayRole) {
-            return -1;
+            return QString("%0").arg(info.count);
         }
         return {};
     }

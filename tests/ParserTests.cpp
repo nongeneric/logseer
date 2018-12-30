@@ -93,14 +93,21 @@ TEST_CASE("get_values") {
     index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
     auto values = index.getValues(1);
     REQUIRE( values.size() == 3 );
-    REQUIRE( values[0] == "ERR" );
-    REQUIRE( values[1] == "INFO" );
-    REQUIRE( values[2] == "WARN" );
+    REQUIRE( std::get<0>(values[0]) == "ERR" );
+    REQUIRE( std::get<0>(values[1]) == "INFO" );
+    REQUIRE( std::get<0>(values[2]) == "WARN" );
+
+    REQUIRE( std::get<1>(values[0]) == 1 );
+    REQUIRE( std::get<1>(values[1]) == 3 );
+    REQUIRE( std::get<1>(values[2]) == 2 );
 
     values = index.getValues(2);
     REQUIRE( values.size() == 2 );
-    REQUIRE( values[0] == "SUB" );
-    REQUIRE( values[1] == "CORE" );
+    REQUIRE( std::get<0>(values[0]) == "SUB" );
+    REQUIRE( std::get<0>(values[1]) == "CORE" );
+
+    REQUIRE( std::get<1>(values[0]) == 3 );
+    REQUIRE( std::get<1>(values[1]) == 3 );
 }
 
 TEST_CASE("search") {

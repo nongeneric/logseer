@@ -3,7 +3,8 @@
 #include "gui/FilterTableModel.h"
 
 TEST_CASE("preserve_order") {
-    std::vector<std::string> values = { "124", "abc", "123", "bc23" };
+    std::vector<std::tuple<std::string, int64_t>> values = {
+        {"124", 2}, {"abc", 10}, {"123", 1}, {"bc23", 7}};
     auto model = new gui::FilterTableModel(values);
     REQUIRE( model->rowCount(QModelIndex()) == 4 );
     REQUIRE( model->data(model->index(0, 1), Qt::DisplayRole).toString() == "124" );
@@ -13,7 +14,8 @@ TEST_CASE("preserve_order") {
 }
 
 TEST_CASE("filter") {
-    std::vector<std::string> values = { "124", "abc", "123", "bc23" };
+    std::vector<std::tuple<std::string, int64_t>> values = {
+        {"124", 2}, {"abc", 10}, {"123", 1}, {"bc23", 7}};
     auto model = new gui::FilterTableModel(values);
 
     model->search("bc");
@@ -48,7 +50,8 @@ TEST_CASE("filter") {
 }
 
 TEST_CASE("check") {
-    std::vector<std::string> values = { "124", "abc", "123", "bc23" };
+    std::vector<std::tuple<std::string, int64_t>> values = {
+        {"124", 2}, {"abc", 10}, {"123", 1}, {"bc23", 7}};
     auto model = new gui::FilterTableModel(values);
     model->selectNone();
     model->search("2");
@@ -59,4 +62,15 @@ TEST_CASE("check") {
     REQUIRE( model->data(model->index(1, 0), Qt::CheckStateRole) == Qt::Unchecked );
     REQUIRE( model->data(model->index(2, 0), Qt::CheckStateRole) == Qt::Checked );
     REQUIRE( model->data(model->index(3, 0), Qt::CheckStateRole) == Qt::Checked );
+}
+
+TEST_CASE("get_counts") {
+    std::vector<std::tuple<std::string, int64_t>> values = {
+        {"124", 2}, {"abc", 10}, {"123", 1}, {"bc23", 7}};
+    auto model = new gui::FilterTableModel(values);
+    REQUIRE( model->rowCount(QModelIndex()) == 4 );
+    REQUIRE( model->data(model->index(0, 2), Qt::DisplayRole).toString() == "2" );
+    REQUIRE( model->data(model->index(1, 2), Qt::DisplayRole).toString() == "10" );
+    REQUIRE( model->data(model->index(2, 2), Qt::DisplayRole).toString() == "1" );
+    REQUIRE( model->data(model->index(3, 2), Qt::DisplayRole).toString() == "7" );
 }

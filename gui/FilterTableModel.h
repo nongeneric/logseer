@@ -10,6 +10,7 @@ namespace gui {
     struct ValueInfo {
         std::string value;
         bool checked = true;
+        int64_t count;
     };
 
     class FilterTableModel : public QAbstractTableModel {
@@ -21,7 +22,7 @@ namespace gui {
         void emitAllChanged();
 
     public:
-        FilterTableModel(std::vector<std::string> const& values);
+        FilterTableModel(std::vector<std::tuple<std::string, int64_t>> const& values);
         void selectAll();
         void selectNone();
         void selectFound();
