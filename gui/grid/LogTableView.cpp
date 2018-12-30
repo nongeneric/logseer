@@ -24,6 +24,7 @@ namespace gui::grid {
     }
 
     LogTableView::LogTableView(LogTable* parent) : QWidget(parent), _table(parent) {
+        setFont(QFont("Mono"));
         QFontMetricsF fm(font());
         _rowHeight = fm.height();
     }

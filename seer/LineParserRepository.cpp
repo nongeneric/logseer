@@ -1,9 +1,11 @@
 #include "LineParserRepository.h"
 #include "RegexLineParser.h"
 
+#include "Log.h"
 #include <filesystem>
 #include <fstream>
 #include <regex>
+#include <limits>
 
 using namespace std::filesystem;
 
@@ -29,7 +31,26 @@ namespace {
 
 namespace seer {
 
+    class DefaultLineParser : public ILineParser {
+    public:
+        bool parseLine(std::string_view line, std::vector<std::string> &columns) override {
+            columns.clear();
+            columns.push_back(line.data());
+            return true;
+        }
+
+        std::vector<ColumnFormat> getColumnFormats() override {
+            return {{"Message", false}};
+        }
+
+        bool isMatch(std::vector<std::string>, std::string_view) override {
+            return true;
+        }
+    };
+
     void LineParserRepository::init() {
+        _parsers[std::numeric_limits<int>::max()] = std::make_shared<DefaultLineParser>();
+
         auto dir = path(std::getenv("HOME")) / ".logseer" / "regex";
         if (!exists(dir))
             return;
@@ -41,13 +62,19 @@ namespace seer {
                 continue;
             std::smatch match;
             auto fileName = p.path().filename().string();
-            if (!std::regex_search(fileName, match, rxFileName))
+            if (!std::regex_search(fileName, match, rxFileName)) {
+                log_infof("parser config name '%s' doesn't have the right format", fileName);
                 continue;
+            }
             auto priority = std::stoi(match.str(1));
             //auto name = match.str(2);
             auto parser = std::make_shared<RegexLineParser>();
-            parser->load(read_all_text(p.path().string()));
-            _parsers[priority] = parser;
+            try {
+                parser->load(read_all_text(p.path().string()));
+                _parsers[priority] = parser;
+            } catch (std::exception& e) {
+                log_infof("parser config '%s' can't be loaded: %s", fileName, e.what());
+            }
         }
     }
 

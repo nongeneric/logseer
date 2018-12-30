@@ -10,6 +10,216 @@
 
 namespace seer {
 
+    class Indexer {
+        using Result = std::vector<ColumnInfo>;
+        using QueueItem = std::optional<std::tuple<std::string, int>>;
+
+        FileParser* _fileParser;
+        ILineParser* _lineParser;
+        std::function<bool()> _stopRequested;
+        std::function<void(uint64_t, uint64_t)> _progress;
+        std::vector<ColumnInfo>* _columns;
+        tbb::concurrent_bounded_queue<QueueItem> _queue;
+        unsigned _threadCount;
+        std::vector<Result> _results;
+        std::vector<std::thread> _threads;
+        std::vector<ewah_bitset> _failures;
+
+        void combine(auto& index, auto& failed, auto& result) {
+            auto i = index.begin();
+            auto f = failed.begin();
+            auto ii = index.toArray();
+            while (i != index.end()) {
+                result.set(*i);
+                while (f != failed.end() && *f < *i) {
+                    ++f;
+                }
+                if (f == failed.end()) {
+                    ++i;
+                    while (i != index.end()) {
+                        result.set(*i++);
+                    }
+                    break;
+                }
+                if (*i + 1 == *f) {
+                    auto delta = 1;
+                    while (f != failed.end() && delta == 1) {
+                        result.set(*f);
+                        auto pf = *f;
+                        ++f;
+                        delta = *f - pf;
+                    }
+                }
+                ++i;
+            }
+        }
+
+        void prepareThreads() {
+            constexpr auto itemsPerThread = 256;
+            _threadCount = std::thread::hardware_concurrency();
+            _queue.set_capacity(itemsPerThread * _threadCount);
+
+            Result emptyIndex;
+            for (auto format : _lineParser->getColumnFormats()) {
+                emptyIndex.push_back({{}, format.indexed});
+            }
+
+            _results = {_threadCount, emptyIndex};
+            _threads.resize(_threadCount);
+            _failures.resize(_threadCount);
+
+            *_columns = emptyIndex;
+        }
+
+        void threadBody(int id) {
+            std::vector<std::string> columns;
+            int lastLineIndex = 0;
+            QueueItem item;
+            for (;;) {
+                _queue.pop(item);
+                if (!item)
+                    return;
+                auto& [line, lineIndex] = *item;
+                assert(lineIndex >= lastLineIndex);
+                lastLineIndex = lineIndex;
+                if (_lineParser->parseLine(line, columns)) {
+                    auto& index = _results[id];
+                    for (auto i = 0u; i < columns.size(); ++i) {
+                        if (index[i].indexed) {
+                            index[i].index[columns[i]].set(lineIndex);
+                        }
+                    }
+                } else {
+                    _failures[id].set(lineIndex);
+                }
+            }
+        }
+
+        void startThreads() {
+            int threadId = 0;
+            for (auto& th : _threads) {
+                th = std::thread([this, id = threadId] {
+                    threadBody(id);
+                });
+                threadId++;
+            }
+        }
+
+        void stopThreads() {
+            for (auto i = 0u; i < _threadCount; ++i) {
+                _queue.push({});
+            }
+
+            for (auto& th : _threads) {
+                th.join();
+            }
+        }
+
+        bool pushLinesToThreads() {
+            std::vector<std::string> columns;
+            std::string line;
+            for (auto index = 0ul, count = _fileParser->lineCount(); index < count; ++index) {
+                if (_stopRequested()) {
+                    stopThreads();
+                    return false;
+                }
+                _fileParser->readLine(index, line);
+                _queue.push(std::tuple(line, index));
+                if (_progress) {
+                    _progress(index, count);
+                }
+            }
+            return true;
+        }
+
+        void discoverMultilines() {
+            std::vector<const ewah_bitset*> failurePointers;
+            for (auto& failure : _failures) {
+                failurePointers.push_back(&failure);
+            }
+
+            auto multilines = fast_logicalor(failurePointers.size(), &failurePointers[0]);
+            std::vector<ewah_bitset*> allIndexes;
+            for (auto tid = 0u; tid < _threadCount; ++tid) {
+                auto& result = _results[tid];
+                for (auto& column : result) {
+                    for (auto& [_, index] : column.index) {
+                        allIndexes.push_back(&index);
+                    }
+                }
+            }
+
+            tbb::parallel_for(size_t{}, allIndexes.size(), [&] (auto i) {
+                ewah_bitset combined;
+                auto index = allIndexes[i];
+                combine(*index, multilines, combined);
+                *index = combined;
+            });
+        }
+
+        void reduceIndexes() {
+            for (auto& result : _results) {
+                assert(_columns->size() == result.size());
+                for (auto i = 0u; i < _columns->size(); ++i) {
+                    auto& column = (*_columns)[i];
+                    assert(column.indexed == result[i].indexed);
+                    for (auto& [name, set] : result[i].index) {
+                        auto existing = column.index.find(name);
+                        if (existing == end(column.index)) {
+                            column.index[name] = set;
+                        } else {
+                            auto& existingSet = existing->second;
+                            existingSet = existingSet | set;
+                        }
+                    }
+                }
+            }
+        }
+
+    public:
+        Indexer(FileParser* fileParser,
+                ILineParser* lineParser,
+                std::function<bool()> stopRequested,
+                std::function<void(uint64_t, uint64_t)> progress,
+                std::vector<ColumnInfo>* columns)
+            : _fileParser(fileParser),
+              _lineParser(lineParser),
+              _stopRequested(stopRequested),
+              _progress(progress),
+              _columns(columns) {}
+
+        bool index() {
+            auto columnFormats = _lineParser->getColumnFormats();
+
+            if (std::find_if(begin(columnFormats), end(columnFormats), [](auto& format) {
+                    return format.indexed;
+                }) == end(columnFormats))
+                return true;
+
+            log_info("started indexing");
+
+            prepareThreads();
+            startThreads();
+
+            if (!pushLinesToThreads())
+                return false;
+
+            stopThreads();
+
+            log_info("indexing multilines");
+
+            discoverMultilines();
+
+            log_info("consolidating indexes");
+
+            reduceIndexes();
+
+            log_info("indexing complete");
+
+            return true;
+        }
+    };
+
     Index::Index(uint64_t unfilteredLineCount)
         : _lineMap(1024), _unfilteredLineCount(unfilteredLineCount) {}
 
@@ -88,156 +298,9 @@ namespace seer {
                       std::function<bool()> stopRequested,
                       std::function<void(uint64_t, uint64_t)> progress)
     {
-        log_info("started indexing");
-
-        using Result = std::vector<ColumnInfo>;
-        using QueueItem = std::optional<std::tuple<std::string, int>>;
-
-        tbb::concurrent_bounded_queue<QueueItem> queue;
-        constexpr auto itemsPerThread = 256;
-        auto threadCount = std::thread::hardware_concurrency();
-        queue.set_capacity(itemsPerThread * threadCount);
-
-        Result emptyIndex;
-        for (auto format : lineParser->getColumnFormats()) {
-            emptyIndex.push_back({{}, format.indexed});
-        }
-
-        std::vector<Result> results(threadCount, emptyIndex);
-        std::vector<std::thread> threads(threadCount);
-        std::vector<ewah_bitset> failures(threadCount);
-        int threadId = 0;
-        for (auto& th : threads) {
-            th = std::thread([&, id = threadId] {
-                std::vector<std::string> columns;
-                int lastLineIndex = 0;
-                QueueItem item;
-                for (;;) {
-                    queue.pop(item);
-                    if (!item)
-                        return;
-                    auto& [line, lineIndex] = *item;
-                    assert(lineIndex >= lastLineIndex);
-                    lastLineIndex = lineIndex;
-                    if (lineParser->parseLine(line, columns)) {
-                        auto& index = results[id];
-                        for (auto i = 0u; i < columns.size(); ++i) {
-                            if (index[i].indexed) {
-                                index[i].index[columns[i]].set(lineIndex);
-                            }
-                        }
-                    } else {
-                        failures[id].set(lineIndex);
-                    }
-                }
-            });
-            threadId++;
-        }
-
-        auto stopThreads = [&] {
-            for (auto i = 0u; i < threadCount; ++i) {
-                queue.push({});
-            }
-
-            for (auto& th : threads) {
-                th.join();
-            }
-        };
-
-        std::vector<std::string> columns;
-        std::string line;
-        for (auto index = 0ul, count = fileParser->lineCount(); index < count; ++index) {
-            if (stopRequested()) {
-                stopThreads();
-                return false;
-            }
-            fileParser->readLine(index, line);
-            queue.push(std::tuple(line, index));
-            if (progress) {
-                progress(index, count);
-            }
-        }
-
-        stopThreads();
-
-        log_info("indexing multilines");
-
-        std::vector<const ewah_bitset*> failurePointers;
-        for (auto& failure : failures) {
-            failurePointers.push_back(&failure);
-        }
-
-        _multilines = fast_logicalor(failurePointers.size(), &failurePointers[0]);
-        std::vector<ewah_bitset*> allIndexes;
-        for (auto tid = 0u; tid < threadCount; ++tid) {
-            auto& result = results[tid];
-            for (auto& column : result) {
-                for (auto& [_, index] : column.index) {
-                    allIndexes.push_back(&index);
-                }
-            }
-        }
-
-        auto combine = [] (auto& index, auto& failed, auto& result) {
-            auto i = index.begin();
-            auto f = failed.begin();
-            auto ii = index.toArray();
-            while (i != index.end()) {
-                result.set(*i);
-                while (f != failed.end() && *f < *i) {
-                    ++f;
-                }
-                if (f == failed.end()) {
-                    ++i;
-                    while (i != index.end()) {
-                        result.set(*i++);
-                    }
-                    break;
-                }
-                if (*i + 1 == *f) {
-                    auto delta = 1;
-                    while (f != failed.end() && delta == 1) {
-                        result.set(*f);
-                        auto pf = *f;
-                        ++f;
-                        delta = *f - pf;
-                    }
-                }
-                ++i;
-            }
-        };
-
-        tbb::parallel_for(size_t{}, allIndexes.size(), [&] (auto i) {
-            ewah_bitset combined;
-            auto index = allIndexes[i];
-            combine(*index, _multilines, combined);
-            *index = combined;
-        });
-
-        log_info("consolidating indexes");
-
-        _columns = emptyIndex;
-        for (auto& result : results) {
-            assert(_columns.size() == result.size());
-            for (auto i = 0u; i < _columns.size(); ++i) {
-                assert(_columns[i].indexed == result[i].indexed);
-                for (auto& [name, set] : result[i].index) {
-                    auto existing = _columns[i].index.find(name);
-                    if (existing == end(_columns[i].index)) {
-                        _columns[i].index[name] = set;
-                    } else {
-                        auto& existingSet = existing->second;
-                        existingSet = existingSet | set;
-                    }
-                }
-            }
-        }
-
         _unfilteredLineCount = fileParser->lineCount();
-
-        log_info("indexing complete");
-
-        return true;
+        Indexer indexer(fileParser, lineParser, stopRequested, progress, &_columns);
+        return indexer.index();
     }
 
     std::vector<std::string> Index::getValues(int column) {
