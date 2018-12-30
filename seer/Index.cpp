@@ -224,6 +224,8 @@ namespace seer {
         : _lineMap(1024), _unfilteredLineCount(unfilteredLineCount) {}
 
     void Index::filter(const std::vector<ColumnFilter>& filters) {
+        _filters = filters;
+
         if (filters.empty()) {
             _filtered = false;
             return;
@@ -303,11 +305,19 @@ namespace seer {
         return indexer.index();
     }
 
-    std::vector<std::tuple<std::string, int64_t>> Index::getValues(int column) {
+    std::vector<ColumnIndexInfo> Index::getValues(int column) {
         assert(_columns.at(column).indexed);
-        std::vector<std::tuple<std::string, int64_t>> values;
+        std::vector<ColumnIndexInfo> values;
         for (auto& [value, index] : _columns[column].index) {
-            values.push_back({value, index.numberOfOnes()});
+            auto checked = true;
+            auto filter = std::find_if(begin(_filters), end(_filters), [=](auto& f) {
+                return f.column = column;
+            });
+            if (filter != end(_filters)) {
+                auto& selected = filter->selected;
+                checked = selected.find(value) != end(selected);
+            }
+            values.push_back({value, checked, index.numberOfOnes()});
         }
         return values;
     }

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "seer/Index.h"
+
 #include <QAbstractTableModel>
 #include <vector>
 #include <string>
@@ -7,22 +9,16 @@
 
 namespace gui {
 
-    struct ValueInfo {
-        std::string value;
-        bool checked = true;
-        int64_t count;
-    };
-
     class FilterTableModel : public QAbstractTableModel {
         Q_OBJECT
-        std::vector<ValueInfo> _infos;
+        std::vector<seer::ColumnIndexInfo> _infos;
         std::vector<size_t> _visibleVec;
         std::set<size_t> _visibleSet;
         void updateVisibleVec();
         void emitAllChanged();
 
     public:
-        FilterTableModel(std::vector<std::tuple<std::string, int64_t>> const& values);
+        FilterTableModel(std::vector<seer::ColumnIndexInfo> const& values);
         void selectAll();
         void selectNone();
         void selectFound();
@@ -32,7 +28,7 @@ namespace gui {
         QVariant data(const QModelIndex &index, int role) const override;
         bool setData(const QModelIndex &index, const QVariant &value, int role) override;
         QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
-        std::vector<std::string> checkedValues() const;
+        std::set<std::string> checkedValues() const;
         Qt::ItemFlags flags(const QModelIndex &index) const override;
 
     signals:

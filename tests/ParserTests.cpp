@@ -93,21 +93,32 @@ TEST_CASE("get_values") {
     index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
     auto values = index.getValues(1);
     REQUIRE( values.size() == 3 );
-    REQUIRE( std::get<0>(values[0]) == "ERR" );
-    REQUIRE( std::get<0>(values[1]) == "INFO" );
-    REQUIRE( std::get<0>(values[2]) == "WARN" );
-
-    REQUIRE( std::get<1>(values[0]) == 1 );
-    REQUIRE( std::get<1>(values[1]) == 3 );
-    REQUIRE( std::get<1>(values[2]) == 2 );
+    REQUIRE( values[0].value == "ERR" );
+    REQUIRE( values[1].value == "INFO" );
+    REQUIRE( values[2].value == "WARN" );
+    REQUIRE( values[0].count == 1 );
+    REQUIRE( values[1].count == 3 );
+    REQUIRE( values[2].count == 2 );
+    REQUIRE( values[0].checked == true );
+    REQUIRE( values[1].checked == true );
+    REQUIRE( values[2].checked == true );
 
     values = index.getValues(2);
     REQUIRE( values.size() == 2 );
-    REQUIRE( std::get<0>(values[0]) == "SUB" );
-    REQUIRE( std::get<0>(values[1]) == "CORE" );
+    REQUIRE( values[0].value == "SUB" );
+    REQUIRE( values[1].value == "CORE" );
+    REQUIRE( values[0].count == 3 );
+    REQUIRE( values[1].count == 3 );
+    REQUIRE( values[0].checked == true );
+    REQUIRE( values[1].checked == true );
 
-    REQUIRE( std::get<1>(values[0]) == 3 );
-    REQUIRE( std::get<1>(values[1]) == 3 );
+    std::vector<ColumnFilter> filters;
+    filters = {{1, {"INFO"}}};
+    index.filter(filters);
+    values = index.getValues(1);
+    REQUIRE( values[0].checked == false );
+    REQUIRE( values[1].checked == true );
+    REQUIRE( values[2].checked == false );
 }
 
 TEST_CASE("search") {

@@ -10,14 +10,21 @@
 #include <vector>
 #include <functional>
 #include <tuple>
+#include <set>
 
 namespace seer {
 
     using ewah_bitset = EWAHBoolArray<uint64_t>;
 
+    struct ColumnIndexInfo {
+        std::string value;
+        bool checked;
+        uint64_t count;
+    };
+
     struct ColumnFilter {
         int column;
-        std::vector<std::string> selected;
+        std::set<std::string> selected;
     };
 
     struct ColumnInfo {
@@ -31,6 +38,7 @@ namespace seer {
         uint64_t _unfilteredLineCount = 0;
         bool _filtered = false;
         ewah_bitset _filter;
+        std::vector<ColumnFilter> _filters;
 
     public:
         Index(uint64_t unfilteredLineCount = 0);
@@ -42,7 +50,7 @@ namespace seer {
                    ILineParser* lineParser,
                    std::function<bool()> stopRequested,
                    std::function<void(uint64_t, uint64_t)> progress = {});
-        std::vector<std::tuple<std::string, int64_t>> getValues(int column);
+        std::vector<ColumnIndexInfo> getValues(int column);
     };
 
 } // namespace seer

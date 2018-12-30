@@ -16,12 +16,8 @@ namespace gui {
         emit checkedChanged();
     }
 
-    FilterTableModel::FilterTableModel(
-        const std::vector<std::tuple<std::string, int64_t>>& values)
-    {
-        for (auto& [value, count] : values) {
-            _infos.push_back({value, true, count});
-        }
+    FilterTableModel::FilterTableModel(std::vector<seer::ColumnIndexInfo> const& values) {
+        _infos = values;
         for (auto i = 0u; i < _infos.size(); ++i) {
             _visibleSet.insert(i);
         }
@@ -111,11 +107,11 @@ namespace gui {
         return baseFlags;
     }
 
-    std::vector<std::string> FilterTableModel::checkedValues() const {
-        std::vector<std::string> values;
+    std::set<std::string> FilterTableModel::checkedValues() const {
+        std::set<std::string> values;
         for (auto i = 0u; i < _infos.size(); ++i) {
             if (_infos[i].checked) {
-                values.push_back(_infos[i].value);
+                values.insert(_infos[i].value);
             }
         }
         return values;

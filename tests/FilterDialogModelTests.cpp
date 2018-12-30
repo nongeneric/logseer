@@ -3,8 +3,8 @@
 #include "gui/FilterTableModel.h"
 
 TEST_CASE("preserve_order") {
-    std::vector<std::tuple<std::string, int64_t>> values = {
-        {"124", 2}, {"abc", 10}, {"123", 1}, {"bc23", 7}};
+    std::vector<seer::ColumnIndexInfo> values = {
+        {"124", true, 2}, {"abc", true, 10}, {"123", true, 1}, {"bc23", true, 7}};
     auto model = new gui::FilterTableModel(values);
     REQUIRE( model->rowCount(QModelIndex()) == 4 );
     REQUIRE( model->data(model->index(0, 1), Qt::DisplayRole).toString() == "124" );
@@ -14,8 +14,8 @@ TEST_CASE("preserve_order") {
 }
 
 TEST_CASE("filter") {
-    std::vector<std::tuple<std::string, int64_t>> values = {
-        {"124", 2}, {"abc", 10}, {"123", 1}, {"bc23", 7}};
+    std::vector<seer::ColumnIndexInfo> values = {
+        {"124", true, 2}, {"abc", true, 10}, {"123", true, 1}, {"bc23", true, 7}};
     auto model = new gui::FilterTableModel(values);
 
     model->search("bc");
@@ -28,8 +28,8 @@ TEST_CASE("filter") {
     model->selectFound();
     checked = model->checkedValues();
     REQUIRE( checked.size() == 2 );
-    REQUIRE( checked[0] == "abc" );
-    REQUIRE( checked[1] == "bc23" );
+    REQUIRE( (checked.find("abc") != end(checked)) );
+    REQUIRE( (checked.find("bc23") != end(checked)) );
 
     REQUIRE( model->data(model->index(0, 0), Qt::CheckStateRole) == Qt::Checked );
     REQUIRE( model->data(model->index(1, 0), Qt::CheckStateRole) == Qt::Checked );
@@ -50,8 +50,8 @@ TEST_CASE("filter") {
 }
 
 TEST_CASE("check") {
-    std::vector<std::tuple<std::string, int64_t>> values = {
-        {"124", 2}, {"abc", 10}, {"123", 1}, {"bc23", 7}};
+    std::vector<seer::ColumnIndexInfo> values = {
+        {"124", true, 2}, {"abc", true, 10}, {"123", true, 1}, {"bc23", true, 7}};
     auto model = new gui::FilterTableModel(values);
     model->selectNone();
     model->search("2");
@@ -64,9 +64,19 @@ TEST_CASE("check") {
     REQUIRE( model->data(model->index(3, 0), Qt::CheckStateRole) == Qt::Checked );
 }
 
+TEST_CASE("initial_checked_value") {
+    std::vector<seer::ColumnIndexInfo> values = {
+        {"124", false, 2}, {"abc", true, 10}, {"123", false, 1}, {"bc23", true, 7}};
+    auto model = new gui::FilterTableModel(values);
+    REQUIRE( model->data(model->index(0, 0), Qt::CheckStateRole) == Qt::Unchecked );
+    REQUIRE( model->data(model->index(1, 0), Qt::CheckStateRole) == Qt::Checked );
+    REQUIRE( model->data(model->index(2, 0), Qt::CheckStateRole) == Qt::Unchecked );
+    REQUIRE( model->data(model->index(3, 0), Qt::CheckStateRole) == Qt::Checked );
+}
+
 TEST_CASE("get_counts") {
-    std::vector<std::tuple<std::string, int64_t>> values = {
-        {"124", 2}, {"abc", 10}, {"123", 1}, {"bc23", 7}};
+    std::vector<seer::ColumnIndexInfo> values = {
+        {"124", true, 2}, {"abc", true, 10}, {"123", true, 1}, {"bc23", true, 7}};
     auto model = new gui::FilterTableModel(values);
     REQUIRE( model->rowCount(QModelIndex()) == 4 );
     REQUIRE( model->data(model->index(0, 2), Qt::DisplayRole).toString() == "2" );

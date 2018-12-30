@@ -143,7 +143,7 @@ namespace gui {
         emit filterRequested(filterModel, column);
     }
 
-    void LogFile::setColumnFilter(int column, std::vector<std::string> values) {
+    void LogFile::setColumnFilter(int column, std::set<std::string> values) {
         if (column == 0)
             return;
         _logTableModel->setFilterActive(

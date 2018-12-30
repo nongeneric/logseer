@@ -17,6 +17,7 @@
 #include <memory>
 #include <string>
 #include <map>
+#include <set>
 #include <atomic>
 #include <istream>
 #include <optional>
@@ -31,7 +32,7 @@ namespace gui {
         std::shared_ptr<seer::Index> _searchIndex;
         std::unique_ptr<LogTableModel> _logTableModel;
         std::unique_ptr<LogTableModel> _searchLogTableModel;
-        std::map<int, std::vector<std::string>> _columnFilters;
+        std::map<int, std::set<std::string>> _columnFilters;
         std::unique_ptr<std::istream> _stream;
         std::shared_ptr<seer::ILineParserRepository> _repository;
         std::unique_ptr<seer::task::Task> _parsingTask;
@@ -98,7 +99,7 @@ namespace gui {
         }
 
         void requestFilter(int column);
-        void setColumnFilter(int column, std::vector<std::string> values);
+        void setColumnFilter(int column, std::set<std::string> values);
         LogTableModel* logTableModel();
         LogTableModel *searchLogTableModel();
 
