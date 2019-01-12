@@ -18,6 +18,7 @@ namespace gui {
         std::vector<std::unique_ptr<LogFile>> _logs;
 
         void closeTab(int index);
+        void interrupt(int index);
 
     public:
         explicit MainWindow(QWidget* parent = nullptr);

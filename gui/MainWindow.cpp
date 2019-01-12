@@ -48,9 +48,11 @@ namespace gui {
 
     void MainWindow::closeTab(int index) {
         _tabWidget->removeTab(index);
-        auto& logFile = _logs[index];
-        logFile->interrupt();
         _logs.erase(begin(_logs) + index);
+    }
+
+    void MainWindow::interrupt(int index) {
+        _logs[index]->interrupt();
     }
 
     MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
@@ -60,7 +62,7 @@ namespace gui {
         connect(_tabWidget,
                 &QTabWidget::tabCloseRequested,
                 this,
-                &MainWindow::closeTab);
+                &MainWindow::interrupt);
 
         setCentralWidget(_tabWidget);
         setAcceptDrops(true);
@@ -150,8 +152,9 @@ namespace gui {
 
     void MainWindow::dropEvent(QDropEvent* event) {
         if (event->mimeData()->hasUrls()) {
-            auto uri = event->mimeData()->urls().first();
-            openLog(uri.toLocalFile().toStdString());
+            for (auto uri : event->mimeData()->urls()) {
+                openLog(uri.toLocalFile().toStdString());
+            }
         }
     }
 
