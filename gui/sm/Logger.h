@@ -9,7 +9,8 @@ namespace gui {
         using namespace boost::sml;
 
         struct Logger {
-            template <class SM, class TEvent> void log_process_event(const TEvent&) {
+            template <class SM, class TEvent>
+            void log_process_event(const TEvent&) {
                 seer::log_infof("[%s][process_event] %s",
                                 aux::get_type_name<SM>(),
                                 aux::get_type_name<TEvent>());

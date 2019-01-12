@@ -8,7 +8,8 @@ namespace seer {
     FileParser::FileParser(std::istream* stream, ILineParser* lineParser)
         : _stream(stream), _lineParser(lineParser) {}
 
-    void FileParser::index(std::function<void(uint64_t, uint64_t)> progress) {
+    void FileParser::index(std::function<void(uint64_t, uint64_t)> progress,
+                           std::function<bool()> stopRequested) {
         auto lock = std::lock_guard(_mutex);
         _indexed = true;
         std::string line;
@@ -32,6 +33,8 @@ namespace seer {
             if (pos != -1 && progress) {
                 progress(pos, fileSize);
             }
+            if (stopRequested())
+                return;
             index++;
         }
         _stream->clear();

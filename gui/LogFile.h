@@ -98,6 +98,14 @@ namespace gui {
             _sm.process_event(sm::InterruptEvent{});
         }
 
+        inline std::string dbgStateName() {
+            std::string name;
+            _sm.visit_current_states([&](auto state) {
+                name = state.c_str();
+            });
+            return name;
+        }
+
         void requestFilter(int column);
         void setColumnFilter(int column, std::set<std::string> values);
         LogTableModel* logTableModel();

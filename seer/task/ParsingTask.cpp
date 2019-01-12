@@ -8,7 +8,7 @@ namespace seer::task {
     void ParsingTask::body() {
         _fileParser->index([&] (auto done, auto total) {
             reportProgress((done * 100) / total);
-        });
+        }, [=] { return this->isStopRequested(); });
     }
 
 } // namespace seer

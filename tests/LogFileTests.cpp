@@ -292,3 +292,37 @@ TEST_CASE("log_file_multiline") {
     REQUIRE(model->data(model->index(1, 3), Qt::DisplayRole).toString() == "");
     REQUIRE(model->data(model->index(1, 4), Qt::DisplayRole).toString() == "message 1 a");
 }
+
+TEST_CASE("interrupt_parsing") {
+    char arg[] = "arg";
+    int count = 1; char* args[] = { arg };
+    QApplication app(count, args);
+
+    std::vector<std::string> trace;
+
+    auto ss = std::make_unique<std::stringstream>(simpleLog);
+    auto repository = std::make_shared<TestLineParserRepository>();
+    TestLogFile file(std::move(ss), repository);
+
+    QObject::connect(&file, &LogFile::stateChanged, [&] {
+        trace.push_back(file.dbgStateName());
+    });
+
+    file.parse();
+
+    waitFor([&] { return file.isState(gui::sm::ParsingState); });
+
+    file.interrupt();
+
+    file.parsingTask->proceed();
+
+    waitFor([&] { return file.isState(gui::sm::InterruptedState); });
+
+    std::vector<std::string> expected {
+        "gui::sm::ParsingState",
+        "gui::sm::InterruptingState",
+        "gui::sm::InterruptedState"
+    };
+
+    REQUIRE( trace == expected );
+}
