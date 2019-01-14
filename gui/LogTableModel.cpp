@@ -63,8 +63,7 @@ namespace gui {
             return {};
         auto lineIndex = _index ? _index->mapIndex(index.row()) : index.row();
         if (index.column() == LineNumber)
-            return QString("%0").arg(lineIndex);
-
+            return QString("%0").arg(lineIndex + 1);
         std::vector<std::string> line;
         _parser->readLine(lineIndex, line);
         size_t columnIndex = index.column() - Regular;

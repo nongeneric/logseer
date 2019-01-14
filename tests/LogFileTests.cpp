@@ -280,17 +280,38 @@ TEST_CASE("log_file_multiline") {
     auto model = file.logTableModel();
     REQUIRE( model->rowCount({}) == 11 );
 
-    REQUIRE(model->data(model->index(0, 0), Qt::DisplayRole).toString() == "0");
+    REQUIRE(model->data(model->index(0, 0), Qt::DisplayRole).toString() == "1");
     REQUIRE(model->data(model->index(0, 1), Qt::DisplayRole).toString() == "10");
     REQUIRE(model->data(model->index(0, 2), Qt::DisplayRole).toString() == "INFO");
     REQUIRE(model->data(model->index(0, 3), Qt::DisplayRole).toString() == "CORE");
     REQUIRE(model->data(model->index(0, 4), Qt::DisplayRole).toString() == "message 1");
 
-    REQUIRE(model->data(model->index(1, 0), Qt::DisplayRole).toString() == "1");
+    REQUIRE(model->data(model->index(1, 0), Qt::DisplayRole).toString() == "2");
     REQUIRE(model->data(model->index(1, 1), Qt::DisplayRole).toString() == "");
     REQUIRE(model->data(model->index(1, 2), Qt::DisplayRole).toString() == "");
     REQUIRE(model->data(model->index(1, 3), Qt::DisplayRole).toString() == "");
     REQUIRE(model->data(model->index(1, 4), Qt::DisplayRole).toString() == "message 1 a");
+}
+
+TEST_CASE("count_lines_from_one") {
+    char arg[] = "arg";
+    int count = 1; char* args[] = { arg };
+    QApplication app(count, args);
+
+    auto ss = std::make_unique<std::stringstream>(simpleLog);
+    auto repository = std::make_shared<TestLineParserRepository>();
+    LogFile file(std::move(ss), repository->resolve(*ss));
+    waitParsingAndIndexing(file);
+
+    auto model = file.logTableModel();
+    REQUIRE( model->rowCount({}) == 6 );
+
+    REQUIRE(model->data(model->index(0, 0), Qt::DisplayRole).toString() == "1");
+    REQUIRE(model->data(model->index(1, 0), Qt::DisplayRole).toString() == "2");
+    REQUIRE(model->data(model->index(2, 0), Qt::DisplayRole).toString() == "3");
+    REQUIRE(model->data(model->index(3, 0), Qt::DisplayRole).toString() == "4");
+    REQUIRE(model->data(model->index(4, 0), Qt::DisplayRole).toString() == "5");
+    REQUIRE(model->data(model->index(5, 0), Qt::DisplayRole).toString() == "6");
 }
 
 TEST_CASE("interrupt_parsing") {
