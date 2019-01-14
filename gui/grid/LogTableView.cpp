@@ -16,7 +16,11 @@ namespace gui::grid {
         QFontMetrics metrics(font());
         for (auto column = 0; column < columns; ++column) {
             auto x = _table->header()->sectionPosition(column);
-            auto text = model->data(model->index(row, column), Qt::DisplayRole).toString();
+            assert(row < model->rowCount({}));
+            assert(column < model->columnCount({}));
+            auto index = model->index(row, column);
+            assert(index.isValid());
+            auto text = model->data(index, Qt::DisplayRole).toString();
             auto sectionSize = _table->header()->sectionSize(column);
             auto elided = metrics.elidedText(text, Qt::ElideRight, sectionSize);
             painter->drawText(x, y, sectionSize, 40, 0, elided);

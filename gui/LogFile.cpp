@@ -82,9 +82,9 @@ namespace gui {
         _searchingTask->setStateChanged([=](auto state) {
             assert(state != TaskState::Failed);
             if (state == TaskState::Finished) {
-                _searchIndex = _searchingTask->index();
                 _dispatcher.postToUIThread([=] {
                     _searchLogTableModel.reset(new LogTableModel(_fileParser.get()));
+                    _searchIndex = _searchingTask->index();
                     _searchLogTableModel->setIndex(_searchIndex.get());
                     finish();
                 });
