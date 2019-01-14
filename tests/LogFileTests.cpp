@@ -142,7 +142,7 @@ TEST_CASE("set_is_filter_active") {
 
     auto ss = std::make_unique<std::stringstream>(simpleLog);
     auto repository = std::make_shared<TestLineParserRepository>();
-    LogFile file(std::move(ss), repository);
+    LogFile file(std::move(ss), repository->resolve(*ss));
     waitParsingAndIndexing(file);
 
     auto model = file.logTableModel();
@@ -192,7 +192,7 @@ TEST_CASE("headers_should_not_be_clickable_until_file_indexed") {
 
     auto ss = std::make_unique<std::stringstream>(simpleLog);
     auto repository = std::make_shared<TestLineParserRepository>();
-    TestLogFile file(std::move(ss), repository);
+    TestLogFile file(std::move(ss), repository->resolve(*ss));
     file.parse();
 
     waitFor([&] { return file.isState(gui::sm::ParsingState); });
@@ -257,7 +257,7 @@ TEST_CASE("log_file_filtering") {
 
     auto ss = std::make_unique<std::stringstream>(simpleLog);
     auto repository = std::make_shared<TestLineParserRepository>();
-    LogFile file(std::move(ss), repository);
+    LogFile file(std::move(ss), repository->resolve(*ss));
     waitParsingAndIndexing(file);
 
     auto model = file.logTableModel();
@@ -274,7 +274,7 @@ TEST_CASE("log_file_multiline") {
 
     auto ss = std::make_unique<std::stringstream>(multilineLog);
     auto repository = std::make_shared<TestLineParserRepository>();
-    LogFile file(std::move(ss), repository);
+    LogFile file(std::move(ss), repository->resolve(*ss));
     waitParsingAndIndexing(file);
 
     auto model = file.logTableModel();
@@ -302,7 +302,7 @@ TEST_CASE("interrupt_parsing") {
 
     auto ss = std::make_unique<std::stringstream>(simpleLog);
     auto repository = std::make_shared<TestLineParserRepository>();
-    TestLogFile file(std::move(ss), repository);
+    TestLogFile file(std::move(ss), repository->resolve(*ss));
 
     QObject::connect(&file, &LogFile::stateChanged, [&] {
         trace.push_back(file.dbgStateName());

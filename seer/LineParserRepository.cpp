@@ -46,6 +46,10 @@ namespace seer {
         bool isMatch(std::vector<std::string>, std::string_view) override {
             return true;
         }
+
+        std::string name() const override {
+            return "default";
+        }
     };
 
     void LineParserRepository::init() {
@@ -67,8 +71,8 @@ namespace seer {
                 continue;
             }
             auto priority = std::stoi(match.str(1));
-            //auto name = match.str(2);
-            auto parser = std::make_shared<RegexLineParser>();
+            auto name = match.str(2);
+            auto parser = std::make_shared<RegexLineParser>(name);
             try {
                 parser->load(read_all_text(p.path().string()));
                 _parsers[priority] = parser;

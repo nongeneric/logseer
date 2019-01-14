@@ -16,6 +16,7 @@ namespace seer {
                                std::vector<std::string>& columns) = 0;
         virtual std::vector<ColumnFormat> getColumnFormats() = 0;
         virtual bool isMatch(std::vector<std::string> sample, std::string_view fileName) = 0;
+        virtual std::string name() const = 0;
         virtual ~ILineParser() = default;
     };
 } // namespace seer

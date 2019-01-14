@@ -74,7 +74,8 @@ namespace gui {
         auto stream = std::make_unique<std::ifstream>(path);
         auto repository = std::make_shared<seer::LineParserRepository>();
         repository->init();
-        auto file = std::make_unique<LogFile>(std::move(stream), repository);
+        auto lineParser = repository->resolve(*stream);
+        auto file = std::make_unique<LogFile>(std::move(stream), lineParser);
 
         auto table = new grid::LogTable();
 
@@ -139,7 +140,9 @@ namespace gui {
                 [file = file.get()](int column) { file->requestFilter(column); });
 
         auto fileName = boost::filesystem::path(path).stem().string();
-        _tabWidget->addTab(splitter, QString::fromStdString(fileName));
+        auto index = _tabWidget->addTab(splitter, QString::fromStdString(fileName));
+        auto toolTip = seer::ssnprintf("%s\nparser type: %s", path.c_str(), lineParser->name().c_str());
+        _tabWidget->setTabToolTip(index, QString::fromStdString(toolTip));
 
         _logs.push_back(std::move(file));
     }
@@ -159,7 +162,11 @@ namespace gui {
     }
 
     void MainWindow::closeEvent(QCloseEvent*) {
+        std::vector<LogFile*> logs;
         for (auto& logFile : _logs) {
+            logs.push_back(logFile.get());
+        }
+        for (auto& logFile : logs) {
             logFile->interrupt();
         }
     }

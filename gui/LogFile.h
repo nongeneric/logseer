@@ -34,7 +34,6 @@ namespace gui {
         std::unique_ptr<LogTableModel> _searchLogTableModel;
         std::map<int, std::set<std::string>> _columnFilters;
         std::unique_ptr<std::istream> _stream;
-        std::shared_ptr<seer::ILineParserRepository> _repository;
         std::unique_ptr<seer::task::Task> _parsingTask;
         std::unique_ptr<seer::task::Task> _indexingTask;
         std::unique_ptr<seer::task::SearchingTask> _searchingTask;
@@ -79,7 +78,7 @@ namespace gui {
 
     public:
         LogFile(std::unique_ptr<std::istream>&& stream,
-                std::shared_ptr<seer::ILineParserRepository> repository);
+                std::shared_ptr<seer::ILineParser> lineParser);
         ~LogFile() = default;
 
         inline void parse() {

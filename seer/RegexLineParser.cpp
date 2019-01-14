@@ -8,7 +8,7 @@ using namespace nlohmann;
 
 namespace seer {
 
-    RegexLineParser::RegexLineParser() {}
+    RegexLineParser::RegexLineParser(std::string name) : _name(name) {}
 
     void RegexLineParser::load(std::string config) {
         std::stringstream ss{config};
@@ -60,6 +60,10 @@ namespace seer {
         }
         std::vector<std::string> columns;
         return parseLine(sample[0], columns);
+    }
+
+    std::string RegexLineParser::name() const{
+        return _name;
     }
 
 } // namespace seer

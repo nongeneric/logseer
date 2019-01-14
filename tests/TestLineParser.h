@@ -54,7 +54,7 @@ inline std::shared_ptr<seer::ILineParser> createTestParser() {
                 ]
             }
         )_";
-    auto parser = std::make_shared<seer::RegexLineParser>();
+    auto parser = std::make_shared<seer::RegexLineParser>("test parser");
     parser->load(config);
     return parser;
 }

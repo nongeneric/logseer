@@ -4,14 +4,13 @@ using namespace seer::task;
 
 namespace gui {
     LogFile::LogFile(std::unique_ptr<std::istream>&& stream,
-                     std::shared_ptr<seer::ILineParserRepository> repository)
-        : _stream(std::move(stream)),
-          _repository(std::move(repository)),
+                     std::shared_ptr<seer::ILineParser> lineParser)
+        : _lineParser(lineParser),
+          _stream(std::move(stream)),
           _sm(static_cast<IStateHandler*>(this), _smLogger) {}
 
     void LogFile::enterParsing() {
         emit stateChanged();
-        _lineParser = _repository->resolve(*_stream);
         _fileParser.reset(new seer::FileParser(_stream.get(), _lineParser.get()));
         _parsingTask.reset(createParsingTask(_fileParser.get()));
         _parsingTask->setStateChanged([=](auto state) {

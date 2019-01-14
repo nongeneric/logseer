@@ -8,6 +8,12 @@
 
 using namespace seer;
 
+TEST_CASE("get_parser_name") {
+    std::stringstream ss(simpleLog);
+    auto lineParser = createTestParser();
+    REQUIRE(lineParser->name() == "test parser");
+}
+
 TEST_CASE("simple_parser") {
     std::stringstream ss(simpleLog);
     auto lineParser = createTestParser();
