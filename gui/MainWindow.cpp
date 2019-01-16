@@ -6,6 +6,7 @@
 #include "grid/FilterHeaderView.h"
 #include "grid/LogTable.h"
 #include "seer/LineParserRepository.h"
+#include "seer/Log.h"
 #include "version.h"
 #include <QDragEnterEvent>
 #include <QMimeData>
@@ -74,6 +75,7 @@ namespace gui {
     }
 
     void MainWindow::openLog(std::string path) {
+        seer::log_infof("opening [%s]", path.c_str());
         auto stream = std::make_unique<std::ifstream>(path);
         auto repository = std::make_shared<seer::LineParserRepository>();
         repository->init();

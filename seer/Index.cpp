@@ -75,7 +75,7 @@ namespace seer {
 
         void threadBody(int id) {
             std::vector<std::string> columns;
-            int lastLineIndex = 0;
+            [[maybe_unused]] int lastLineIndex = 0;
             QueueItem item;
             for (;;) {
                 _queue.dequeue(item);
@@ -120,7 +120,7 @@ namespace seer {
         bool pushLinesToThreads() {
             std::vector<std::string> columns;
             std::string line;
-            for (auto index = 0ul, count = _fileParser->lineCount(); index < count; ++index) {
+            for (uint64_t index = 0, count = _fileParser->lineCount(); index < count; ++index) {
                 if (_stopRequested()) {
                     stopThreads();
                     return false;

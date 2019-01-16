@@ -27,5 +27,9 @@ void seer::log_info(const char* message) {
 }
 
 #else
-void seer::log_info(const char*) { }
+#include <iostream>
+
+void seer::log_info(const char* message) {
+    std::cout << message << std::endl;
+}
 #endif

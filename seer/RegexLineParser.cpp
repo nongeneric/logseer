@@ -1,6 +1,6 @@
 #include "RegexLineParser.h"
 
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 #include <boost/algorithm/string.hpp>
 #include <sstream>
 

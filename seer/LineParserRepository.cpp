@@ -2,12 +2,12 @@
 #include "RegexLineParser.h"
 
 #include "Log.h"
-#include <filesystem>
+#include <boost/filesystem.hpp>
 #include <fstream>
 #include <regex>
 #include <limits>
 
-using namespace std::filesystem;
+using namespace boost::filesystem;
 
 namespace {
     std::vector<uint8_t> read_all_bytes(std::string_view path) {
@@ -26,6 +26,28 @@ namespace {
     std::string read_all_text(std::string_view path) {
         auto vec = read_all_bytes(path);
         return std::string((const char*)&vec[0], vec.size());
+    }
+
+    path getHomeDirectory() {
+        auto userProfile = std::getenv("USERPROFILE");
+        if (userProfile)
+            return userProfile;
+        auto homeDrive = std::getenv("HOMEDRIVE");
+        auto homePath = std::getenv("HOMEPATH");
+        if (homeDrive && homePath)
+            return path(homeDrive) / homePath;
+        auto home = std::getenv("HOME");
+        if (home)
+            return home;
+        return {};
+    }
+
+    path getConfigDirectory() {
+        auto home = getHomeDirectory();
+        if (home.empty()) {
+            home = boost::filesystem::current_path();
+        }
+        return home / ".logseer";
     }
 }
 
@@ -53,16 +75,21 @@ namespace seer {
     };
 
     void LineParserRepository::init() {
+        seer::log_info("initializing repository");
+
         _parsers[std::numeric_limits<int>::max()] = std::make_shared<DefaultLineParser>();
 
-        auto dir = path(std::getenv("HOME")) / ".logseer" / "regex";
+        auto dir = getConfigDirectory() / "regex";
+
+        seer::log_infof("searching %s", dir.string().c_str());
+
         if (!exists(dir))
             return;
 
         std::regex rxFileName{R"(^(\d\d\d)_(.*?)\.json$)"};
 
         for (auto& p : directory_iterator(dir)) {
-            if (!p.is_regular_file())
+            if (!is_regular_file(p))
                 continue;
             std::smatch match;
             auto fileName = p.path().filename().string();
