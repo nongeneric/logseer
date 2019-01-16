@@ -1,8 +1,8 @@
 #include "Index.h"
 
 #include "Log.h"
-#include <tbb/concurrent_queue.h>
-#include <tbb/parallel_for_each.h>
+#include "ParallelFor.h"
+#include "BoundedConcurrentQueue.h"
 #include <numeric>
 #include <optional>
 #include <thread>
@@ -20,7 +20,7 @@ namespace seer {
         std::function<bool()> _stopRequested;
         std::function<void(uint64_t, uint64_t)> _progress;
         std::vector<ColumnInfo>* _columns;
-        tbb::concurrent_bounded_queue<QueueItem> _queue;
+        BoundedConcurrentQueue<QueueItem> _queue;
         unsigned _threadCount;
         std::vector<Result> _results;
         std::vector<std::thread> _threads;
@@ -58,7 +58,8 @@ namespace seer {
         void prepareThreads() {
             constexpr auto itemsPerThread = 256;
             _threadCount = std::thread::hardware_concurrency();
-            _queue.set_capacity(itemsPerThread * _threadCount);
+            auto capacity = itemsPerThread * _threadCount;
+            _queue = BoundedConcurrentQueue<QueueItem>(capacity);
 
             Result emptyIndex;
             for (auto format : _lineParser->getColumnFormats()) {
@@ -77,7 +78,7 @@ namespace seer {
             int lastLineIndex = 0;
             QueueItem item;
             for (;;) {
-                _queue.pop(item);
+                _queue.dequeue(item);
                 if (!item)
                     return;
                 auto& [line, lineIndex] = *item;
@@ -108,7 +109,7 @@ namespace seer {
 
         void stopThreads() {
             for (auto i = 0u; i < _threadCount; ++i) {
-                _queue.push({});
+                _queue.enqueue({});
             }
 
             for (auto& th : _threads) {
@@ -125,7 +126,7 @@ namespace seer {
                     return false;
                 }
                 _fileParser->readLine(index, line);
-                _queue.push(std::tuple(line, index));
+                _queue.enqueue(std::tuple(line, index));
                 if (_progress) {
                     _progress(index, count);
                 }
@@ -150,9 +151,8 @@ namespace seer {
                 }
             }
 
-            tbb::parallel_for(size_t{}, allIndexes.size(), [&] (auto i) {
+            parallelFor(allIndexes, [=](auto index) {
                 ewah_bitset combined;
-                auto index = allIndexes[i];
                 combine(*index, multilines, combined);
                 *index = combined;
             });

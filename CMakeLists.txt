@@ -17,11 +17,12 @@ include_directories(SYSTEM thirdparty/Catch2/single_include)
 include_directories(SYSTEM thirdparty/EWAHBoolArray/headers)
 include_directories(SYSTEM thirdparty/sml/include/boost)
 include_directories(SYSTEM thirdparty/cmcstl2/include)
+include_directories(SYSTEM thirdparty/concurrentqueue)
 
 set(Boost_USE_STATIC_LIBS       OFF)
 set(Boost_USE_MULTITHREADED      ON)
 set(Boost_USE_STATIC_RUNTIME    OFF)
-find_package(Boost 1.50 COMPONENTS system program_options filesystem REQUIRED)
+find_package(Boost 1.56 COMPONENTS system program_options filesystem REQUIRED)
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 option(CMAKE_RELEASE "CMAKE_RELEASE" FALSE)
