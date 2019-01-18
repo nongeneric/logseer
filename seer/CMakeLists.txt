@@ -18,6 +18,8 @@ set(SRC
     RandomBitArray.cpp
     RegexLineParser.h
     RegexLineParser.cpp
+    CommandLineParser.h
+    CommandLineParser.cpp
     task/Task.h
     task/Task.cpp
     task/ParsingTask.h

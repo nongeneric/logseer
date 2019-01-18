@@ -18,6 +18,7 @@ set(SRC
     OffsetIndexTests.cpp
     RandomBitArrayTests.cpp
     TaskTests.cpp
+    CommandLineParserTests.cpp
 )
 add_executable(tests ${SRC})
 target_link_libraries(tests gui)
