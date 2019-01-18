@@ -10,8 +10,6 @@ namespace gui::grid {
 
         LogTable* _table;
         int _rowHeight;
-        int _selectedFirstRow = -1;
-        int _selectedLastRow = -1;
 
         void paintRow(QPainter* painter, int row, int y);
         int getRow(int y);
@@ -20,6 +18,7 @@ namespace gui::grid {
         explicit LogTableView(LogTable* parent);
         QSize sizeHint() const override;
         bool eventFilter(QObject *watched, QEvent *event) override;
+        int getRowY(int row);
 
     signals:
 

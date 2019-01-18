@@ -347,3 +347,55 @@ TEST_CASE("interrupt_parsing") {
 
     REQUIRE( trace == expected );
 }
+
+TEST_CASE("log_file_search_basic") {
+    char arg[] = "arg";
+    int count = 1; char* args[] = { arg };
+    QApplication app(count, args);
+
+    auto ss = std::make_unique<std::stringstream>(simpleLog);
+    auto repository = std::make_shared<TestLineParserRepository>();
+    LogFile file(std::move(ss), repository->resolve(*ss));
+    waitParsingAndIndexing(file);
+
+    bool complete = false;
+
+    file.connect(&file, &LogFile::stateChanged, [&] {
+        if (file.isState(gui::sm::CompleteState)) {
+            complete = true;
+        }
+    });
+
+    file.search("4", false);
+
+    while (!complete) {
+        QApplication::processEvents();
+    }
+
+    auto model = file.logTableModel();
+    auto searchModel = file.searchLogTableModel();
+
+    REQUIRE( model->rowCount({}) == 6 );
+    REQUIRE( searchModel->rowCount({}) == 2 );
+
+    searchModel->setSelection(0);
+    REQUIRE( model->isSelected(3) );
+
+    file.setColumnFilter(2, {"INFO"});
+    auto [first, last] = model->getSelection();
+    REQUIRE( first == -1 );
+    REQUIRE( last == -1 );
+
+    // 10 INFO CORE message 1
+    // 15 INFO SUB message 2
+    // 20 INFO SUB message 4
+
+    searchModel->setSelection(0);
+    REQUIRE( model->isSelected(2) );
+
+    file.setColumnFilter(2, {});
+    searchModel->setSelection(0);
+    std::tie(first, last) = model->getSelection();
+    REQUIRE( first == -1 );
+    REQUIRE( last == -1 );
+}

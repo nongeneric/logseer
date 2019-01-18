@@ -83,7 +83,9 @@ namespace gui {
             assert(state != TaskState::Failed);
             if (state == TaskState::Finished) {
                 _dispatcher.postToUIThread([=] {
-                    _searchLogTableModel.reset(new LogTableModel(_fileParser.get()));
+                    auto newSearchTableModel = new LogTableModel(_fileParser.get());
+                    subscribeToSelectionChanged(_searchLogTableModel.get(), newSearchTableModel);
+                    _searchLogTableModel.reset(newSearchTableModel);
                     _searchIndex = _searchingTask->index();
                     _searchLogTableModel->setIndex(_searchIndex.get());
                     finish();
@@ -110,6 +112,18 @@ namespace gui {
     void LogFile::searchFromPaused() {
         emit stateChanged();
         searchFromComplete(*_scheduledSearchEvent);
+    }
+
+    void LogFile::subscribeToSelectionChanged(LogTableModel *oldModel, LogTableModel *newModel) {
+        if (oldModel) {
+            disconnect(oldModel);
+        }
+        connect(newModel, &LogTableModel::selectionChanged, this, [=] {
+            auto [first, last] = newModel->getSelection();
+            auto lineOffset = newModel->lineOffset(first);
+            auto row = _logTableModel->findRow(lineOffset);
+            _logTableModel->setSelection(row);
+        });
     }
 
     seer::task::Task* LogFile::createIndexingTask(seer::Index* index,
@@ -154,6 +168,7 @@ namespace gui {
         }
         _index->filter(filters);
         _logTableModel->setIndex(_index.get());
+        _logTableModel->setSelection(-1);
     }
 
 } // namespace gui

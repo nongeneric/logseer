@@ -11,9 +11,7 @@ namespace gui::grid {
         auto model = _table->model();
         auto columns = _table->header()->count();
 
-        auto first = std::min(_selectedFirstRow, _selectedLastRow);
-        auto last = std::max(_selectedFirstRow, _selectedLastRow);
-        if (first <= row && row < last) {
+        if (model->isSelected(row)) {
             QBrush b(palette().color(QPalette::Highlight));
             QRect r(0, y, width(), _rowHeight);
             painter->fillRect(r, b);
@@ -81,14 +79,7 @@ namespace gui::grid {
         auto row = getRow(event->y());
         if (row == -1)
             return;
-        if (row < _table->model()->rowCount({})) {
-            _selectedFirstRow = row;
-            _selectedLastRow = row + 1;
-        } else {
-            _selectedFirstRow = -1;
-            _selectedLastRow = -1;
-        }
-        update();
+        _table->model()->setSelection(row < _table->model()->rowCount({}) ? row : -1);
     }
 
     void LogTableView::mouseMoveEvent(QMouseEvent *event) {
@@ -97,12 +88,7 @@ namespace gui::grid {
         auto row = getRow(event->y());
         if (row == -1)
             return;
-        _selectedLastRow = row + 1;
-        if (_selectedFirstRow < _selectedLastRow) {
-            _selectedLastRow = row + 1;
-        } else {
-            _selectedLastRow = row;
-        }
+        _table->model()->extendSelection(row);
         update();
     }
 
@@ -125,6 +111,10 @@ namespace gui::grid {
             }
         }
         return QWidget::eventFilter(watched, event);
+    }
+
+    int LogTableView::getRowY(int row) {
+        return _rowHeight * row;
     }
 
 } // namespace gui::grid

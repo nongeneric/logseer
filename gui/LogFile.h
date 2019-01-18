@@ -68,6 +68,8 @@ namespace gui {
             _sm.process_event(sm::FailEvent{});
         }
 
+        void subscribeToSelectionChanged(LogTableModel* oldModel, LogTableModel* newModel);
+
     protected:
         virtual seer::task::Task* createIndexingTask(
             seer::Index* index,

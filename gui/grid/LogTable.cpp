@@ -64,6 +64,15 @@ namespace gui::grid {
             _view->update();
             emulateResize(_scrollArea);
         });
+
+        connect(_model,
+                &LogTableModel::selectionChanged,
+                this,
+                [=] {
+            auto [first, last] = _model->getSelection();
+            _scrollArea->ensureVisible(0, _view->getRowY(first));
+            _view->update();
+        });
     }
 
     LogTableModel* LogTable::model() const {

@@ -1,11 +1,38 @@
 #include "LogTableModel.h"
 
+#include <boost/range/irange.hpp>
+
 namespace gui {
 
     enum ColumnType {
         LineNumber = 0,
         Regular = 1
     };
+
+    void LogTableModel::setSelection(int row, int last) {
+        if (row == -1) {
+            _selectedFirstRow = -1;
+            _selectedLastRow = -1;
+        } else {
+            _selectedFirstRow = row;
+            _selectedLastRow = last == -1 ? row + 1 : last;
+        }
+        emit selectionChanged();
+    }
+
+    void LogTableModel::extendSelection(int row) {
+        _selectedLastRow = row + 1;
+        if (_selectedFirstRow < _selectedLastRow) {
+            _selectedLastRow = row + 1;
+        } else {
+            _selectedLastRow = row;
+        }
+        emit selectionChanged();
+    }
+
+    std::tuple<int, int> LogTableModel::getSelection() {
+        return {_selectedFirstRow, _selectedLastRow};
+    }
 
     LogTableModel::LogTableModel(seer::FileParser* parser)
         : _parser(parser) {
@@ -31,6 +58,32 @@ namespace gui {
 
     void LogTableModel::showIndexedColumns() {
         _showIndexedColumns = true;
+    }
+
+    bool LogTableModel::isSelected(int row) {
+        auto first = _selectedFirstRow;
+        auto last = _selectedLastRow;
+        if (_selectedLastRow < _selectedFirstRow) {
+            std::swap(first, last);
+            last++;
+        }
+        return first <= row && row < last;
+    }
+
+    uint64_t LogTableModel::lineOffset(uint64_t row) {
+        return _index->mapIndex(row);
+    }
+
+    int LogTableModel::findRow(uint64_t lineOffset) {
+        if (!_index)
+            return lineOffset;
+        auto rows = boost::irange(0, rowCount({}), 1);
+        auto it = std::lower_bound(
+            rows.begin(), rows.end(), lineOffset, [=](auto row, auto offset) {
+                auto rowOffset = _index->mapIndex(row);
+                return rowOffset < offset;
+            });
+        return it == rows.end() ? -1 : *it;
     }
 
     QVariant LogTableModel::headerData(int section, Qt::Orientation orientation, int role) const {

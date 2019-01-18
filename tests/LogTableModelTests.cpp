@@ -11,7 +11,7 @@ using namespace gui;
 
 TEST_CASE("return_roles") {
     std::stringstream ss(simpleLog);
-    auto lineParser = createTestParser();;
+    auto lineParser = createTestParser();
     FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
 
@@ -40,4 +40,50 @@ TEST_CASE("return_roles") {
     REQUIRE( model.headerData(2, Qt::Horizontal, (int)HeaderDataRole::IsFilterActive).toBool() == false );
     REQUIRE( model.headerData(3, Qt::Horizontal, (int)HeaderDataRole::IsFilterActive).toBool() == true );
     REQUIRE( model.headerData(4, Qt::Horizontal, (int)HeaderDataRole::IsFilterActive).toBool() == false );
+}
+
+TEST_CASE("model_selection") {
+    std::stringstream ss(simpleLog);
+    auto lineParser = createTestParser();
+    FileParser fileParser(&ss, lineParser.get());
+    fileParser.index();
+
+    Index index;
+    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+    LogTableModel model(&fileParser);
+
+    REQUIRE( model.rowCount({}) == 6 );
+
+    auto [first, last] = model.getSelection();
+    REQUIRE( first == -1 );
+    REQUIRE( last == -1 );
+
+    model.setSelection(1);
+    std::tie(first, last) = model.getSelection();
+    REQUIRE( first == 1 );
+    REQUIRE( last == 2 );
+
+    model.extendSelection(3);
+    std::tie(first, last) = model.getSelection();
+    REQUIRE( first == 1 );
+    REQUIRE( last == 4 );
+    REQUIRE( model.isSelected(1) );
+    REQUIRE( model.isSelected(2) );
+    REQUIRE( model.isSelected(3) );
+    REQUIRE( !model.isSelected(4) );
+
+    model.setSelection(3);
+    std::tie(first, last) = model.getSelection();
+    REQUIRE( first == 3 );
+    REQUIRE( last == 4 );
+    REQUIRE( model.isSelected(3) );
+    REQUIRE( !model.isSelected(4) );
+
+    model.extendSelection(1);
+    std::tie(first, last) = model.getSelection();
+    REQUIRE( first == 3 );
+    REQUIRE( last == 1 );
+    REQUIRE( model.isSelected(1) );
+    REQUIRE( model.isSelected(2) );
+    REQUIRE( model.isSelected(3) );
 }
