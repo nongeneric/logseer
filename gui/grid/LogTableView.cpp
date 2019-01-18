@@ -10,9 +10,18 @@ namespace gui::grid {
     void LogTableView::paintRow(QPainter* painter, int row, int y) {
         auto model = _table->model();
         auto columns = _table->header()->count();
-        if (row == _selectedRow) {
-            painter->drawRect(0, y, width(), _rowHeight);
+
+        auto first = std::min(_selectedFirstRow, _selectedLastRow);
+        auto last = std::max(_selectedFirstRow, _selectedLastRow);
+        if (first <= row && row < last) {
+            QBrush b(palette().color(QPalette::Highlight));
+            QRect r(0, y, width(), _rowHeight);
+            painter->fillRect(r, b);
+            painter->setPen(palette().color(QPalette::HighlightedText));
+        } else {
+            painter->setPen(palette().color(QPalette::ButtonText));
         }
+
         QFontMetrics metrics(font());
         for (auto column = 0; column < columns; ++column) {
             auto x = _table->header()->sectionPosition(column);
@@ -23,14 +32,23 @@ namespace gui::grid {
             auto text = model->data(index, Qt::DisplayRole).toString();
             auto sectionSize = _table->header()->sectionSize(column);
             auto elided = metrics.elidedText(text, Qt::ElideRight, sectionSize);
-            painter->drawText(x, y, sectionSize, 40, 0, elided);
+            painter->drawText(x, y, sectionSize, _rowHeight, 0, elided);
         }
+    }
+
+    int LogTableView::getRow(int y) {
+        auto model = _table->model();
+        if (!model)
+            return -1;
+        y = y + _table->scrollArea()->y() - _table->header()->height();
+        return y / _rowHeight;
     }
 
     LogTableView::LogTableView(LogTable* parent) : QWidget(parent), _table(parent) {
         setFont(QFont("Mono"));
         QFontMetricsF fm(font());
         _rowHeight = fm.height();
+        setMouseTracking(true);
     }
 
     void LogTableView::paintEvent(QPaintEvent* event) {
@@ -48,7 +66,9 @@ namespace gui::grid {
         int y = row * _rowHeight;
 
         for (; row < _table->model()->rowCount(QModelIndex()); ++row) {
+            painter.save();
             paintRow(&painter, row, y);
+            painter.restore();
             y += _rowHeight;
             if (y > maxY)
                 break;
@@ -56,12 +76,33 @@ namespace gui::grid {
     }
 
     void LogTableView::mousePressEvent(QMouseEvent *event) {
-        auto model = _table->model();
-        if (!model)
+        if (event->button() != Qt::LeftButton)
             return;
-        auto y = event->y() + _table->scrollArea()->y() - _table->header()->height();
-        auto row = y / _rowHeight;
-        _selectedRow = row < model->rowCount({}) ? row : -1;
+        auto row = getRow(event->y());
+        if (row == -1)
+            return;
+        if (row < _table->model()->rowCount({})) {
+            _selectedFirstRow = row;
+            _selectedLastRow = row + 1;
+        } else {
+            _selectedFirstRow = -1;
+            _selectedLastRow = -1;
+        }
+        update();
+    }
+
+    void LogTableView::mouseMoveEvent(QMouseEvent *event) {
+        if (!(event->buttons() & Qt::LeftButton))
+            return;
+        auto row = getRow(event->y());
+        if (row == -1)
+            return;
+        _selectedLastRow = row + 1;
+        if (_selectedFirstRow < _selectedLastRow) {
+            _selectedLastRow = row + 1;
+        } else {
+            _selectedLastRow = row;
+        }
         update();
     }
 

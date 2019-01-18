@@ -10,9 +10,11 @@ namespace gui::grid {
 
         LogTable* _table;
         int _rowHeight;
-        int _selectedRow = -1;
+        int _selectedFirstRow = -1;
+        int _selectedLastRow = -1;
 
         void paintRow(QPainter* painter, int row, int y);
+        int getRow(int y);
 
     public:
         explicit LogTableView(LogTable* parent);
@@ -26,6 +28,7 @@ namespace gui::grid {
     protected:
         void paintEvent(QPaintEvent *event) override;
         void mousePressEvent(QMouseEvent *event) override;
+        void mouseMoveEvent(QMouseEvent *event) override;
     };
 
 } // namespace gui::grid
