@@ -39,7 +39,7 @@ namespace gui::grid {
         if (!model)
             return -1;
         y = y + _table->scrollArea()->y() - _table->header()->height();
-        return y / _rowHeight;
+        return y / _rowHeight + _firstRow;
     }
 
     LogTableView::LogTableView(LogTable* parent) : QWidget(parent), _table(parent) {
@@ -54,15 +54,13 @@ namespace gui::grid {
         if (!model)
             return;
 
-        int minY = std::max(0, event->rect().y() - _rowHeight);
-        int maxY = minY + event->rect().height() + _rowHeight;
-
         QPainter painter(this);
         painter.setRenderHints(QPainter::Antialiasing, QPainter::TextAntialiasing);
 
-        int row = minY / _rowHeight;
-        int y = row * _rowHeight;
+        int row = _firstRow;
+        int y = 0;
 
+        int maxY = event->rect().height() + _rowHeight;
         for (; row < _table->model()->rowCount(QModelIndex()); ++row) {
             painter.save();
             paintRow(&painter, row, y);
@@ -79,7 +77,9 @@ namespace gui::grid {
         auto row = getRow(event->y());
         if (row == -1)
             return;
-        _table->model()->setSelection(row < _table->model()->rowCount({}) ? row : -1);
+        if (row < _table->model()->rowCount({})) {
+            _table->model()->setSelection(row);
+        }
     }
 
     void LogTableView::mouseMoveEvent(QMouseEvent *event) {
@@ -92,29 +92,12 @@ namespace gui::grid {
         update();
     }
 
-    QSize LogTableView::sizeHint() const {
-        auto model = _table->model();
-        auto rows = model ? model->rowCount(QModelIndex()) : 1;
-        return {1000, rows * _rowHeight};
+    void LogTableView::setFirstRow(int row) {
+        _firstRow = row;
     }
 
-    bool LogTableView::eventFilter(QObject* watched, QEvent* event) {
-        if (auto scrollArea = _table->scrollArea()) {
-            if (watched == scrollArea && event->type() == QEvent::Resize) {
-                auto resizeEvent = static_cast<QResizeEvent*>(event);
-                auto size = resizeEvent->size();
-                size.setHeight(sizeHint().height());
-                int width = size.width() -
-                            scrollArea->verticalScrollBar()->sizeHint().width();
-                size.setWidth(width);
-                resize(size);
-            }
-        }
-        return QWidget::eventFilter(watched, event);
-    }
-
-    int LogTableView::getRowY(int row) {
-        return _rowHeight * row;
+    int LogTableView::visibleRows() {
+        return height() / _rowHeight;
     }
 
 } // namespace gui::grid

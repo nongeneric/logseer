@@ -2,8 +2,8 @@
 
 #include "../LogTableModel.h"
 #include "FilterHeaderView.h"
+#include "LogScrollArea.h"
 #include <QWidget>
-#include <QScrollArea>
 
 namespace gui::grid {
 
@@ -15,7 +15,7 @@ namespace gui::grid {
         LogTableModel* _model = nullptr;
         FilterHeaderView* _header = nullptr;
         LogTableView* _view = nullptr;
-        QScrollArea* _scrollArea = nullptr;
+        LogScrollArea* _scrollArea = nullptr;
 
     public:
         explicit LogTable(QWidget* parent = nullptr);
@@ -30,7 +30,7 @@ namespace gui::grid {
 
     public:
         bool eventFilter(QObject *watched, QEvent *event) override;
-        QScrollArea* scrollArea() const;
+        LogScrollArea* scrollArea() const;
 
     protected:
         void mousePressEvent(QMouseEvent *event) override;

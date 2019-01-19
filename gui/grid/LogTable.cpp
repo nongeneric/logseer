@@ -13,10 +13,8 @@ namespace gui::grid {
         _header->setMinimumHeight(0);
         _view = new LogTableView(this);
         _view->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-        _scrollArea = new QScrollArea(this);
+        _scrollArea = new LogScrollArea(this);
         _scrollArea->setWidget(_view);
-        _scrollArea->setBackgroundRole(QPalette::Light);
-        _scrollArea->installEventFilter(_view);
         auto layout = new QVBoxLayout();
         layout->addWidget(_header);
         layout->addWidget(_scrollArea);
@@ -56,11 +54,13 @@ namespace gui::grid {
         _header->setSectionResizeMode(count - 1, QHeaderView::ResizeMode::Stretch);
         _view->update();
         _header->updateGeometry();
+        _scrollArea->setRowCount(_model->rowCount({}));
 
         connect(_model,
                 &QAbstractTableModel::modelReset,
                 this,
                 [=] {
+            _scrollArea->setRowCount(_model->rowCount({}));
             _view->update();
             emulateResize(_scrollArea);
         });
@@ -70,7 +70,7 @@ namespace gui::grid {
                 this,
                 [=] {
             auto [first, last] = _model->getSelection();
-            _scrollArea->ensureVisible(0, _view->getRowY(first));
+            _scrollArea->ensureVisible(first);
             _view->update();
         });
     }
@@ -87,7 +87,7 @@ namespace gui::grid {
         return QWidget::eventFilter(watched, event);
     }
 
-    QScrollArea* LogTable::scrollArea() const {
+    LogScrollArea* LogTable::scrollArea() const {
         return _scrollArea;
     }
 

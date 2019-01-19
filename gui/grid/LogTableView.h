@@ -10,15 +10,15 @@ namespace gui::grid {
 
         LogTable* _table;
         int _rowHeight;
+        int _firstRow = 0;
 
         void paintRow(QPainter* painter, int row, int y);
         int getRow(int y);
 
     public:
         explicit LogTableView(LogTable* parent);
-        QSize sizeHint() const override;
-        bool eventFilter(QObject *watched, QEvent *event) override;
-        int getRowY(int row);
+        void setFirstRow(int row);
+        int visibleRows();
 
     signals:
 
