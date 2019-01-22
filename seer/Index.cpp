@@ -76,6 +76,7 @@ namespace seer {
         void threadBody(int id) {
             std::vector<std::string> columns;
             [[maybe_unused]] int lastLineIndex = 0;
+            auto lastColumn = _lineParser->getColumnFormats().size() - 1;
             QueueItem item;
             for (;;) {
                 _queue.dequeue(item);
@@ -84,15 +85,18 @@ namespace seer {
                 auto& [line, lineIndex] = *item;
                 assert(lineIndex >= lastLineIndex);
                 lastLineIndex = lineIndex;
+                auto& index = _results[id];
                 if (_lineParser->parseLine(line, columns)) {
-                    auto& index = _results[id];
                     for (auto i = 0u; i < columns.size(); ++i) {
+                        index[i].maxWidth = std::max(index[i].maxWidth, (int)columns[i].size());
                         if (index[i].indexed) {
                             index[i].index[columns[i]].set(lineIndex);
                         }
                     }
                 } else {
                     _failures[id].set(lineIndex);
+                    auto& info = index[lastColumn];
+                    info.maxWidth = std::max(info.maxWidth, (int)line.size());
                 }
             }
         }
@@ -164,6 +168,7 @@ namespace seer {
                 for (auto i = 0u; i < _columns->size(); ++i) {
                     auto& column = (*_columns)[i];
                     assert(column.indexed == result[i].indexed);
+                    column.maxWidth = std::max(column.maxWidth, result[i].maxWidth);
                     for (auto& [name, set] : result[i].index) {
                         auto existing = column.index.find(name);
                         if (existing == end(column.index)) {
@@ -344,6 +349,10 @@ namespace seer {
         std::experimental::ranges::sort(values, std::less{}, &ColumnIndexInfo::value);
 
         return values;
+    }
+
+    int Index::maxWidth(int column) {
+        return _columns.at(column).maxWidth;
     }
 
 } // namespace seer

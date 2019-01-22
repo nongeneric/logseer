@@ -315,3 +315,33 @@ TEST_CASE("get_values_counts") {
     REQUIRE( values[CORE].count == 3 );
     REQUIRE( values[SUB].count == 3 );
 }
+
+TEST_CASE("index_column_width") {
+    std::stringstream ss(simpleLog);
+    auto lineParser = createTestParser();
+    FileParser fileParser(&ss, lineParser.get());
+    fileParser.index();
+
+    Index index;
+    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+
+    REQUIRE( index.maxWidth(0) == 2 );
+    REQUIRE( index.maxWidth(1) == 4 );
+    REQUIRE( index.maxWidth(2) == 4 );
+    REQUIRE( index.maxWidth(3) == 9 );
+}
+
+TEST_CASE("multiline_index_column_width") {
+    std::stringstream ss(multilineLog);
+    auto lineParser = createTestParser();
+    FileParser fileParser(&ss, lineParser.get());
+    fileParser.index();
+
+    Index index;
+    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+
+    REQUIRE( index.maxWidth(0) == 2 );
+    REQUIRE( index.maxWidth(1) == 4 );
+    REQUIRE( index.maxWidth(2) == 4 );
+    REQUIRE( index.maxWidth(3) == 11 );
+}

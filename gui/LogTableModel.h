@@ -12,6 +12,7 @@ namespace gui {
         QString name;
         bool indexed = false;
         bool filterActive = false;
+        int maxWidth = -1;
     };
 
     enum class HeaderDataRole {
@@ -43,6 +44,8 @@ namespace gui {
         bool isSelected(int row);
         uint64_t lineOffset(uint64_t row);
         int findRow(uint64_t lineOffset);
+        int maxColumnWidth(int column);
+        void setColumnWidths(std::vector<int> widths);
         virtual int rowCount(const QModelIndex &parent) const override;
         virtual int columnCount(const QModelIndex &parent) const override;
         virtual QVariant data(const QModelIndex &index, int role) const override;

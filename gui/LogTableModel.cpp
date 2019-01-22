@@ -86,6 +86,17 @@ namespace gui {
         return it == rows.end() ? -1 : *it;
     }
 
+    int LogTableModel::maxColumnWidth(int column) {
+        return _columns[column].maxWidth;
+    }
+
+    void LogTableModel::setColumnWidths(std::vector<int> widths) {
+        assert(widths.size() == _columns.size());
+        for (auto i = 0u; i < widths.size(); ++i) {
+            _columns[i].maxWidth = widths[i];
+        }
+    }
+
     QVariant LogTableModel::headerData(int section, Qt::Orientation orientation, int role) const {
         if (section == -1 || orientation != Qt::Horizontal)
             return QVariant();
@@ -96,6 +107,8 @@ namespace gui {
             return _columns[section].filterActive;
         }
         if (role == Qt::DisplayRole && orientation == Qt::Horizontal) {
+            if (section == (int)_columns.size() - 1)
+                return {};
             return _columns[section].name;
         }
         return QVariant();

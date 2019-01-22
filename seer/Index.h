@@ -31,6 +31,7 @@ namespace seer {
     struct ColumnInfo {
         std::unordered_map<std::string, ewah_bitset> index;
         bool indexed = false;
+        int maxWidth = -1;
     };
 
     class Index {
@@ -54,6 +55,7 @@ namespace seer {
                    std::function<bool()> stopRequested,
                    std::function<void(uint64_t, uint64_t)> progress = {});
         std::vector<ColumnIndexInfo> getValues(int column);
+        int maxWidth(int column);
     };
 
 } // namespace seer

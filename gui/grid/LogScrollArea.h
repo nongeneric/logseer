@@ -1,6 +1,7 @@
 #pragma once
 
 #include "LogTableView.h"
+#include "FilterHeaderView.h"
 #include <QAbstractScrollArea>
 
 namespace gui::grid {
@@ -9,11 +10,12 @@ namespace gui::grid {
         Q_OBJECT
 
         LogTableView* _view;
+        FilterHeaderView* _header;
         int _rowCount = 0;
 
     public:
         explicit LogScrollArea(QWidget* parent = nullptr);
-        void setWidget(LogTableView* view);
+        void setWidget(LogTableView* view, FilterHeaderView* header);
         void setRowCount(int count);
         void ensureVisible(int row);
 

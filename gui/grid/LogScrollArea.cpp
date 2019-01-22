@@ -12,8 +12,9 @@ namespace gui::grid {
         verticalScrollBar()->setPageStep(10);
     }
 
-    void LogScrollArea::setWidget(LogTableView* view) {
+    void LogScrollArea::setWidget(LogTableView* view, FilterHeaderView* header) {
         _view = view;
+        _header = header;
         view->setParent(viewport());
         view->installEventFilter(this);
         view->show();
@@ -44,6 +45,12 @@ namespace gui::grid {
 
     void LogScrollArea::scrollContentsBy(int dx, int dy) {
         _view->setFirstRow(verticalScrollBar()->value());
+        _view->move(-horizontalScrollBar()->value(), 0);
+        _view->resize(_view->size().width() - _view->pos().x(),
+                      _view->size().height());
+        _header->move(-horizontalScrollBar()->value(), 0);
+        _header->resize(_header->size().width() - _header->pos().x(),
+                        _header->size().height());
         QAbstractScrollArea::scrollContentsBy(dx, dy);
     }
 

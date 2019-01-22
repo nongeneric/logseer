@@ -399,3 +399,42 @@ TEST_CASE("log_file_search_basic") {
     REQUIRE( first == -1 );
     REQUIRE( last == -1 );
 }
+
+TEST_CASE("column_max_width_should_be_set_after_file_has_been_indexed") {
+    char arg[] = "arg";
+    int count = 1; char* args[] = { arg };
+    QApplication app(count, args);
+
+    auto ss = std::make_unique<std::stringstream>(simpleLog);
+    auto repository = std::make_shared<TestLineParserRepository>();
+    TestLogFile file(std::move(ss), repository->resolve(*ss));
+    file.parse();
+
+    waitFor([&] { return file.isState(gui::sm::ParsingState); });
+
+    auto model = file.logTableModel();
+
+    REQUIRE( model->maxColumnWidth(0) == -1 );
+    REQUIRE( model->maxColumnWidth(1) == -1 );
+    REQUIRE( model->maxColumnWidth(2) == -1 );
+    REQUIRE( model->maxColumnWidth(3) == -1 );
+    REQUIRE( model->maxColumnWidth(4) == -1 );
+
+    file.parsingTask->proceed();
+
+    waitFor([&] { return file.isState(gui::sm::IndexingState); });
+
+    file.indexingTask->proceed();
+
+    waitFor([&] { return file.isState(gui::sm::CompleteState); });
+
+    REQUIRE( model->maxColumnWidth(0) == 1 );
+    REQUIRE( model->maxColumnWidth(1) == 2 );
+    REQUIRE( model->maxColumnWidth(2) == 4 );
+    REQUIRE( model->maxColumnWidth(3) == 4 );
+    REQUIRE( model->maxColumnWidth(4) == 9 );
+
+    file.interrupt();
+
+    waitFor([&] { return file.isState(gui::sm::InterruptedState); });
+}

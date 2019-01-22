@@ -3,23 +3,51 @@
 #include <QSizePolicy>
 #include <QVBoxLayout>
 #include <QResizeEvent>
+#include <QScrollBar>
+#include <QFontMetrics>
 
 #include "LogTableView.h"
 
 namespace gui::grid {
 
+    void emulateResize(QWidget* widget) {
+        auto size = widget->size();
+        size.rheight()++;
+        widget->resize(size);
+        size.rheight()--;
+        widget->resize(size);
+    }
+
     void LogTable::flipExpanded() {
+        auto lastColumnCharWidth = _model->maxColumnWidth(_model->columnCount({}) - 1);
+        if (lastColumnCharWidth == -1)
+            return;
         _expanded = !_expanded;
+        auto last = _header->count() - 1;
+        if (_expanded) {
+            _header->setSectionResizeMode(last,
+                                          QHeaderView::ResizeMode::Interactive);
+             QFontMetrics metrics(_view->font());
+             auto lastColumnWidth =
+                 metrics.size(Qt::TextSingleLine, "_") * lastColumnCharWidth;
+             _header->resizeSection(last, lastColumnWidth.width());
+        } else {
+            _header->setSectionResizeMode(last,
+                                          QHeaderView::ResizeMode::Stretch);
+        }
+        emulateResize(this);
+        emulateResize(_header);
     }
 
     LogTable::LogTable(QWidget* parent) : QWidget(parent) {
         _header = new FilterHeaderView(this);
         _view = new LogTableView(this);
         _scrollArea = new LogScrollArea(this);
-        _scrollArea->setWidget(_view);
+        _scrollArea->setWidget(_view, _header);
 
         connect(_header, &QHeaderView::sectionResized, this, [=] {
             _view->update();
+            emulateResize(this);
         });
 
         connect(_header,
@@ -96,11 +124,24 @@ namespace gui::grid {
         QWidget::paintEvent(event);
     }
 
-    void LogTable::resizeEvent(QResizeEvent* event) {
-        auto size = event->size();
-        _header->resize(size.width(), 26);
+    void LogTable::resizeEvent(QResizeEvent*) {
+        auto size = geometry();
+        _header->resize(size.width() - _header->pos().x(), 26);
         _scrollArea->move(0, _header->height());
-        _scrollArea->resize(size.width(), size.height() - _header->height());
+        _scrollArea->resize(size.width() - _scrollArea->pos().x(),
+                            size.height() - _header->height());
+        auto minHeaderWidth = _header->sectionPosition(_header->count() - 1);
+        if (_expanded) {
+            minHeaderWidth += _header->sectionSize(_header->count() - 1);
+        }
+        auto hScrollBar = _scrollArea->horizontalScrollBar();
+        if (minHeaderWidth > size.width()) {
+            hScrollBar->setMaximum(minHeaderWidth - size.width());
+            hScrollBar->setPageStep(size.width());
+        } else {
+            hScrollBar->setMaximum(0);
+            hScrollBar->setPageStep(0);
+        }
     }
 
 } // namespace gui::grid
