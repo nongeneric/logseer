@@ -29,6 +29,9 @@ namespace gui::grid {
             assert(index.isValid());
             auto text = model->data(index, Qt::DisplayRole).toString();
             auto sectionSize = _table->header()->sectionSize(column);
+            if (column == columns - 1) {
+                sectionSize -= _table->scrollArea()->verticalScrollBar()->width();
+            }
             auto elided = metrics.elidedText(text, Qt::ElideRight, sectionSize);
             painter->drawText(x, y, sectionSize, _rowHeight, 0, elided);
         }

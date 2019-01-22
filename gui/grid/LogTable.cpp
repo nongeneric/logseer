@@ -2,25 +2,21 @@
 
 #include <QSizePolicy>
 #include <QVBoxLayout>
+#include <QResizeEvent>
 
 #include "LogTableView.h"
 
 namespace gui::grid {
 
+    void LogTable::flipExpanded() {
+        _expanded = !_expanded;
+    }
+
     LogTable::LogTable(QWidget* parent) : QWidget(parent) {
         _header = new FilterHeaderView(this);
-        _header->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-        _header->setMinimumHeight(0);
         _view = new LogTableView(this);
-        _view->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
         _scrollArea = new LogScrollArea(this);
         _scrollArea->setWidget(_view);
-        auto layout = new QVBoxLayout();
-        layout->addWidget(_header);
-        layout->addWidget(_scrollArea);
-        layout->setSpacing(0);
-        layout->setContentsMargins(0, 0, 0, 0);
-        setLayout(layout);
 
         connect(_header, &QHeaderView::sectionResized, this, [=] {
             _view->update();
@@ -30,18 +26,12 @@ namespace gui::grid {
                 &QHeaderView::sectionClicked,
                 this,
                 [=](int column) {
-                    if (column != 0) {
+                    if (column == _header->count() - 1) {
+                        flipExpanded();
+                    } else if (column != 0) {
                         emit requestFilter(column);
                     }
                 });
-    }
-
-    void emulateResize(QWidget* widget) {
-        auto size = widget->size();
-        size.rheight()++;
-        widget->resize(size);
-        size.rheight()--;
-        widget->resize(size);
     }
 
     void LogTable::setModel(LogTableModel* model) {
@@ -61,8 +51,7 @@ namespace gui::grid {
                 this,
                 [=] {
             _scrollArea->setRowCount(_model->rowCount({}));
-            _view->update();
-            emulateResize(_scrollArea);
+            _scrollArea->update();
         });
 
         connect(_model,
@@ -91,6 +80,10 @@ namespace gui::grid {
         return _scrollArea;
     }
 
+    bool LogTable::expanded() const {
+        return _expanded;
+    }
+
     void LogTable::mousePressEvent(QMouseEvent* event) {
         QWidget::mousePressEvent(event);
     }
@@ -101,6 +94,13 @@ namespace gui::grid {
 
     void LogTable::paintEvent(QPaintEvent* event) {
         QWidget::paintEvent(event);
+    }
+
+    void LogTable::resizeEvent(QResizeEvent* event) {
+        auto size = event->size();
+        _header->resize(size.width(), 26);
+        _scrollArea->move(0, _header->height());
+        _scrollArea->resize(size.width(), size.height() - _header->height());
     }
 
 } // namespace gui::grid

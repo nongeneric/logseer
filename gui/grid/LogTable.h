@@ -16,6 +16,9 @@ namespace gui::grid {
         FilterHeaderView* _header = nullptr;
         LogTableView* _view = nullptr;
         LogScrollArea* _scrollArea = nullptr;
+        bool _expanded = false;
+
+        void flipExpanded();
 
     public:
         explicit LogTable(QWidget* parent = nullptr);
@@ -31,11 +34,13 @@ namespace gui::grid {
     public:
         bool eventFilter(QObject *watched, QEvent *event) override;
         LogScrollArea* scrollArea() const;
+        bool expanded() const;
 
     protected:
         void mousePressEvent(QMouseEvent *event) override;
         void keyPressEvent(QKeyEvent *event) override;
         void paintEvent(QPaintEvent *event) override;
+        void resizeEvent(QResizeEvent *event) override;
     };
 
 } // namespace gui::grid

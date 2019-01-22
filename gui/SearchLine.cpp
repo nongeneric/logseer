@@ -8,6 +8,8 @@
 namespace gui {
 
     SearchLine::SearchLine(QWidget* parent) : QWidget(parent) {
+        setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+
         auto edit = new QLineEdit();
         _button = new QPushButton();
         _button->setText("Search");

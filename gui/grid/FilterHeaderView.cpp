@@ -71,16 +71,8 @@ namespace gui::grid {
         setMouseTracking(true);
     }
 
-    void FilterHeaderView::mousePressEvent(QMouseEvent* event) {
-        QHeaderView::mousePressEvent(event);
-    }
-
     LogTable *FilterHeaderView::logTable() const {
         return _table;
-    }
-
-    QSize FilterHeaderView::minimumSizeHint() const {
-        return sizeHint();
     }
 
 } // namespace gui::grid

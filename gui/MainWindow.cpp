@@ -118,6 +118,7 @@ namespace gui {
         splitter->setOrientation(Qt::Vertical);
         splitter->addWidget(mainTableAndSearch);
         splitter->addWidget(searchTable);
+        splitter->setSizes({height() * 2/3, height() * 1/3});
 
         connect(searchLine,
                 &SearchLine::searchRequested,
