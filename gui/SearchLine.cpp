@@ -4,6 +4,7 @@
 #include <QVBoxLayout>
 #include <QLineEdit>
 #include <QCheckBox>
+#include <QShortcut>
 
 namespace gui {
 
@@ -38,12 +39,19 @@ namespace gui {
         vbox->setAlignment(caseSensitive, Qt::AlignRight);
         setLayout(vbox);
 
-        connect(_button,
-                &QPushButton::clicked,
-                this,
-                [=] {
-            emit searchRequested(edit->text().toStdString(), caseSensitive->isChecked());
+        auto focusShortcut = new QShortcut(QKeySequence::Find, this);
+
+        connect(focusShortcut, &QShortcut::activated, this, [=] {
+            edit->selectAll();
+            edit->setFocus();
         });
+
+        auto search = [=] {
+            emit searchRequested(edit->text().toStdString(), caseSensitive->isChecked());
+        };
+
+        connect(edit, &QLineEdit::returnPressed, this, search);
+        connect(_button, &QPushButton::clicked, this, search);
     }
 
     void SearchLine::setStatus(std::string status) {
