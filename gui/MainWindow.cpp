@@ -3,6 +3,7 @@
 #include "FilterTableModel.h"
 #include "LogTableModel.h"
 #include "SearchLine.h"
+#include "Config.h"
 #include "grid/FilterHeaderView.h"
 #include "grid/LogTable.h"
 #include "seer/LineParserRepository.h"
@@ -77,9 +78,13 @@ namespace gui {
     void MainWindow::openLog(std::string path) {
         seer::log_infof("opening [%s]", path.c_str());
         auto stream = std::make_unique<std::ifstream>(path);
-        auto repository = std::make_shared<seer::LineParserRepository>();
-        repository->init();
-        auto lineParser = repository->resolve(*stream);
+
+        seer::LineParserRepository repository;
+        for (auto& config : g_Config.regexConfigs()) {
+            repository.addRegexParser(config.name, config.priority, config.json);
+        }
+
+        auto lineParser = repository.resolve(*stream);
         auto file = std::make_unique<LogFile>(std::move(stream), lineParser);
 
         auto table = new grid::LogTable();

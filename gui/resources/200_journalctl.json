@@ -1,0 +1,32 @@
+{
+    "description": "journalctl logs",
+    "magic": "-- Logs begin at",
+    "regex": "^(.+? \\d+ .+?) (.*?) (.*?)((\\[(\\d+)])?): (.*)$",
+    "columns": [
+        {
+            "name": "Timestamp",
+            "group": 1,
+            "indexed": false
+        },
+        {
+            "name": "Host",
+            "group": 2,
+            "indexed": true
+        },
+        {
+            "name": "Component",
+            "group": 3,
+            "indexed": true
+        },
+        {
+            "name": "Pid",
+            "group": 6,
+            "indexed": true
+        },
+        {
+            "name": "Message",
+            "group": 7,
+            "indexed": false
+        }
+    ]
+}

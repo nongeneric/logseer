@@ -1,6 +1,6 @@
-<!DOCTYPE RCC>
-<RCC version="1.0">
-<qresource>
-    <file>filter-icon.ico</file>
-</qresource>
+<RCC>
+    <qresource prefix="/">
+        <file>filter-icon.ico</file>
+        <file>200_journalctl.json</file>
+    </qresource>
 </RCC>

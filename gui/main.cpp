@@ -4,6 +4,7 @@
 #include <QStyleFactory>
 #include <string>
 #include <iostream>
+#include "Config.h"
 #include "seer/CommandLineParser.h"
 
 int main(int argc, char *argv[]) {
@@ -14,6 +15,8 @@ int main(int argc, char *argv[]) {
 
     seer::CommandLineParser parser;
     if (parser.parse(argc, argv)) {
+        gui::g_Config.init();
+
         if (!parser.help().empty()) {
             std::cout << parser.help() << std::endl;
             return 0;

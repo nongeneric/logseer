@@ -40,6 +40,8 @@ set(SRC
     sm/StateMachine.h
     ThreadDispatcher.h
     ThreadDispatcher.cpp
+    Config.h
+    Config.cpp
 )
 add_library(gui STATIC ${SRC})
 target_link_libraries(gui Qt5::Core Qt5::Widgets seer ${Boost_LIBRARIES})
