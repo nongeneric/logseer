@@ -1,6 +1,8 @@
 <RCC>
     <qresource prefix="/">
-        <file>filter-icon.ico</file>
+        <file>filter-fill.svg</file>
+        <file>filter.svg</file>
+        <file>plus.svg</file>
         <file>200_journalctl.json</file>
     </qresource>
 </RCC>
