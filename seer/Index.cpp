@@ -244,7 +244,7 @@ namespace seer {
     }
 
     Index::Index(uint64_t unfilteredLineCount)
-        : _lineMap(1024), _unfilteredLineCount(unfilteredLineCount) {}
+        : _unfilteredLineCount(unfilteredLineCount) {}
 
     void Index::filter(const std::vector<ColumnFilter>& filters) {
         _filters = filters;
@@ -253,6 +253,7 @@ namespace seer {
             _filtered = false;
             return;
         }
+
         _filtered = true;
 
         log_info("started filtering");
@@ -261,17 +262,16 @@ namespace seer {
 
         log_info("filtering complete");
 
-        _lineMap.clear();
-        for (auto index : _filter) {
-            _lineMap.add(index);
-        }
+        auto iewah = new IndexedEwah(1024);
+        iewah->init(_filter);
+        _lineMap.reset(iewah);
 
         log_info("building lineMap complete");
     }
 
     void Index::search(FileParser* fileParser, std::string text, bool caseSensitive) {
-        _lineMap.clear();
         std::string line;
+        auto lineMap = new RandomBitArray(1024);
         auto pred = caseSensitive
                 ? [](char a, char b) { return a == b; }
                 : [](char a, char b) { return std::toupper(a) == std::toupper(b); };
@@ -279,7 +279,7 @@ namespace seer {
             fileParser->readLine(index, line);
             auto it = std::search(begin(line), end(line), begin(text), end(text), pred);
             if (it != end(line)) {
-                _lineMap.add(index);
+                lineMap->add(index);
             }
         };
         if (_filtered) {
@@ -292,18 +292,19 @@ namespace seer {
             }
             _filtered = true;
         }
+        _lineMap.reset(lineMap);
     }
 
     uint64_t Index::getLineCount() {
         if (_filtered)
-            return _lineMap.size();
+            return _lineMap->size();
         return _unfilteredLineCount;
     }
 
     uint64_t Index::mapIndex(uint64_t index) {
         if (!_filtered)
             return index;
-        return _lineMap.get(index);
+        return _lineMap->get(index);
     }
 
     bool Index::index(FileParser* fileParser,

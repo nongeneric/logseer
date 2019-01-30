@@ -19,6 +19,7 @@ set(SRC
     RandomBitArrayTests.cpp
     TaskTests.cpp
     CommandLineParserTests.cpp
+    IndexedEwahTests.cpp
 )
 add_executable(tests ${SRC})
 target_link_libraries(tests gui)

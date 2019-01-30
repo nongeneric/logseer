@@ -1,11 +1,12 @@
 #pragma once
 
+#include "IRandomArray.h"
 #include <vector>
 #include <ewah.h>
 
 namespace seer {
 
-    class RandomBitArray {
+    class RandomBitArray : public IRandomArray {
         unsigned _bucketSize;
         uint64_t _lastValue = 0;
         unsigned _currentBucketSize = -1;
@@ -14,8 +15,8 @@ namespace seer {
     public:
         RandomBitArray(unsigned bucketSize);
         void add(uint64_t value);
-        uint64_t get(uint64_t index);
-        uint64_t size() const;
+        uint64_t get(uint64_t index) override;
+        uint64_t size() const override;
         void clear();
     };
 

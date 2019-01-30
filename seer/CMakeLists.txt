@@ -20,6 +20,8 @@ set(SRC
     RegexLineParser.cpp
     CommandLineParser.h
     CommandLineParser.cpp
+    IndexedEwah.h
+    IndexedEwah.cpp
     task/Task.h
     task/Task.cpp
     task/ParsingTask.h

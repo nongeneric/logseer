@@ -3,6 +3,7 @@
 #include "FileParser.h"
 #include "ILineParser.h"
 #include "RandomBitArray.h"
+#include "IndexedEwah.h"
 #include <ewah.h>
 #include <stdint.h>
 #include <string>
@@ -11,6 +12,7 @@
 #include <functional>
 #include <tuple>
 #include <set>
+#include <memory>
 #include <experimental/ranges/range>
 
 namespace seer {
@@ -35,7 +37,7 @@ namespace seer {
     };
 
     class Index {
-        RandomBitArray _lineMap;
+        std::shared_ptr<IRandomArray> _lineMap;
         std::vector<ColumnInfo> _columns;
         uint64_t _unfilteredLineCount = 0;
         bool _filtered = false;
