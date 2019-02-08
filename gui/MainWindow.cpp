@@ -28,6 +28,7 @@ namespace gui {
         auto searchModel = file->searchLogTableModel();
         if (searchModel) {
             searchTable->setModel(searchModel);
+            table->setHist(file->searchHist());
         }
 
         if (file->isState(sm::ParsingState)) {
@@ -88,6 +89,7 @@ namespace gui {
         auto file = std::make_unique<LogFile>(std::move(stream), lineParser);
 
         auto table = new grid::LogTable();
+        table->showHistMap();
 
         auto mainTableAndSearch = new QWidget();
         auto vbox = new QVBoxLayout();

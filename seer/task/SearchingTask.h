@@ -8,6 +8,7 @@ namespace seer {
 
     class FileParser;
     class Index;
+    class Hist;
 
     namespace task {
 
@@ -16,6 +17,7 @@ namespace seer {
             std::string _text;
             bool _caseSensitive;
             std::shared_ptr<Index> _index;
+            std::shared_ptr<Hist> _hist;
 
         public:
             SearchingTask(FileParser* fileParser,
@@ -23,6 +25,7 @@ namespace seer {
                           std::string text,
                           bool caseSensitive);
             std::shared_ptr<Index> index();
+            std::shared_ptr<Hist> hist();
 
         protected:
             void body() override;

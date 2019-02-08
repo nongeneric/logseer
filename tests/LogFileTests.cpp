@@ -374,9 +374,17 @@ TEST_CASE("log_file_search_basic") {
 
     auto model = file.logTableModel();
     auto searchModel = file.searchLogTableModel();
+    auto hist = file.searchHist();
 
     REQUIRE( model->rowCount({}) == 6 );
     REQUIRE( searchModel->rowCount({}) == 2 );
+    REQUIRE( hist != nullptr );
+    REQUIRE( hist->get(0, 6) == 0 );
+    REQUIRE( hist->get(1, 6) == 0 );
+    REQUIRE( hist->get(2, 6) == 0 );
+    REQUIRE( hist->get(3, 6) == 1 );
+    REQUIRE( hist->get(4, 6) == 0 );
+    REQUIRE( hist->get(5, 6) == 1 );
 
     searchModel->setSelection(0);
     REQUIRE( model->isSelected(3) );

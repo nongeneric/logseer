@@ -22,6 +22,8 @@ set(SRC
     CommandLineParser.cpp
     IndexedEwah.h
     IndexedEwah.cpp
+    Hist.h
+    Hist.cpp
     task/Task.h
     task/Task.cpp
     task/ParsingTask.h

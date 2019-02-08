@@ -36,6 +36,8 @@ set(SRC
     grid/LogTableView.cpp
     grid/LogScrollArea.h
     grid/LogScrollArea.cpp
+    grid/HistMap.h
+    grid/HistMap.cpp
     sm/Logger.h
     sm/StateMachine.h
     ThreadDispatcher.h

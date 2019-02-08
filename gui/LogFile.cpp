@@ -86,6 +86,7 @@ namespace gui {
                     auto newSearchTableModel = new LogTableModel(_fileParser.get());
                     subscribeToSelectionChanged(_searchLogTableModel.get(), newSearchTableModel);
                     _searchLogTableModel.reset(newSearchTableModel);
+                    _searchHist = _searchingTask->hist();
                     _searchIndex = _searchingTask->index();
                     _searchLogTableModel->setIndex(_searchIndex.get());
                     finish();
@@ -152,6 +153,10 @@ namespace gui {
 
     LogTableModel *LogFile::searchLogTableModel() {
         return _searchLogTableModel.get();
+    }
+
+    const seer::Hist* LogFile::searchHist() {
+        return _searchHist.get();
     }
 
     void LogFile::requestFilter(int column) {

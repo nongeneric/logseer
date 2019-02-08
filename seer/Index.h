@@ -4,6 +4,7 @@
 #include "ILineParser.h"
 #include "RandomBitArray.h"
 #include "IndexedEwah.h"
+#include "Hist.h"
 #include <ewah.h>
 #include <stdint.h>
 #include <string>
@@ -49,7 +50,10 @@ namespace seer {
     public:
         Index(uint64_t unfilteredLineCount = 0);
         void filter(const std::vector<ColumnFilter>& filters);
-        void search(FileParser* fileParser, std::string text, bool caseSensitive);
+        void search(FileParser* fileParser,
+                    std::string text,
+                    bool caseSensitive,
+                    Hist& hist);
         uint64_t getLineCount();
         uint64_t mapIndex(uint64_t index);
         bool index(FileParser* fileParser,

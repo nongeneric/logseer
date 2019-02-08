@@ -269,29 +269,36 @@ namespace seer {
         log_info("building lineMap complete");
     }
 
-    void Index::search(FileParser* fileParser, std::string text, bool caseSensitive) {
+    void Index::search(FileParser* fileParser,
+                       std::string text,
+                       bool caseSensitive,
+                       Hist& hist)
+    {
         std::string line;
         auto lineMap = new RandomBitArray(1024);
         auto pred = caseSensitive
                 ? [](char a, char b) { return a == b; }
                 : [](char a, char b) { return std::toupper(a) == std::toupper(b); };
-        auto add = [&] (auto index) {
+        auto add = [&] (auto index, auto size) {
             fileParser->readLine(index, line);
             auto it = std::search(begin(line), end(line), begin(text), end(text), pred);
             if (it != end(line)) {
                 lineMap->add(index);
+                hist.add(index, size);
             }
         };
         if (_filtered) {
+            auto size = _filter.sizeInBits();
             for (auto index : _filter) {
-                add(index);
+                add(index, size);
             }
         } else {
             for (uint64_t i = 0; i < _unfilteredLineCount; ++i) {
-                add(i);
+                add(i, _unfilteredLineCount);
             }
             _filtered = true;
         }
+        hist.freeze();
         _lineMap.reset(lineMap);
     }
 

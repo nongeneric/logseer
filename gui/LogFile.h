@@ -10,6 +10,7 @@
 #include "seer/task/IndexingTask.h"
 #include "seer/task/SearchingTask.h"
 #include "seer/Log.h"
+#include "seer/Hist.h"
 #include "sm/Logger.h"
 #include "sm/StateMachine.h"
 #include <sml.hpp>
@@ -37,6 +38,7 @@ namespace gui {
         std::unique_ptr<seer::task::Task> _parsingTask;
         std::unique_ptr<seer::task::Task> _indexingTask;
         std::unique_ptr<seer::task::SearchingTask> _searchingTask;
+        std::shared_ptr<seer::Hist> _searchHist;
         sm::Logger _smLogger;
         boost::sml::sm<sm::StateMachine, boost::sml::logger<sm::Logger>> _sm;
         ThreadDispatcher _dispatcher;
@@ -110,7 +112,8 @@ namespace gui {
         void requestFilter(int column);
         void setColumnFilter(int column, std::set<std::string> values);
         LogTableModel* logTableModel();
-        LogTableModel *searchLogTableModel();
+        LogTableModel* searchLogTableModel();
+        const seer::Hist* searchHist();
 
         inline bool isState(auto state) {
             return _sm.is(state);

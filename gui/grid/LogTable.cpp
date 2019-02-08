@@ -1,10 +1,10 @@
 #include "LogTable.h"
 
-#include <QSizePolicy>
-#include <QVBoxLayout>
+#include <QFontMetrics>
 #include <QResizeEvent>
 #include <QScrollBar>
-#include <QFontMetrics>
+#include <QSizePolicy>
+#include <QVBoxLayout>
 
 #include "LogTableView.h"
 
@@ -19,7 +19,8 @@ namespace gui::grid {
     }
 
     void LogTable::flipExpanded() {
-        auto lastColumnCharWidth = _model->maxColumnWidth(_model->columnCount({}) - 1);
+        auto lastColumnCharWidth =
+            _model->maxColumnWidth(_model->columnCount({}) - 1);
         if (lastColumnCharWidth == -1)
             return;
         _expanded = !_expanded;
@@ -27,13 +28,12 @@ namespace gui::grid {
         if (_expanded) {
             _header->setSectionResizeMode(last,
                                           QHeaderView::ResizeMode::Interactive);
-             QFontMetrics metrics(_view->font());
-             auto lastColumnWidth =
-                 metrics.size(Qt::TextSingleLine, "_") * lastColumnCharWidth;
-             _header->resizeSection(last, lastColumnWidth.width());
+            QFontMetrics metrics(_view->font());
+            auto lastColumnWidth =
+                metrics.size(Qt::TextSingleLine, "_") * lastColumnCharWidth;
+            _header->resizeSection(last, lastColumnWidth.width());
         } else {
-            _header->setSectionResizeMode(last,
-                                          QHeaderView::ResizeMode::Stretch);
+            _header->setSectionResizeMode(last, QHeaderView::ResizeMode::Stretch);
         }
         emulateResize(this);
         emulateResize(_header);
@@ -44,22 +44,20 @@ namespace gui::grid {
         _view = new LogTableView(this);
         _scrollArea = new LogScrollArea(this);
         _scrollArea->setWidget(_view, _header);
+        _histMap = new HistMap(this);
 
         connect(_header, &QHeaderView::sectionResized, this, [=] {
             _view->update();
             emulateResize(this);
         });
 
-        connect(_header,
-                &QHeaderView::sectionClicked,
-                this,
-                [=](int column) {
-                    if (column == _header->count() - 1) {
-                        flipExpanded();
-                    } else if (column != 0) {
-                        emit requestFilter(column);
-                    }
-                });
+        connect(_header, &QHeaderView::sectionClicked, this, [=](int column) {
+            if (column == _header->count() - 1) {
+                flipExpanded();
+            } else if (column != 0) {
+                emit requestFilter(column);
+            }
+        });
     }
 
     void LogTable::setModel(LogTableModel* model) {
@@ -74,29 +72,27 @@ namespace gui::grid {
         _header->updateGeometry();
         _scrollArea->setRowCount(_model->rowCount({}));
 
-        connect(_model,
-                &QAbstractTableModel::modelReset,
-                this,
-                [=] {
+        connect(_model, &QAbstractTableModel::modelReset, this, [=] {
             _scrollArea->setRowCount(_model->rowCount({}));
             _scrollArea->update();
         });
 
-        connect(_model,
-                &LogTableModel::selectionChanged,
-                this,
-                [=] {
+        connect(_model, &LogTableModel::selectionChanged, this, [=] {
             auto [first, last] = _model->getSelection();
             _scrollArea->ensureVisible(first);
             _view->update();
         });
     }
 
+    void LogTable::setHist(const seer::Hist* hist) {
+        _histMap->setHist(hist);
+    }
+
     LogTableModel* LogTable::model() const {
         return _model;
     }
 
-    FilterHeaderView *LogTable::header() const {
+    FilterHeaderView* LogTable::header() const {
         return _header;
     }
 
@@ -108,8 +104,16 @@ namespace gui::grid {
         return _scrollArea;
     }
 
+    HistMap *LogTable::histMap() const {
+        return _histMap;
+    }
+
     bool LogTable::expanded() const {
         return _expanded;
+    }
+
+    void LogTable::showHistMap() {
+        _showHistMap = true;
     }
 
     void LogTable::mousePressEvent(QMouseEvent* event) {
@@ -127,14 +131,26 @@ namespace gui::grid {
     void LogTable::resizeEvent(QResizeEvent*) {
         auto size = geometry();
         _header->resize(size.width() - _header->pos().x(), 26);
+
         _scrollArea->move(0, _header->height());
-        _scrollArea->resize(size.width() - _scrollArea->pos().x(),
+        _scrollArea->resize(size.width(),
                             size.height() - _header->height());
+
+        auto vScrollBar = _scrollArea->verticalScrollBar();
+        auto hScrollBar = _scrollArea->horizontalScrollBar();
+        _histMap->resize(_showHistMap ? 28 : 0,
+                         _scrollArea->height() - hScrollBar->height() -
+                             _scrollArea->contentsMargins().top() -
+                             _scrollArea->contentsMargins().bottom());
+        _histMap->move(_scrollArea->width() - vScrollBar->width() -
+                           _histMap->width() -
+                           _scrollArea->contentsMargins().right(),
+                       _header->height() + _scrollArea->contentsMargins().top());
         auto minHeaderWidth = _header->sectionPosition(_header->count() - 1);
         if (_expanded) {
             minHeaderWidth += _header->sectionSize(_header->count() - 1);
         }
-        auto hScrollBar = _scrollArea->horizontalScrollBar();
+
         if (minHeaderWidth > size.width()) {
             hScrollBar->setMaximum(minHeaderWidth - size.width());
             hScrollBar->setPageStep(size.width());

@@ -154,22 +154,24 @@ TEST_CASE("search") {
     REQUIRE( indexCopy.mapIndex(1) == 1 );
     REQUIRE( indexCopy.mapIndex(2) == 3 );
 
-    indexCopy.search(&fileParser, "4", true);
+    seer::Hist hist(1);
+
+    indexCopy.search(&fileParser, "4", true, hist);
     REQUIRE( indexCopy.getLineCount() == 1 );
     REQUIRE( indexCopy.mapIndex(0) == 3 );
 
     indexCopy = index;
-    indexCopy.search(&fileParser, "4", true);
+    indexCopy.search(&fileParser, "4", true, hist);
     REQUIRE( indexCopy.getLineCount() == 2 );
     REQUIRE( indexCopy.mapIndex(0) == 3 );
     REQUIRE( indexCopy.mapIndex(1) == 5 );
 
     indexCopy = index;
-    indexCopy.search(&fileParser, "inf", true);
+    indexCopy.search(&fileParser, "inf", true, hist);
     REQUIRE( indexCopy.getLineCount() == 0 );
 
     indexCopy = index;
-    indexCopy.search(&fileParser, "inf", false);
+    indexCopy.search(&fileParser, "inf", false, hist);
     REQUIRE( indexCopy.getLineCount() == 3 );
     REQUIRE( indexCopy.mapIndex(0) == 0 );
     REQUIRE( indexCopy.mapIndex(1) == 1 );
@@ -344,4 +346,59 @@ TEST_CASE("multiline_index_column_width") {
     REQUIRE( index.maxWidth(1) == 4 );
     REQUIRE( index.maxWidth(2) == 4 );
     REQUIRE( index.maxWidth(3) == 11 );
+}
+
+TEST_CASE("search_hist_simple") {
+    std::stringstream ss(simpleLog);
+    auto lineParser = createTestParser();
+    FileParser fileParser(&ss, lineParser.get());
+    fileParser.index();
+
+    Index index;
+    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+
+    /*
+        10 INFO CORE message 1
+        15 INFO SUB message 2
+        17 WARN CORE message 3
+        20 INFO SUB message 4
+        30 ERR CORE message 5
+        40 WARN SUB message 6
+    */
+
+    Hist hist(1000);
+    auto indexCopy = index;
+
+    /*
+        10 INFO CORE message 1
+        15 INFO SUB message 2
+        17 WARN CORE message 3
+      + 20 INFO SUB message 4
+        30 ERR CORE message 5
+      + 40 WARN SUB message 6
+    */
+
+    indexCopy.search(&fileParser, "4", true, hist);
+    REQUIRE( hist.get(0, 6) == 0 );
+    REQUIRE( hist.get(1, 6) == 0 );
+    REQUIRE( hist.get(2, 6) == 0 );
+    REQUIRE( hist.get(3, 6) == 1 );
+    REQUIRE( hist.get(4, 6) == 0 );
+    REQUIRE( hist.get(5, 6) == 1 );
+
+    /*
+        10 INFO CORE message 1
+        15 INFO SUB message 2
+      + 20 INFO SUB message 4
+    */
+
+    std::vector<ColumnFilter> filters;
+    filters = {{1, {"INFO"}}};
+    indexCopy = index;
+    Hist hist2(1000);
+    indexCopy.filter(filters);
+    indexCopy.search(&fileParser, "4", true, hist2);
+    REQUIRE( hist2.get(0, 3) == 0 );
+    REQUIRE( hist2.get(1, 3) == 0 );
+    REQUIRE( hist2.get(2, 3) == 1 );
 }
