@@ -1,6 +1,8 @@
 #pragma once
 
 #include <QWidget>
+#include <QRect>
+
 namespace gui::grid {
 
     class LogTable;
@@ -11,6 +13,8 @@ namespace gui::grid {
         LogTable* _table;
         int _rowHeight;
         int _firstRow = 0;
+        std::string _searchText;
+        bool _searchCaseSensitive;
 
         void paintRow(QPainter* painter, int row, int y);
         int getRow(int y);
@@ -19,6 +23,7 @@ namespace gui::grid {
         explicit LogTableView(LogTable* parent);
         void setFirstRow(int row);
         int visibleRows();
+        void setSearchHighlight(std::string text, bool caseSensitive);
 
     signals:
 

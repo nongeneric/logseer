@@ -18,7 +18,6 @@ namespace gui::grid {
         LogTableView* _view = nullptr;
         LogScrollArea* _scrollArea = nullptr;
         HistMap* _histMap = nullptr;
-
         bool _expanded = false;
         bool _showHistMap = false;
 
@@ -34,6 +33,7 @@ namespace gui::grid {
         HistMap* histMap() const;
         bool expanded() const;
         void showHistMap();
+        void setSearchHighlight(std::string text, bool caseSensitive);
 
     signals:
         void requestFilter(int column);

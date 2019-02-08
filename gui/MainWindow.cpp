@@ -132,6 +132,8 @@ namespace gui {
                 this,
                 [=, file = file.get()] (std::string text, bool caseSensitive) {
             file->search(text, caseSensitive);
+            searchTable->setSearchHighlight(text, caseSensitive);
+            table->setSearchHighlight(text, caseSensitive);
         });
 
         connect(

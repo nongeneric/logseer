@@ -11,6 +11,8 @@ namespace gui::grid {
         auto model = _table->model();
         auto columns = _table->header()->count();
 
+        QFontMetrics fm(font());
+
         if (model->isSelected(row)) {
             QBrush b(palette().color(QPalette::Highlight));
             QRect r(0, y, width(), _rowHeight);
@@ -20,7 +22,6 @@ namespace gui::grid {
             painter->setPen(palette().color(QPalette::ButtonText));
         }
 
-        QFontMetrics metrics(font());
         for (auto column = 0; column < columns; ++column) {
             auto x = _table->header()->sectionPosition(column);
             assert(row < model->rowCount({}));
@@ -34,7 +35,32 @@ namespace gui::grid {
                 sectionSize -= _table->histMap()->width();
                 sectionSize -= 2;
             }
-            auto elided = metrics.elidedText(text, Qt::ElideRight, sectionSize);
+            auto elided = fm.elidedText(text, Qt::ElideRight, sectionSize);
+
+            if (!_searchText.empty() && !model->isSelected(row)) {
+                auto pred = _searchCaseSensitive
+                        ? [](char a, char b) { return a == b; }
+                        : [](char a, char b) { return std::toupper(a) == std::toupper(b); };
+
+                auto textStr = text.toStdString();
+                auto it = begin(textStr);
+
+                for (;;) {
+                    it = std::search(it, end(textStr), begin(_searchText), end(_searchText), pred);
+                    if (it == end(textStr))
+                        break;
+                    int first = std::distance(begin(textStr), it);
+                    int last = first + _searchText.size();
+                    QRect r;
+                    r.setLeft(x + fm.width(text, first));
+                    r.setRight(x + fm.width(text, last));
+                    r.setTop(y);
+                    r.setBottom(y + _rowHeight);
+                    painter->fillRect(r, QBrush(QColor::fromRgb(0xfb, 0xfa, 0x08)));
+                    it += _searchText.size();
+                }
+            }
+
             painter->drawText(x, y, sectionSize, _rowHeight, 0, elided);
         }
     }
@@ -103,6 +129,12 @@ namespace gui::grid {
 
     int LogTableView::visibleRows() {
         return height() / _rowHeight;
+    }
+
+    void LogTableView::setSearchHighlight(std::string text, bool caseSensitive) {
+        _searchText = text;
+        _searchCaseSensitive = caseSensitive;
+        update();
     }
 
 } // namespace gui::grid

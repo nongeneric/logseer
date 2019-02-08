@@ -116,6 +116,10 @@ namespace gui::grid {
         _showHistMap = true;
     }
 
+    void LogTable::setSearchHighlight(std::string text, bool caseSensitive) {
+        _view->setSearchHighlight(text, caseSensitive);
+    }
+
     void LogTable::mousePressEvent(QMouseEvent* event) {
         QWidget::mousePressEvent(event);
     }
