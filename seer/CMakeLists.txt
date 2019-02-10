@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.11)
 
 project(seer)
 
+find_package(Qt5Core)
+
 set(SRC
     ILineParser.h
     FileParser.h
@@ -34,4 +36,4 @@ set(SRC
     task/SearchingTask.cpp
 )
 add_library(seer STATIC ${SRC})
-target_link_libraries(seer pthread)
+target_link_libraries(seer Qt5::Core pthread)

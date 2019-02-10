@@ -32,8 +32,10 @@ namespace gui::grid {
             auto sectionSize = _table->header()->sectionSize(column);
             if (column == columns - 1) {
                 sectionSize -= _table->scrollArea()->verticalScrollBar()->width();
-                sectionSize -= _table->histMap()->width();
-                sectionSize -= 2;
+                if (!_table->expanded()) {
+                    sectionSize -= _table->histMap()->width();
+                    sectionSize -= 2;
+                }
             }
             auto elided = fm.elidedText(text, Qt::ElideRight, sectionSize);
 

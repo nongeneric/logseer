@@ -79,6 +79,7 @@ namespace gui {
     void MainWindow::openLog(std::string path) {
         seer::log_infof("opening [%s]", path.c_str());
         auto stream = std::make_unique<std::ifstream>(path);
+        assert(stream->is_open());
 
         seer::LineParserRepository repository;
         for (auto& config : g_Config.regexConfigs()) {

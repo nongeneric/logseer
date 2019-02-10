@@ -10,13 +10,13 @@ using namespace seer;
 
 TEST_CASE("get_parser_name") {
     std::stringstream ss(simpleLog);
-    auto lineParser = createTestParser();
+    auto lineParser = createTestParser(ss);
     REQUIRE(lineParser->name() == "test parser");
 }
 
 TEST_CASE("simple_parser") {
     std::stringstream ss(simpleLog);
-    auto lineParser = createTestParser();
+    auto lineParser = createTestParser(ss);
     FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
 
@@ -49,7 +49,7 @@ TEST_CASE("simple_parser") {
 
 TEST_CASE("simple_index") {
     std::stringstream ss(simpleLog);
-    auto lineParser = createTestParser();
+    auto lineParser = createTestParser(ss);
     FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
 
@@ -91,7 +91,7 @@ TEST_CASE("simple_index") {
 
 TEST_CASE("get_values") {
     std::stringstream ss(simpleLog);
-    auto lineParser = createTestParser();
+    auto lineParser = createTestParser(ss);
     FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
 
@@ -135,7 +135,7 @@ TEST_CASE("get_values") {
 
 TEST_CASE("search") {
     std::stringstream ss(simpleLog);
-    auto lineParser = createTestParser();
+    auto lineParser = createTestParser(ss);
     FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
 
@@ -180,7 +180,7 @@ TEST_CASE("search") {
 
 TEST_CASE("multiline_index") {
     std::stringstream ss(multilineLog);
-    auto lineParser = createTestParser();
+    auto lineParser = createTestParser(ss);
     FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
 
@@ -231,7 +231,7 @@ TEST_CASE("get_values_adjacent") {
         adjacentLog += "10 INFO CORE message 1\n";
     }
     std::stringstream ss(adjacentLog);
-    auto lineParser = createTestParser();
+    auto lineParser = createTestParser(ss);
     FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
 
@@ -243,7 +243,7 @@ TEST_CASE("get_values_adjacent") {
 
 TEST_CASE("get_values_counts") {
     std::stringstream ss(simpleLog);
-    auto lineParser = createTestParser();
+    auto lineParser = createTestParser(ss);
     FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
 
@@ -320,7 +320,7 @@ TEST_CASE("get_values_counts") {
 
 TEST_CASE("index_column_width") {
     std::stringstream ss(simpleLog);
-    auto lineParser = createTestParser();
+    auto lineParser = createTestParser(ss);
     FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
 
@@ -335,7 +335,7 @@ TEST_CASE("index_column_width") {
 
 TEST_CASE("multiline_index_column_width") {
     std::stringstream ss(multilineLog);
-    auto lineParser = createTestParser();
+    auto lineParser = createTestParser(ss);
     FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
 
@@ -350,7 +350,7 @@ TEST_CASE("multiline_index_column_width") {
 
 TEST_CASE("search_hist_simple") {
     std::stringstream ss(simpleLog);
-    auto lineParser = createTestParser();
+    auto lineParser = createTestParser(ss);
     FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
 
@@ -401,4 +401,66 @@ TEST_CASE("search_hist_simple") {
     REQUIRE( hist2.get(0, 3) == 0 );
     REQUIRE( hist2.get(1, 3) == 0 );
     REQUIRE( hist2.get(2, 3) == 1 );
+}
+
+TEST_CASE("search_unicode") {
+    std::stringstream ss(unicodeLog);
+    auto lineParser = createTestParser(ss);
+    FileParser fileParser(&ss, lineParser.get());
+    fileParser.index();
+
+    Index index;
+    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+
+    /*
+        10 ИНФО CORE message 1
+        15 ИНФО SUB message 2
+        17 WARN CORE message 3
+        20 ИНФО SUB GRÜẞEN 4
+        30 ERR CORE GRÜSSEN 5
+        40 WARN SUB grüßen 6
+    */
+
+    auto indexCopy = index;
+    std::vector<ColumnFilter> filters;
+    filters = {{1, {u8"ИНФО"}}};
+    indexCopy.filter(filters);
+    REQUIRE( indexCopy.getLineCount() == 3 );
+    REQUIRE( indexCopy.mapIndex(0) == 0 );
+    REQUIRE( indexCopy.mapIndex(1) == 1 );
+    REQUIRE( indexCopy.mapIndex(2) == 3 );
+
+    seer::Hist hist(1);
+
+    indexCopy = index;
+    indexCopy.search(&fileParser, u8"grüßen", true, hist);
+    REQUIRE( indexCopy.getLineCount() == 1 );
+    REQUIRE( indexCopy.mapIndex(0) == 5 );
+
+    indexCopy = index;
+    indexCopy.search(&fileParser, u8"grüßen", false, hist);
+    REQUIRE( indexCopy.getLineCount() == 2 );
+    REQUIRE( indexCopy.mapIndex(0) == 3 );
+    REQUIRE( indexCopy.mapIndex(1) == 5 );
+
+    indexCopy = index;
+    indexCopy.search(&fileParser, u8"GRÜSSEN", true, hist);
+    REQUIRE( indexCopy.getLineCount() == 1 );
+    REQUIRE( indexCopy.mapIndex(0) == 4 );
+
+    indexCopy = index;
+    indexCopy.search(&fileParser, u8"GRÜSSEN", false, hist);
+    REQUIRE( indexCopy.getLineCount() == 1 );
+    REQUIRE( indexCopy.mapIndex(0) == 4 );
+
+    indexCopy = index;
+    indexCopy.search(&fileParser, u8"GRÜẞEN", true, hist);
+    REQUIRE( indexCopy.getLineCount() == 1 );
+    REQUIRE( indexCopy.mapIndex(0) == 3 );
+
+    indexCopy = index;
+    indexCopy.search(&fileParser, u8"GRÜẞEN", false, hist);
+    REQUIRE( indexCopy.getLineCount() == 2 );
+    REQUIRE( indexCopy.mapIndex(0) == 3 );
+    REQUIRE( indexCopy.mapIndex(1) == 5 );
 }

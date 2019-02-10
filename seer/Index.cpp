@@ -8,6 +8,7 @@
 #include <thread>
 #include <tuple>
 #include <experimental/ranges/algorithm>
+#include <QString>
 
 namespace seer {
 
@@ -275,14 +276,13 @@ namespace seer {
                        Hist& hist)
     {
         std::string line;
+        QString qline, qtext = QString::fromStdString(text);
         auto lineMap = new RandomBitArray(1024);
-        auto pred = caseSensitive
-                ? [](char a, char b) { return a == b; }
-                : [](char a, char b) { return std::toupper(a) == std::toupper(b); };
+        auto qCaseSensitive = caseSensitive ? Qt::CaseSensitive : Qt::CaseInsensitive;
         auto add = [&] (auto index, auto size) {
             fileParser->readLine(index, line);
-            auto it = std::search(begin(line), end(line), begin(text), end(text), pred);
-            if (it != end(line)) {
+            qline = QString::fromStdString(line);
+            if (qline.contains(qtext, qCaseSensitive)) {
                 lineMap->add(index);
                 hist.add(index, size);
             }

@@ -48,8 +48,11 @@ namespace seer {
             sample.push_back(line);
         }
         for (auto& [_, parser] : _parsers) {
-            if (parser->isMatch(sample, ""))
+            if (parser->isMatch(sample, "")) {
+                stream.clear();
+                stream.seekg(0);
                 return parser;
+            }
         }
         return nullptr;
     }

@@ -11,7 +11,7 @@ using namespace gui;
 
 TEST_CASE("return_roles") {
     std::stringstream ss(simpleLog);
-    auto lineParser = createTestParser();
+    auto lineParser = createTestParser(ss);
     FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
 
@@ -44,7 +44,7 @@ TEST_CASE("return_roles") {
 
 TEST_CASE("model_selection") {
     std::stringstream ss(simpleLog);
-    auto lineParser = createTestParser();
+    auto lineParser = createTestParser(ss);
     FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
 
