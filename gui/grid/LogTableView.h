@@ -13,7 +13,7 @@ namespace gui::grid {
         LogTable* _table;
         int _rowHeight;
         int _firstRow = 0;
-        std::string _searchText;
+        QString _searchText;
         bool _searchCaseSensitive;
 
         void paintRow(QPainter* painter, int row, int y);
