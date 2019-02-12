@@ -47,8 +47,10 @@ namespace gui {
 
     void FilterTableModel::search(std::string key) {
         _visibleSet.clear();
+        auto qKey = QString::fromStdString(key);
         for (auto i = 0u; i < _infos.size(); ++i) {
-            if (_infos[i].value.find(key) != std::string::npos) {
+            auto qValue = QString::fromStdString(_infos[i].value);
+            if (qValue.contains(qKey, Qt::CaseInsensitive)) {
                 _visibleSet.insert(i);
             }
         }

@@ -49,6 +49,19 @@ TEST_CASE("filter") {
     REQUIRE( model->data(model->index(3, 1), Qt::DisplayRole).toString() == "bc23" );
 }
 
+TEST_CASE("filter_case_insensitive") {
+    std::vector<seer::ColumnIndexInfo> values = {
+        {"124", true, 2}, {"abc", true, 10}, {"123", true, 1}, {"BC23", true, 7}};
+    auto model = new gui::FilterTableModel(values);
+
+    model->search("bc");
+    REQUIRE( model->rowCount(QModelIndex()) == 2 );
+    REQUIRE( model->data(model->index(0, 1), Qt::DisplayRole).toString() == "abc" );
+    REQUIRE( model->data(model->index(1, 1), Qt::DisplayRole).toString() == "BC23" );
+    auto checked = model->checkedValues();
+    REQUIRE( checked.size() == 4 );
+}
+
 TEST_CASE("check") {
     std::vector<seer::ColumnIndexInfo> values = {
         {"124", true, 2}, {"abc", true, 10}, {"123", true, 1}, {"bc23", true, 7}};
