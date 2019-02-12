@@ -64,7 +64,7 @@ namespace seer {
 
             Result emptyIndex;
             for (auto format : _lineParser->getColumnFormats()) {
-                emptyIndex.push_back({{}, format.indexed});
+                emptyIndex.push_back({{}, format.indexed, {}, {}});
             }
 
             _results = {_threadCount, emptyIndex};
@@ -223,9 +223,8 @@ namespace seer {
         }
     };
 
-    ewah_bitset Index::makeIndex(std::vector<ColumnFilter>::const_iterator first,
-                                 std::vector<ColumnFilter>::const_iterator last) {
-        std::vector<ewah_bitset> perColumn;
+    void Index::makePerColumnIndex(std::vector<ColumnFilter>::const_iterator first,
+                                   std::vector<ColumnFilter>::const_iterator last) {
         for (auto filter = first; filter != last; ++filter) {
             std::vector<const ewah_bitset*> perValue;
             assert(_columns[filter->column].indexed);
@@ -233,11 +232,8 @@ namespace seer {
             for (auto& value : filter->selected) {
                 perValue.push_back(&column.index[value]);
             }
-            perColumn.push_back(fast_logicalor(perValue.size(), &perValue[0]));
+            _columns[filter->column].combinedIndex = fast_logicalor(perValue.size(), &perValue[0]);
         }
-
-        return std::accumulate(
-            begin(perColumn) + 1, end(perColumn), perColumn[0], std::bit_and<>());
     }
 
     Index::Index(uint64_t unfilteredLineCount)
@@ -255,7 +251,11 @@ namespace seer {
 
         log_info("started filtering");
 
-        _filter = makeIndex(begin(filters), end(filters));
+        makePerColumnIndex(begin(filters), end(filters));
+        _filter = _columns[_filters[0].column].combinedIndex;
+        for (auto it = begin(_filters) + 1; it != end(_filters); ++it) {
+            _filter = _filter & _columns[it->column].combinedIndex;
+        }
 
         log_info("filtering complete");
 
@@ -344,7 +344,10 @@ namespace seer {
             if (first == last) {
                 count = index.numberOfOnes();
             } else {
-                auto otherColumnsIndex = makeIndex(first, last);
+                auto otherColumnsIndex = _columns[first->column].combinedIndex;
+                for (auto it = first + 1; it != last; ++it) {
+                    otherColumnsIndex = otherColumnsIndex & _columns[it->column].combinedIndex;
+                }
                 count = (otherColumnsIndex & index).numberOfOnes();
             }
             values.push_back({value, checked, count});

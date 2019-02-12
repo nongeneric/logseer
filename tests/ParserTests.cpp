@@ -124,12 +124,91 @@ TEST_CASE("get_values") {
     index.filter(filters);
     values = index.getValues(1);
     REQUIRE( values.size() == 3 );
+    REQUIRE( values[0].count == 1 );
+    REQUIRE( values[1].count == 3 );
+    REQUIRE( values[2].count == 2 );
     REQUIRE( values[0].checked == false );
     REQUIRE( values[1].checked == true );
     REQUIRE( values[2].checked == false );
 
     values = index.getValues(2);
     REQUIRE( values.size() == 2 );
+    REQUIRE( values[0].count == 1 );
+    REQUIRE( values[1].count == 2 );
+    REQUIRE( values[0].checked == true );
+    REQUIRE( values[1].checked == true );
+}
+
+TEST_CASE("get_values_three_columns") {
+    std::stringstream ss(threeColumnLog);
+    auto lineParser = createThreeColumnTestParser(ss);
+    FileParser fileParser(&ss, lineParser.get());
+    fileParser.index();
+
+    Index index;
+    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+    auto values = index.getValues(1);
+    REQUIRE( values.size() == 3 );
+    REQUIRE( values[0].value == "ERR" );
+    REQUIRE( values[1].value == "INFO" );
+    REQUIRE( values[2].value == "WARN" );
+    REQUIRE( values[0].count == 1 );
+    REQUIRE( values[1].count == 3 );
+    REQUIRE( values[2].count == 2 );
+    REQUIRE( values[0].checked == true );
+    REQUIRE( values[1].checked == true );
+    REQUIRE( values[2].checked == true );
+
+    values = index.getValues(2);
+    REQUIRE( values.size() == 2 );
+    REQUIRE( values[0].value == "CORE" );
+    REQUIRE( values[1].value == "SUB" );
+    REQUIRE( values[0].count == 3 );
+    REQUIRE( values[1].count == 3 );
+    REQUIRE( values[0].checked == true );
+    REQUIRE( values[1].checked == true );
+
+    values = index.getValues(3);
+    REQUIRE( values.size() == 2 );
+    REQUIRE( values[0].value == "F1" );
+    REQUIRE( values[1].value == "F2" );
+    REQUIRE( values[0].count == 3 );
+    REQUIRE( values[1].count == 3 );
+    REQUIRE( values[0].checked == true );
+    REQUIRE( values[1].checked == true );
+
+    std::vector<ColumnFilter> filters;
+    filters = {{1, {"ERR", "WARN"}},
+               {2, {"CORE"}},
+               {3, {"F1", "F2"}}};
+    index.filter(filters);
+    values = index.getValues(1);
+    REQUIRE( values.size() == 3 );
+    REQUIRE( values[0].value == "ERR" );
+    REQUIRE( values[1].value == "INFO" );
+    REQUIRE( values[2].value == "WARN" );
+    REQUIRE( values[0].count == 1 );
+    REQUIRE( values[1].count == 1 );
+    REQUIRE( values[2].count == 1 );
+    REQUIRE( values[0].checked == true );
+    REQUIRE( values[1].checked == false );
+    REQUIRE( values[2].checked == true );
+
+    values = index.getValues(2);
+    REQUIRE( values.size() == 2 );
+    REQUIRE( values[0].value == "CORE" );
+    REQUIRE( values[1].value == "SUB" );
+    REQUIRE( values[0].count == 2 );
+    REQUIRE( values[1].count == 1 );
+    REQUIRE( values[0].checked == true );
+    REQUIRE( values[1].checked == false );
+
+    values = index.getValues(3);
+    REQUIRE( values.size() == 2 );
+    REQUIRE( values[0].value == "F1" );
+    REQUIRE( values[1].value == "F2" );
+    REQUIRE( values[0].count == 2 );
+    REQUIRE( values[1].count == 0 );
     REQUIRE( values[0].checked == true );
     REQUIRE( values[1].checked == true );
 }
