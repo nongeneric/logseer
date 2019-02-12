@@ -6,6 +6,13 @@
 #include "seer/RegexLineParser.h"
 #include <sstream>
 
+inline std::string unstructuredLog = "message1\n"
+                                     "message2\n"
+                                     "message3\n"
+                                     "message4\n";
+
+inline std::string zeroesLog = std::string("message1\0\0\0\0\0\0\0\0\0\0", 18);
+
 inline std::string simpleLog = "10 INFO CORE message 1\n"
                                "15 INFO SUB message 2\n"
                                "17 WARN CORE message 3\n"

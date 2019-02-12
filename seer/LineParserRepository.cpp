@@ -31,6 +31,10 @@ namespace seer {
         }
     };
 
+    LineParserRepository::LineParserRepository() {
+        _parsers[std::numeric_limits<int>::max()] = std::make_shared<DefaultLineParser>();
+    }
+
     void LineParserRepository::addRegexParser(std::string name, int priority, std::string json) {
         auto parser = std::make_shared<RegexLineParser>(name);
         try {

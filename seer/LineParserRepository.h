@@ -9,6 +9,7 @@ namespace seer {
         std::map<int, std::shared_ptr<ILineParser>> _parsers;
 
     public:
+        LineParserRepository();
         void addRegexParser(std::string name, int priority, std::string json);
         std::shared_ptr<ILineParser> resolve(std::istream &stream) override;
     };

@@ -34,7 +34,7 @@ namespace seer {
     struct ColumnInfo {
         std::unordered_map<std::string, ewah_bitset> index;
         bool indexed = false;
-        int maxWidth = -1;
+        int maxWidth = 0;
     };
 
     class Index {

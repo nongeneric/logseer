@@ -198,14 +198,10 @@ namespace seer {
         bool index() {
             auto columnFormats = _lineParser->getColumnFormats();
 
-            if (std::find_if(begin(columnFormats), end(columnFormats), [](auto& format) {
-                    return format.indexed;
-                }) == end(columnFormats))
-                return true;
+            prepareThreads();
 
             log_info("started indexing");
 
-            prepareThreads();
             startThreads();
 
             if (!pushLinesToThreads())

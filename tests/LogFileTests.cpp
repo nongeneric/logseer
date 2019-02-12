@@ -6,7 +6,7 @@
 #include "seer/FileParser.h"
 #include "seer/ILineParser.h"
 #include "seer/Index.h"
-#include <seer/task/Task.h>
+#include "seer/task/Task.h"
 #include <QApplication>
 #include <tbb/concurrent_queue.h>
 #include <condition_variable>

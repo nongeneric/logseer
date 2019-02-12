@@ -4,6 +4,7 @@
 #include "seer/ILineParser.h"
 #include "seer/FileParser.h"
 #include "seer/Index.h"
+#include "seer/LineParserRepository.h"
 #include <sstream>
 
 using namespace seer;
@@ -463,4 +464,66 @@ TEST_CASE("search_unicode") {
     REQUIRE( indexCopy.getLineCount() == 2 );
     REQUIRE( indexCopy.mapIndex(0) == 3 );
     REQUIRE( indexCopy.mapIndex(1) == 5 );
+}
+
+TEST_CASE("default_line_parser") {
+    seer::LineParserRepository repository;
+    std::stringstream ss("abc");
+    auto lineParser = repository.resolve(ss);
+    REQUIRE( lineParser->name() == "default" );
+}
+
+TEST_CASE("default_line_parser_columns") {
+    seer::LineParserRepository repository;
+    std::stringstream ss(unstructuredLog);
+    auto lineParser = repository.resolve(ss);
+    REQUIRE( lineParser->name() == "default" );
+
+    FileParser fileParser(&ss, lineParser.get());
+    fileParser.index();
+    Index index;
+    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+
+    REQUIRE( index.getLineCount() == 4 );
+    REQUIRE( fileParser.lineCount() == 4 );
+    std::string line;
+    fileParser.readLine(0, line);
+    std::vector<std::string> columns;
+    REQUIRE( line == "message1" );
+    fileParser.readLine(0, columns);
+    REQUIRE( columns.size() == 1 );
+    REQUIRE( columns[0] == "message1" );
+
+    REQUIRE( index.maxWidth(0) == std::string("message1").size() );
+}
+
+TEST_CASE("parse_zeroes") {
+    seer::LineParserRepository repository;
+    std::stringstream ss(zeroesLog);
+    auto lineParser = repository.resolve(ss);
+    REQUIRE( lineParser->name() == "default" );
+
+    FileParser fileParser(&ss, lineParser.get());
+    fileParser.index();
+    Index index;
+    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+
+    REQUIRE( index.getLineCount() == 1 );
+    REQUIRE( fileParser.lineCount() == 1 );
+    std::string line;
+    fileParser.readLine(0, line);
+    std::vector<std::string> columns;
+    REQUIRE( line.size() == std::string("message1").size() );
+    REQUIRE( line == "message1" );
+    fileParser.readLine(0, columns);
+    REQUIRE( columns.size() == 1 );
+    REQUIRE( columns[0] == "message1" );
+
+    REQUIRE( index.maxWidth(0) == std::string("message1").size() );
+
+    // cached last line size
+    line = "abc";
+    fileParser.readLine(0, line);
+    REQUIRE( line.size() == std::string("message1").size() );
+    REQUIRE( line == "message1" );
 }

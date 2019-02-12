@@ -37,6 +37,8 @@ namespace gui::grid {
                     sectionSize -= 2;
                 }
             }
+
+            text = text.replace("\t", " ");
             auto elided = fm.elidedText(text, Qt::ElideRight, sectionSize);
 
             if (!_searchText.isEmpty() && !model->isSelected(row)) {

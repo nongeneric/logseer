@@ -17,6 +17,7 @@ namespace seer {
         bool _indexed = false;
         size_t _currentIndex = -1;
         std::mutex _mutex;
+        int64_t _lastLineSize = -1;
 
     public:
         FileParser(std::istream* stream, ILineParser* lineParser);
