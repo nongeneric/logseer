@@ -18,6 +18,7 @@ namespace gui::grid {
 
         void paintRow(QPainter* painter, int row, int y);
         int getRow(int y);
+        void copyToClipboard();
 
     public:
         explicit LogTableView(LogTable* parent);

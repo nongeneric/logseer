@@ -81,9 +81,34 @@ TEST_CASE("model_selection") {
 
     model.extendSelection(1);
     std::tie(first, last) = model.getSelection();
-    REQUIRE( first == 3 );
-    REQUIRE( last == 1 );
+    REQUIRE( first == 1 );
+    REQUIRE( last == 4 );
     REQUIRE( model.isSelected(1) );
     REQUIRE( model.isSelected(2) );
     REQUIRE( model.isSelected(3) );
+}
+
+TEST_CASE("model_selection_extending_past_last_line") {
+    std::stringstream ss(simpleLog);
+    auto lineParser = createTestParser(ss);
+    FileParser fileParser(&ss, lineParser.get());
+    fileParser.index();
+
+    Index index;
+    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+    LogTableModel model(&fileParser);
+
+    REQUIRE( model.rowCount({}) == 6 );
+
+    model.setSelection(1);
+    model.extendSelection(100);
+    auto [first, last] = model.getSelection();
+    REQUIRE( first == 1 );
+    REQUIRE( last == 6 );
+
+    model.setSelection(3);
+    model.extendSelection(-50);
+    std::tie(first, last) = model.getSelection();
+    REQUIRE( first == 0 );
+    REQUIRE( last == 4 );
 }

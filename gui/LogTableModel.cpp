@@ -21,6 +21,8 @@ namespace gui {
     }
 
     void LogTableModel::extendSelection(int row) {
+        row = std::max(row, 0);
+        row = std::min(row, rowCount({}) - 1);
         _selectedLastRow = row + 1;
         if (_selectedFirstRow < _selectedLastRow) {
             _selectedLastRow = row + 1;
@@ -31,7 +33,13 @@ namespace gui {
     }
 
     std::tuple<int, int> LogTableModel::getSelection() {
-        return {_selectedFirstRow, _selectedLastRow};
+        auto first = _selectedFirstRow;
+        auto last = _selectedLastRow;
+        if (_selectedLastRow < _selectedFirstRow) {
+            std::swap(first, last);
+            last++;
+        }
+        return {first, last};
     }
 
     LogTableModel::LogTableModel(seer::FileParser* parser)
@@ -61,12 +69,7 @@ namespace gui {
     }
 
     bool LogTableModel::isSelected(int row) {
-        auto first = _selectedFirstRow;
-        auto last = _selectedLastRow;
-        if (_selectedLastRow < _selectedFirstRow) {
-            std::swap(first, last);
-            last++;
-        }
+        auto [first, last] = getSelection();
         return first <= row && row < last;
     }
 
@@ -125,22 +128,25 @@ namespace gui {
     }
 
     QVariant LogTableModel::data(const QModelIndex& index, int role) const {
+        auto lineIndex = _index ? _index->mapIndex(index.row()) : index.row();
+        auto getRawLine = [&] {
+            std::string rawLine;
+            _parser->readLine(lineIndex, rawLine);
+            return QString::fromStdString(rawLine);
+        };
+        if (role == (int)CellDataRole::RawLine)
+            return getRawLine();
         if (role != Qt::DisplayRole)
             return {};
-        auto lineIndex = _index ? _index->mapIndex(index.row()) : index.row();
         if (index.column() == LineNumber)
             return QString("%0").arg(lineIndex + 1);
         std::vector<std::string> line;
         _parser->readLine(lineIndex, line);
         size_t columnIndex = index.column() - Regular;
-        if (columnIndex < line.size()) {
+        if (columnIndex < line.size())
             return QString::fromStdString(line[columnIndex]);
-        }
-        if (index.column() == (int)_columns.size() - 1) {
-            std::string rawLine;
-            _parser->readLine(lineIndex, rawLine);
-            return QString::fromStdString(rawLine);
-        }
+        if (index.column() == (int)_columns.size() - 1)
+            return getRawLine();
         return "";
     }
 

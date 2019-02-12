@@ -1,9 +1,13 @@
 #include "LogTableView.h"
 #include "LogTable.h"
+#include "seer/Log.h"
 #include <QFontMetricsF>
 #include <QPaintEvent>
 #include <QPainter>
 #include <QScrollBar>
+#include <QAction>
+#include <QGuiApplication>
+#include <QClipboard>
 
 namespace gui::grid {
 
@@ -72,11 +76,38 @@ namespace gui::grid {
         return y / _rowHeight + _firstRow;
     }
 
+    void LogTableView::copyToClipboard() {
+        auto model = _table->model();
+        if (!model)
+            return;
+        auto a = model->_index;(void)a;
+        auto [first, last] = model->getSelection();
+        if (first == -1)
+            return;
+        seer::log_infof("copying to clipboard lines [%d; %d)", first, last);
+        QString text;
+        for (auto i = first; i != last; ++i) {
+            auto index = model->index(i, 0);
+            text += model->data(index, (int)CellDataRole::RawLine).toString();
+            if (i != last - 1) {
+                text += "\n";
+            }
+        }
+        QGuiApplication::clipboard()->setText(text);
+    }
+
     LogTableView::LogTableView(LogTable* parent) : QWidget(parent), _table(parent) {
+        setFocusPolicy(Qt::ClickFocus);
         setFont(QFont("Mono"));
         QFontMetricsF fm(font());
         _rowHeight = fm.height();
         setMouseTracking(true);
+
+        auto copyAction = new QAction(_table->scrollArea());
+        copyAction->setShortcuts(QKeySequence::Copy);
+        copyAction->setShortcutContext(Qt::WidgetWithChildrenShortcut);
+        connect(copyAction, &QAction::triggered, this, &LogTableView::copyToClipboard);
+        addAction(copyAction);
     }
 
     void LogTableView::paintEvent(QPaintEvent* event) {

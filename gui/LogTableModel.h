@@ -21,6 +21,11 @@ namespace gui {
         FirstLine,
     };
 
+    enum class CellDataRole {
+        IsIndexed = Qt::UserRole,
+        RawLine
+    };
+
     class LogTableModel : public QAbstractTableModel {
         Q_OBJECT;
 
@@ -33,7 +38,6 @@ namespace gui {
 
         void setSelection(int row, int last = -1);
         void extendSelection(int row);
-        std::tuple<int, int> getSelection();
 
     public:
         LogTableModel(seer::FileParser* parser);
@@ -46,6 +50,7 @@ namespace gui {
         int findRow(uint64_t lineOffset);
         int maxColumnWidth(int column);
         void setColumnWidths(std::vector<int> widths);
+        std::tuple<int, int> getSelection();
         virtual int rowCount(const QModelIndex &parent) const override;
         virtual int columnCount(const QModelIndex &parent) const override;
         virtual QVariant data(const QModelIndex &index, int role) const override;
