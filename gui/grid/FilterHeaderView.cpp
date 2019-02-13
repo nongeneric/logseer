@@ -44,7 +44,7 @@ namespace gui::grid {
                     auto icon = QIcon(isFilterActive ? ":/filter-fill.svg" : ":/filter.svg");
                     int iconExtent = proxy()->pixelMetric(PM_SmallIconSize);
                     auto pixmap = icon.pixmap(QSize(iconExtent, iconExtent), QIcon::Normal);
-                    auto y = (rect.height() - pixmap.height()) / 2;
+                    auto y = rect.top() + (rect.height() - pixmap.height()) / 2;
                     p->drawPixmap(rect.left(), y, pixmap);
                     rect.setX(rect.x() + pixmap.width());
                 }
@@ -61,9 +61,8 @@ namespace gui::grid {
                     auto icon = QIcon(":/plus.svg");
                     int iconExtent = proxy()->pixelMetric(PM_SmallIconSize);
                     auto pixmap = icon.pixmap(QSize(iconExtent, iconExtent), QIcon::Normal);
-                    auto y = (rect.height() - pixmap.height()) / 2;
+                    auto y = rect.top() + (rect.height() - pixmap.height()) / 2;
                     p->drawPixmap(rect.right() - iconExtent, y, pixmap);
-                    rect.setX(rect.x() + pixmap.width());
                 }
             } else {
                 QProxyStyle::drawControl(element, opt, p, widget);
