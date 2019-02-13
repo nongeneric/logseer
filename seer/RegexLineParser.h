@@ -3,7 +3,8 @@
 #include "ILineParser.h"
 #include <string>
 #include <vector>
-#include <regex>
+#define PCRE2_CODE_UNIT_WIDTH 8
+#include <pcre2.h>
 
 namespace seer {
     struct RegexColumnFormat {
@@ -14,9 +15,9 @@ namespace seer {
 
     class RegexLineParser : public ILineParser {
         std::vector<RegexColumnFormat> _formats;
-        std::regex _re;
         std::string _magic;
         std::string _name;
+        pcre2_code* _re;
 
     public:
         RegexLineParser(std::string name);

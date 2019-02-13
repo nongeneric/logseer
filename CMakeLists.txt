@@ -39,9 +39,7 @@ endif()
 
 add_subdirectory(gui)
 add_subdirectory(seer)
-if(NOT CMAKE_RELEASE)
-    add_subdirectory(tests)
-endif()
+add_subdirectory(tests)
 
 if(WIN32)
     configure_file (

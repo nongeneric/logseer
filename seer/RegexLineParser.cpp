@@ -15,7 +15,20 @@ namespace seer {
         json j;
         ss >> j;
         auto description = j["description"].get<std::string>();
-        _re = j["regex"].get<std::string>();
+        auto rePattern = j["regex"].get<std::string>();
+
+        int reError;
+        PCRE2_SIZE errorOffset;
+        _re = pcre2_compile((PCRE2_SPTR8)rePattern.c_str(),
+                            PCRE2_ZERO_TERMINATED,
+                            0,
+                            &reError,
+                            &errorOffset,
+                            nullptr);
+        assert(_re);
+        reError = pcre2_jit_compile(_re, PCRE2_JIT_COMPLETE);
+        assert(reError == 0);
+
         auto& columns = j["columns"];
         auto magic = j["magic"];
         if (!magic.is_null()) {
@@ -31,16 +44,30 @@ namespace seer {
 
     bool RegexLineParser::parseLine(std::string_view line,
                                     std::vector<std::string>& columns) {
-        std::smatch match;
-        auto s = std::string(line);
-        if (std::regex_search(s, match, _re) && match.size() > 1) {
-            columns.clear();
-            for (auto& format : _formats) {
-                columns.push_back(match.str(format.group));
-            }
-            return true;
+        std::shared_ptr<pcre2_match_data> matchData(
+            pcre2_match_data_create_from_pattern(_re, nullptr),
+            pcre2_match_data_free);
+        auto rc = pcre2_match(_re,
+                              (PCRE2_SPTR8)line.data(),
+                              line.size(),
+                              0,
+                              0,
+                              matchData.get(),
+                              nullptr);
+        if (rc < 0)
+            return false;
+
+        auto vec = pcre2_get_ovector_pointer(matchData.get());
+        columns.clear();
+
+        for (auto& format : _formats) {
+            auto i = format.group;
+            assert(i < rc);
+            auto group = line.data() + vec[2 * i];
+            auto len = vec[2 * i + 1] - vec[2 * i];
+            columns.emplace_back(group, len);
         }
-        return false;
+        return true;
     }
 
     std::vector<ColumnFormat> RegexLineParser::getColumnFormats() {

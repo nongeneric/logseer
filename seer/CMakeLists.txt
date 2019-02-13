@@ -36,4 +36,4 @@ set(SRC
     task/SearchingTask.cpp
 )
 add_library(seer STATIC ${SRC})
-target_link_libraries(seer Qt5::Core pthread)
+target_link_libraries(seer Qt5::Core pcre2-8 pthread)
