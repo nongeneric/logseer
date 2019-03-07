@@ -54,9 +54,10 @@ namespace gui::grid {
                         break;
                     int first = index;
                     int last = first + _searchText.size();
+                    auto sectionSize = _table->header()->sectionSize(column);
                     QRect r;
                     r.setLeft(x + fm.width(text, first));
-                    r.setRight(x + fm.width(text, last));
+                    r.setRight(x + std::min(fm.width(text, last), sectionSize));
                     r.setTop(y);
                     r.setBottom(y + _rowHeight);
                     painter->fillRect(r, QBrush(QColor::fromRgb(0xfb, 0xfa, 0x08)));
