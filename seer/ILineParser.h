@@ -3,6 +3,7 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#include <stdint.h>
 
 namespace seer {
 
@@ -17,6 +18,7 @@ namespace seer {
         virtual std::vector<ColumnFormat> getColumnFormats() = 0;
         virtual bool isMatch(std::vector<std::string> sample, std::string_view fileName) = 0;
         virtual std::string name() const = 0;
+        virtual uint32_t rgb(std::vector<std::string> const&) const { return 0; }
         virtual ~ILineParser() = default;
     };
 } // namespace seer

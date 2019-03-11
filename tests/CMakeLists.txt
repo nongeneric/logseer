@@ -21,6 +21,7 @@ set(SRC
     CommandLineParserTests.cpp
     IndexedEwahTests.cpp
     HistTests.cpp
+    LineColorTests.cpp
 )
 add_executable(tests ${SRC})
 target_link_libraries(tests gui)

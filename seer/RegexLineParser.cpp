@@ -2,6 +2,7 @@
 
 #include <nlohmann/json.hpp>
 #include <boost/algorithm/string.hpp>
+#include <experimental/ranges/algorithm>
 #include <sstream>
 
 using namespace nlohmann;
@@ -40,6 +41,20 @@ namespace seer {
             auto indexed = (*it)["indexed"].get<bool>();
             _formats.push_back({name, group, indexed});
         }
+
+        auto colors = j["colors"];
+        if (!colors.is_null()) {
+            for (auto it = begin(colors); it != end(colors); ++it) {
+                auto columnName = (*it)["column"].get<std::string>();
+                auto value = (*it)["value"].get<std::string>();
+                auto color = std::stoi((*it)["color"].get<std::string>(), 0, 16);
+                auto column = std::experimental::ranges::find(_formats, columnName, &RegexColumnFormat::name);
+                if (column == end(_formats))
+                    continue;
+                auto columnIndex = static_cast<int>(std::distance(begin(_formats), column));
+                _colors.push_back({columnIndex, value, static_cast<uint32_t>(color)});
+            }
+        }
     }
 
     bool RegexLineParser::parseLine(std::string_view line,
@@ -76,6 +91,15 @@ namespace seer {
             formats.push_back({format.name, format.indexed});
         }
         return formats;
+    }
+
+    uint32_t RegexLineParser::rgb(const std::vector<std::string>& columns) const {
+        for (auto& color : _colors) {
+            if (color.column < static_cast<int>(columns.size()) &&
+                color.value == columns[color.column])
+                return color.color;
+        }
+        return 0;
     }
 
     bool RegexLineParser::isMatch([[maybe_unused]] std::vector<std::string> sample,

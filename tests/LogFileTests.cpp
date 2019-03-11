@@ -10,6 +10,7 @@
 #include <QApplication>
 #include <condition_variable>
 #include <mutex>
+#include <QBrush>
 
 using namespace seer;
 using namespace gui;
@@ -444,4 +445,38 @@ TEST_CASE("column_max_width_should_be_set_after_file_has_been_indexed") {
     file.interrupt();
 
     waitFor([&] { return file.isState(gui::sm::InterruptedState); });
+}
+
+TEST_CASE("log_file_color") {
+    char arg[] = "arg";
+    int count = 1; char* args[] = { arg };
+    QApplication app(count, args);
+
+    auto ss = std::make_unique<std::stringstream>(simpleLog);
+    auto repository = std::make_shared<TestLineParserRepository>();
+    LogFile file(std::move(ss), repository->resolve(*ss));
+    waitParsingAndIndexing(file);
+
+    auto regularColor = QColor(Qt::black);
+    auto warningColor = QColor(0x550000);
+    auto errorColor = QColor(0xff0000);
+
+    auto model = file.logTableModel();
+    REQUIRE( model->data(model->index(0, 0), Qt::ForegroundRole).value<QColor>() == regularColor );
+    REQUIRE( model->data(model->index(0, 1), Qt::ForegroundRole).value<QColor>() == regularColor );
+
+    REQUIRE( model->data(model->index(1, 2), Qt::ForegroundRole).value<QColor>() == regularColor );
+    REQUIRE( model->data(model->index(1, 3), Qt::ForegroundRole).value<QColor>() == regularColor );
+
+    REQUIRE( model->data(model->index(2, 0), Qt::ForegroundRole).value<QColor>() == warningColor );
+    REQUIRE( model->data(model->index(2, 4), Qt::ForegroundRole).value<QColor>() == warningColor );
+
+    REQUIRE( model->data(model->index(3, 2), Qt::ForegroundRole).value<QColor>() == regularColor );
+    REQUIRE( model->data(model->index(3, 3), Qt::ForegroundRole).value<QColor>() == regularColor );
+
+    REQUIRE( model->data(model->index(4, 0), Qt::ForegroundRole).value<QColor>() == errorColor );
+    REQUIRE( model->data(model->index(4, 4), Qt::ForegroundRole).value<QColor>() == errorColor );
+
+    REQUIRE( model->data(model->index(5, 2), Qt::ForegroundRole).value<QColor>() == warningColor );
+    REQUIRE( model->data(model->index(5, 3), Qt::ForegroundRole).value<QColor>() == warningColor );
 }

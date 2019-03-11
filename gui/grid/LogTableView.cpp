@@ -23,7 +23,10 @@ namespace gui::grid {
             painter->fillRect(r, b);
             painter->setPen(palette().color(QPalette::HighlightedText));
         } else {
-            painter->setPen(palette().color(QPalette::ButtonText));
+            auto index = model->index(row, 0);
+            assert(index.isValid());
+            auto brush = model->data(index, Qt::ForegroundRole).value<QBrush>();
+            painter->setPen(brush.color());
         }
 
         for (auto column = 0; column < columns; ++column) {

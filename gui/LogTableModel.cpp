@@ -1,5 +1,6 @@
 #include "LogTableModel.h"
 
+#include <QColor>
 #include <boost/range/irange.hpp>
 
 namespace gui {
@@ -136,12 +137,14 @@ namespace gui {
         };
         if (role == (int)CellDataRole::RawLine)
             return getRawLine();
-        if (role != Qt::DisplayRole)
+        if (role != Qt::DisplayRole && role != Qt::ForegroundRole)
             return {};
-        if (index.column() == LineNumber)
-            return QString("%0").arg(lineIndex + 1);
         std::vector<std::string> line;
         _parser->readLine(lineIndex, line);
+        if (role == Qt::ForegroundRole)
+            return QColor(_parser->lineParser()->rgb(line));
+        if (index.column() == LineNumber)
+            return QString("%0").arg(lineIndex + 1);
         size_t columnIndex = index.column() - Regular;
         if (columnIndex < line.size())
             return QString::fromStdString(line[columnIndex]);

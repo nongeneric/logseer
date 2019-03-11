@@ -72,6 +72,18 @@ inline std::string testConfig =
                     "group": 4,
                     "indexed": false
                 }
+            ],
+            "colors": [
+                {
+                    "column": "Level",
+                    "value": "ERR",
+                    "color": "ff0000"
+                },
+                {
+                    "column": "Level",
+                    "value": "WARN",
+                    "color": "550000"
+                }
             ]
         }
     )_";
