@@ -66,12 +66,12 @@ namespace gui {
     void Config::init() {
         auto dir = getConfigDirectory() / "regex";
 
-        seer::log_infof("searching %s", dir.string().c_str());
+        seer::log_infof("searching directory [%s]", dir.string().c_str());
 
         if (!exists(dir)) {
             seer::log_info("initializing the default set of regex configs");
 
-            for (auto rname : { "200_journalctl.json" }) {
+            for (auto rname : { "200_journalctl.json", "500_logseer.json" }) {
                 create_directories(dir);
                 QResource resource(QString(":/") + rname);
                 write_all_bytes(resource.data(), resource.size(), (dir / rname).string());
@@ -86,7 +86,7 @@ namespace gui {
             std::smatch match;
             auto fileName = p.path().filename().string();
             if (!std::regex_search(fileName, match, rxFileName)) {
-                seer::log_infof("parser config name '%s' doesn't have the right format", fileName.c_str());
+                seer::log_infof("parser config name [%s] doesn't have the right format", fileName.c_str());
                 continue;
             }
             auto priority = std::stoi(match.str(1));

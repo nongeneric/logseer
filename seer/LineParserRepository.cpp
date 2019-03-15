@@ -41,7 +41,7 @@ namespace seer {
             parser->load(json);
             _parsers[priority] = parser;
         } catch (std::exception& e) {
-            log_infof("parser config '%s' can't be loaded: %s", name, e.what());
+            log_infof("parser config [%s] can't be loaded: [%s]", name, e.what());
         }
     }
 
@@ -52,9 +52,11 @@ namespace seer {
             sample.push_back(line);
         }
         for (auto& [_, parser] : _parsers) {
+            log_infof("trying parser [%s]", parser->name());
             if (parser->isMatch(sample, "")) {
                 stream.clear();
                 stream.seekg(0);
+                log_infof("selected parser [%s]", parser->name());
                 return parser;
             }
         }
