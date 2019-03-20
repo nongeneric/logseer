@@ -45,8 +45,11 @@ namespace gui::grid {
                 }
             }
 
-            text = text.replace("\t", " ");
             auto elided = fm.elidedText(text, Qt::ElideRight, sectionSize);
+
+            auto textWidth = [&](QString const& text, int len) {
+                return fm.size(Qt::TextExpandTabs, text.left(len), _tabDistance).width();
+            };
 
             if (!_searchText.isEmpty() && !model->isSelected(row)) {
                 int64_t index = 0;
@@ -59,8 +62,8 @@ namespace gui::grid {
                     int last = first + _searchText.size();
                     auto sectionSize = _table->header()->sectionSize(column);
                     QRect r;
-                    r.setLeft(x + fm.width(text, first));
-                    r.setRight(x + std::min(fm.width(text, last), sectionSize));
+                    r.setLeft(x + textWidth(text, first));
+                    r.setRight(x + std::min(textWidth(text, last), sectionSize));
                     r.setTop(y);
                     r.setBottom(y + _rowHeight);
                     painter->fillRect(r, QBrush(QColor::fromRgb(0xfb, 0xfa, 0x08)));
@@ -68,7 +71,14 @@ namespace gui::grid {
                 }
             }
 
-            painter->drawText(x, y, sectionSize, _rowHeight, 0, elided);
+            QRectF rect;
+            rect.setLeft(x);
+            rect.setRight(x + sectionSize);
+            rect.setTop(y);
+            rect.setBottom(y + _rowHeight);
+            QTextOption option;
+            option.setTabStopDistance(_tabDistance);
+            painter->drawText(rect, elided, option);
         }
     }
 
@@ -100,11 +110,12 @@ namespace gui::grid {
         QGuiApplication::clipboard()->setText(text);
     }
 
-    LogTableView::LogTableView(LogTable* parent) : QWidget(parent), _table(parent) {
+    LogTableView::LogTableView(QFont font, LogTable* parent) : QWidget(parent), _table(parent) {
         setFocusPolicy(Qt::ClickFocus);
-        setFont(QFont("Mono"));
-        QFontMetricsF fm(font());
+        setFont(font);
+        QFontMetricsF fm(font);
         _rowHeight = fm.height();
+        _tabDistance = fm.width(' ') * 4;
         setMouseTracking(true);
 
         auto copyAction = new QAction(_table->scrollArea());

@@ -3,11 +3,14 @@
 #include "seer/Log.h"
 #include <QResource>
 #include <boost/filesystem.hpp>
+#include <nlohmann/json.hpp>
 #include <fstream>
 #include <regex>
+#include <sstream>
 #include <stdio.h>
 
 using namespace boost::filesystem;
+using namespace nlohmann;
 
 namespace {
     std::vector<uint8_t> read_all_bytes(std::string_view path) {
@@ -59,14 +62,18 @@ namespace {
         }
         return home / ".logseer";
     }
+
+    path getConfigJsonPath() {
+        return getConfigDirectory() / "logseer.json";
+    }
 }
 
 namespace gui {
 
-    void Config::init() {
+    void Config::initRegexConfigs() {
         auto dir = getConfigDirectory() / "regex";
 
-        seer::log_infof("searching directory [%s]", dir.string().c_str());
+        seer::log_infof("searching directory [%s]", dir.string());
 
         if (!exists(dir)) {
             seer::log_info("initializing the default set of regex configs");
@@ -86,7 +93,7 @@ namespace gui {
             std::smatch match;
             auto fileName = p.path().filename().string();
             if (!std::regex_search(fileName, match, rxFileName)) {
-                seer::log_infof("parser config name [%s] doesn't have the right format", fileName.c_str());
+                seer::log_infof("parser config name [%s] doesn't have the right format", fileName);
                 continue;
             }
             auto priority = std::stoi(match.str(1));
@@ -96,8 +103,68 @@ namespace gui {
         }
     }
 
+    void Config::save() {
+        json j = {
+            {
+                "font", {
+                    {"name", _fontConfig.name},
+                    {"size", _fontConfig.size}
+                }
+            },
+            {
+                "search", {
+                    {"messageOnly", _searchConfig.messageOnly},
+                    {"regex", _searchConfig.regex},
+                    {"caseSensitive", _searchConfig.caseSensitive}
+                }
+            }
+        };
+        auto str = j.dump(4);
+        write_all_bytes(&str[0], str.size(), getConfigJsonPath().string());
+    }
+
+    void Config::init() {
+        initRegexConfigs();
+
+        auto configPath = getConfigJsonPath();
+        if (!is_regular_file(configPath)) {
+            seer::log_infof("no config found at [%s]", configPath);
+            save();
+            return;
+        }
+
+        std::stringstream ss(read_all_text(configPath.string()));
+        json j;
+        ss >> j;
+        auto font = j["font"];
+        _fontConfig.name = font["name"].get<std::string>();
+        _fontConfig.size = font["size"].get<int>();
+        auto search = j["search"];
+        _searchConfig.messageOnly = search["messageOnly"].get<bool>();
+        _searchConfig.regex = search["regex"].get<bool>();
+        _searchConfig.caseSensitive = search["caseSensitive"].get<bool>();
+    }
+
     std::vector<RegexConfig> Config::regexConfigs() {
         return _regexConfigs;
+    }
+
+    FontConfig Config::fontConfig() {
+        return _fontConfig;
+    }
+
+    SearchConfig Config::searchConfig() {
+        return _searchConfig;
+    }
+
+    void Config::save(FontConfig const& config) {
+        _fontConfig = config;
+        save();
+    }
+
+    void Config::save(SearchConfig const& config) {
+        _searchConfig = config;
+        save();
     }
 
     Config g_Config;

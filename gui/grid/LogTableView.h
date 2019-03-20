@@ -15,13 +15,14 @@ namespace gui::grid {
         int _firstRow = 0;
         QString _searchText;
         bool _searchCaseSensitive;
+        float _tabDistance;
 
         void paintRow(QPainter* painter, int row, int y);
         int getRow(int y);
         void copyToClipboard();
 
     public:
-        explicit LogTableView(LogTable* parent);
+        explicit LogTableView(QFont font, LogTable* parent);
         void setFirstRow(int row);
         int visibleRows();
         void setSearchHighlight(std::string text, bool caseSensitive);

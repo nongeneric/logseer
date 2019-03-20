@@ -39,9 +39,9 @@ namespace gui::grid {
         emulateResize(_header);
     }
 
-    LogTable::LogTable(QWidget* parent) : QWidget(parent) {
+    LogTable::LogTable(QFont font, QWidget* parent) : QWidget(parent) {
         _header = new FilterHeaderView(this);
-        _view = new LogTableView(this);
+        _view = new LogTableView(font, this);
         _scrollArea = new LogScrollArea(this);
         _scrollArea->setWidget(_view, _header);
         _histMap = new HistMap(this);

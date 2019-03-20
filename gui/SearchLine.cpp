@@ -8,7 +8,7 @@
 
 namespace gui {
 
-    SearchLine::SearchLine(QWidget* parent) : QWidget(parent) {
+    SearchLine::SearchLine(bool caseSensitiveInitial, QWidget* parent) : QWidget(parent) {
         setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 
         auto edit = new QLineEdit();
@@ -20,6 +20,7 @@ namespace gui {
         topHbox->addWidget(_button);
 
         auto caseSensitive = new QCheckBox();
+        caseSensitive->setChecked(caseSensitiveInitial);
         caseSensitive->setText("Case-sensitive");
 
         _status = new QLabel();
@@ -52,6 +53,7 @@ namespace gui {
 
         connect(edit, &QLineEdit::returnPressed, this, search);
         connect(_button, &QPushButton::clicked, this, search);
+        connect(caseSensitive, &QCheckBox::clicked, this, &SearchLine::caseSensitiveChanged);
     }
 
     void SearchLine::setStatus(std::string status) {

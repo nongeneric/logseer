@@ -24,7 +24,7 @@ namespace gui::grid {
         void flipExpanded();
 
     public:
-        explicit LogTable(QWidget* parent = nullptr);
+        explicit LogTable(QFont font, QWidget* parent = nullptr);
         void setModel(LogTableModel* model);
         void setHist(const seer::Hist* hist);
         LogTableModel* model() const;

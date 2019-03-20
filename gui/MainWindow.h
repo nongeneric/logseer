@@ -19,6 +19,7 @@ namespace gui {
 
         void closeTab(int index);
         void interrupt(int index);
+        QFont loadFont();
 
     public:
         explicit MainWindow(QWidget* parent = nullptr);

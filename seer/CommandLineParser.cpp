@@ -49,9 +49,8 @@ namespace seer {
 
             po::notify(console_vm);
         } catch(std::exception& e) {
-            _error = ssnprintf("can't parse program options:\n%s\n\n%s",
-                               e.what(),
-                               help().c_str());
+            _error = ssnprintf(
+                "can't parse program options:\n%s\n\n%s", e.what(), help());
             return false;
         }
 
