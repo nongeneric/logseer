@@ -93,6 +93,9 @@ namespace gui {
                 });
             }
         });
+        _searchingTask->setProgressChanged([=](auto progress) {
+            _dispatcher.postToUIThread([=] { emit progressChanged(progress); });
+        });
         _searchingTask->start();
     }
 

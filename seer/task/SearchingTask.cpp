@@ -25,7 +25,14 @@ namespace seer::task {
 
     void SearchingTask::body() {
         _hist = std::make_shared<Hist>(3000);
-        _index->search(_fileParser, _text, _regex, _caseSensitive, *_hist);
+        _index->search(
+            _fileParser,
+            _text,
+            _regex,
+            _caseSensitive,
+            *_hist,
+            [=] { return this->isStopRequested(); },
+            [&](auto done, auto total) { reportProgress((done * 100) / total); });
     }
 
 } // namespace seer::task

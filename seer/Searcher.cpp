@@ -65,7 +65,7 @@ namespace seer {
 
             std::tuple<int, int> search(QString const& text, int start) override {
                 auto index = text.indexOf(_pattern, start, _caseSensitive);
-                return {index, text.length()};
+                return {index, _pattern.length()};
             }
         };
 

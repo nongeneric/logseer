@@ -271,7 +271,9 @@ namespace seer {
                        std::string text,
                        bool regex,
                        bool caseSensitive,
-                       Hist& hist)
+                       Hist& hist,
+                       std::function<bool()> stopRequested,
+                       std::function<void(uint64_t, uint64_t)> progress)
     {
         std::string line;
         auto searcher = createSearcher(QString::fromStdString(text), regex, caseSensitive);
@@ -283,19 +285,34 @@ namespace seer {
                 hist.add(index, size);
             }
         };
+
+        std::shared_ptr<int> guard(nullptr, [&](auto) {
+            hist.freeze();
+            _lineMap.reset(lineMap);
+        });
+
+        uint64_t done = 0;
         if (_filtered) {
             auto size = _filter.sizeInBits();
             for (auto index : _filter) {
+                if (stopRequested())
+                    return;
                 add(index, size);
+                done++;
+                if (progress)
+                    progress(done, size);
             }
         } else {
             for (uint64_t i = 0; i < _unfilteredLineCount; ++i) {
+                if (stopRequested())
+                    return;
                 add(i, _unfilteredLineCount);
+                done++;
+                if (progress)
+                    progress(i, _unfilteredLineCount);
             }
             _filtered = true;
         }
-        hist.freeze();
-        _lineMap.reset(lineMap);
     }
 
     uint64_t Index::getLineCount() {

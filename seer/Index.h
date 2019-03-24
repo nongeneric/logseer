@@ -55,7 +55,9 @@ namespace seer {
                     std::string text,
                     bool regex,
                     bool caseSensitive,
-                    Hist& hist);
+                    Hist& hist,
+                    std::function<bool()> stopRequested = [] { return false; },
+                    std::function<void(uint64_t, uint64_t)> progress = {});
         uint64_t getLineCount();
         uint64_t mapIndex(uint64_t index);
         bool index(FileParser* fileParser,

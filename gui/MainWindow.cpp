@@ -39,7 +39,6 @@ namespace gui {
             searchLine->setSearchEnabled(true);
         } else if (file->isState(sm::SearchingState)) {
             searchLine->setStatus("Searching...");
-            searchLine->setProgress(-1);
         } else if (file->isState(sm::CompleteState)) {
             auto status = searchModel ? seer::ssnprintf("%d matches found",
                                                         searchModel->rowCount({}))
