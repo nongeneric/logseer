@@ -3,6 +3,7 @@
 #include "Log.h"
 #include "ParallelFor.h"
 #include "BoundedConcurrentQueue.h"
+#include "Searcher.h"
 #include <numeric>
 #include <optional>
 #include <thread>
@@ -268,17 +269,16 @@ namespace seer {
 
     void Index::search(FileParser* fileParser,
                        std::string text,
+                       bool regex,
                        bool caseSensitive,
                        Hist& hist)
     {
         std::string line;
-        QString qline, qtext = QString::fromStdString(text);
-        auto lineMap = new RandomBitArray(1024);
-        auto qCaseSensitive = caseSensitive ? Qt::CaseSensitive : Qt::CaseInsensitive;
+        auto searcher = createSearcher(QString::fromStdString(text), regex, caseSensitive);
+        auto lineMap = new RandomBitArray(1024);        
         auto add = [&] (auto index, auto size) {
             fileParser->readLine(index, line);
-            qline = QString::fromStdString(line);
-            if (qline.contains(qtext, qCaseSensitive)) {
+            if (std::get<0>(searcher->search(QString::fromStdString(line), 0)) != -1) {
                 lineMap->add(index);
                 hist.add(index, size);
             }

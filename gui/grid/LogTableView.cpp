@@ -51,15 +51,13 @@ namespace gui::grid {
                 return fm.size(Qt::TextExpandTabs, text.left(len), _tabDistance).width();
             };
 
-            if (!_searchText.isEmpty() && !model->isSelected(row)) {
-                int64_t index = 0;
+            if (_searcher && !model->isSelected(row)) {
+                int currentIndex = 0;
                 for (;;) {
-                    auto caseSensitive = _searchCaseSensitive ? Qt::CaseSensitive : Qt::CaseInsensitive;
-                    index = text.indexOf(_searchText, index, caseSensitive);
-                    if (index == -1)
+                    auto [first, len] = _searcher->search(text, currentIndex);
+                    if (first == -1)
                         break;
-                    int first = index;
-                    int last = first + _searchText.size();
+                    int last = first + len;
                     auto sectionSize = _table->header()->sectionSize(column);
                     QRect r;
                     r.setLeft(x + textWidth(text, first));
@@ -67,7 +65,7 @@ namespace gui::grid {
                     r.setTop(y);
                     r.setBottom(y + _rowHeight);
                     painter->fillRect(r, QBrush(QColor::fromRgb(0xfb, 0xfa, 0x08)));
-                    index += _searchText.size();
+                    currentIndex += len;
                 }
             }
 
@@ -176,9 +174,9 @@ namespace gui::grid {
         return height() / _rowHeight;
     }
 
-    void LogTableView::setSearchHighlight(std::string text, bool caseSensitive) {
-        _searchText = QString::fromStdString(text);
-        _searchCaseSensitive = caseSensitive;
+    void LogTableView::setSearchHighlight(std::string text, bool regex, bool caseSensitive) {
+        auto qText = QString::fromStdString(text);
+        _searcher = seer::createSearcher(qText, regex, caseSensitive);
         update();
     }
 

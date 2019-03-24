@@ -8,7 +8,7 @@
 
 namespace gui {
 
-    SearchLine::SearchLine(bool caseSensitiveInitial, QWidget* parent) : QWidget(parent) {
+    SearchLine::SearchLine(bool regexInitial, bool caseSensitiveInitial, QWidget* parent) : QWidget(parent) {
         setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 
         auto edit = new QLineEdit();
@@ -23,6 +23,10 @@ namespace gui {
         caseSensitive->setChecked(caseSensitiveInitial);
         caseSensitive->setText("Case-sensitive");
 
+        auto regex = new QCheckBox();
+        regex->setChecked(regexInitial);
+        regex->setText("RegEx");
+
         _status = new QLabel();
         _progress = new QProgressBar();
         _progress->setMaximum(100);
@@ -32,11 +36,13 @@ namespace gui {
         bottomHbox->addWidget(_status);
         bottomHbox->addWidget(_progress);
         bottomHbox->addStretch();
+        bottomHbox->addWidget(regex);
         bottomHbox->addWidget(caseSensitive);
 
         auto vbox = new QVBoxLayout();
         vbox->addLayout(topHbox);
         vbox->addLayout(bottomHbox);
+        vbox->setAlignment(regex, Qt::AlignRight);
         vbox->setAlignment(caseSensitive, Qt::AlignRight);
         setLayout(vbox);
 
@@ -48,11 +54,14 @@ namespace gui {
         });
 
         auto search = [=] {
-            emit searchRequested(edit->text().toStdString(), caseSensitive->isChecked());
+            emit searchRequested(edit->text().toStdString(),
+                                 regex->isChecked(),
+                                 caseSensitive->isChecked());
         };
 
         connect(edit, &QLineEdit::returnPressed, this, search);
         connect(_button, &QPushButton::clicked, this, search);
+        connect(regex, &QCheckBox::clicked, this, &SearchLine::regexChanged);
         connect(caseSensitive, &QCheckBox::clicked, this, &SearchLine::caseSensitiveChanged);
     }
 

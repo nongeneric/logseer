@@ -26,6 +26,8 @@ set(SRC
     IndexedEwah.cpp
     Hist.h
     Hist.cpp
+    Searcher.h
+    Searcher.cpp
     task/Task.h
     task/Task.cpp
     task/ParsingTask.h
@@ -36,4 +38,4 @@ set(SRC
     task/SearchingTask.cpp
 )
 add_library(seer STATIC ${SRC})
-target_link_libraries(seer Qt5::Core pcre2-8 pthread)
+target_link_libraries(seer Qt5::Core pcre2-8 pcre2-16 pthread)

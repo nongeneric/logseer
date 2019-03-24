@@ -53,6 +53,7 @@ namespace seer {
         void filter(const std::vector<ColumnFilter>& filters);
         void search(FileParser* fileParser,
                     std::string text,
+                    bool regex,
                     bool caseSensitive,
                     Hist& hist);
         uint64_t getLineCount();

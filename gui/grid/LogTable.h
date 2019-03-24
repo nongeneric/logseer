@@ -33,7 +33,7 @@ namespace gui::grid {
         HistMap* histMap() const;
         bool expanded() const;
         void showHistMap();
-        void setSearchHighlight(std::string text, bool caseSensitive);
+        void setSearchHighlight(std::string text, bool regex, bool caseSensitive);
 
     signals:
         void requestFilter(int column);

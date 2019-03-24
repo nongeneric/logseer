@@ -7,9 +7,11 @@ namespace seer::task {
     SearchingTask::SearchingTask(FileParser* fileParser,
                                  Index* index,
                                  std::string text,
+                                 bool regex,
                                  bool caseSensitive)
         : _fileParser(fileParser),
           _text(text),
+          _regex(regex),
           _caseSensitive(caseSensitive),
           _index(new Index(*index)) {}
 
@@ -23,7 +25,7 @@ namespace seer::task {
 
     void SearchingTask::body() {
         _hist = std::make_shared<Hist>(3000);
-        _index->search(_fileParser, _text, _caseSensitive, *_hist);
+        _index->search(_fileParser, _text, _regex, _caseSensitive, *_hist);
     }
 
 } // namespace seer::task

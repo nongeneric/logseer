@@ -3,9 +3,10 @@
 #include "ILineParser.h"
 #include <string>
 #include <vector>
+#include <memory>
 #include <stdint.h>
-#define PCRE2_CODE_UNIT_WIDTH 8
-#include <pcre2.h>
+
+struct pcre2_real_code_8;
 
 namespace seer {
 
@@ -26,7 +27,7 @@ namespace seer {
         std::vector<RegexColumnColor> _colors;
         std::string _magic;
         std::string _name;
-        pcre2_code* _re;
+        pcre2_real_code_8* _re;
 
     public:
         RegexLineParser(std::string name);

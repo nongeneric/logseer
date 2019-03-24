@@ -15,6 +15,7 @@ namespace seer {
         class SearchingTask : public Task {
             FileParser* _fileParser;
             std::string _text;
+            bool _regex;
             bool _caseSensitive;
             std::shared_ptr<Index> _index;
             std::shared_ptr<Hist> _hist;
@@ -23,6 +24,7 @@ namespace seer {
             SearchingTask(FileParser* fileParser,
                           Index* index,
                           std::string text,
+                          bool regex,
                           bool caseSensitive);
             std::shared_ptr<Index> index();
             std::shared_ptr<Hist> hist();

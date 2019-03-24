@@ -12,6 +12,7 @@ namespace gui {
         struct IndexEvent {};
         struct SearchEvent {
             std::string text;
+            bool regex;
             bool caseSensitive;
         };
         struct InterruptEvent {};

@@ -22,6 +22,7 @@ set(SRC
     IndexedEwahTests.cpp
     HistTests.cpp
     LineColorTests.cpp
+    SearcherTests.cpp
 )
 add_executable(tests ${SRC})
 target_link_libraries(tests gui)

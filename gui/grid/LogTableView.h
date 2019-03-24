@@ -2,6 +2,7 @@
 
 #include <QWidget>
 #include <QRect>
+#include "seer/Searcher.h"
 
 namespace gui::grid {
 
@@ -13,8 +14,7 @@ namespace gui::grid {
         LogTable* _table;
         int _rowHeight;
         int _firstRow = 0;
-        QString _searchText;
-        bool _searchCaseSensitive;
+        std::unique_ptr<seer::ISearcher> _searcher;
         float _tabDistance;
 
         void paintRow(QPainter* painter, int row, int y);
@@ -25,7 +25,7 @@ namespace gui::grid {
         explicit LogTableView(QFont font, LogTable* parent);
         void setFirstRow(int row);
         int visibleRows();
-        void setSearchHighlight(std::string text, bool caseSensitive);
+        void setSearchHighlight(std::string text, bool regex, bool caseSensitive);
 
     signals:
 

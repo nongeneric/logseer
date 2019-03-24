@@ -116,8 +116,8 @@ namespace gui::grid {
         _showHistMap = true;
     }
 
-    void LogTable::setSearchHighlight(std::string text, bool caseSensitive) {
-        _view->setSearchHighlight(text, caseSensitive);
+    void LogTable::setSearchHighlight(std::string text, bool regex, bool caseSensitive) {
+        _view->setSearchHighlight(text, regex, caseSensitive);
     }
 
     void LogTable::mousePressEvent(QMouseEvent* event) {

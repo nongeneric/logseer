@@ -5,6 +5,9 @@
 #include <experimental/ranges/algorithm>
 #include <sstream>
 
+#define PCRE2_CODE_UNIT_WIDTH 8
+#include <pcre2.h>
+
 using namespace nlohmann;
 
 namespace seer {
@@ -59,16 +62,17 @@ namespace seer {
 
     bool RegexLineParser::parseLine(std::string_view line,
                                     std::vector<std::string>& columns) {
-        std::shared_ptr<pcre2_match_data> matchData(
+        auto matchData = std::shared_ptr<pcre2_match_data>(
             pcre2_match_data_create_from_pattern(_re, nullptr),
             pcre2_match_data_free);
-        auto rc = pcre2_match(_re,
-                              (PCRE2_SPTR8)line.data(),
-                              line.size(),
-                              0,
-                              0,
-                              matchData.get(),
-                              nullptr);
+
+        auto rc = pcre2_jit_match(_re,
+                                  (PCRE2_SPTR8)line.data(),
+                                  line.size(),
+                                  0,
+                                  0,
+                                  matchData.get(),
+                                  nullptr);
         if (rc < 0)
             return false;
 
@@ -77,7 +81,8 @@ namespace seer {
 
         for (auto& format : _formats) {
             auto i = format.group;
-            assert(i < rc);
+            assert(static_cast<size_t>(i) <
+                   pcre2_get_ovector_count(matchData.get()));
             auto group = line.data() + vec[2 * i];
             auto len = vec[2 * i + 1] - vec[2 * i];
             columns.emplace_back(group, len);

@@ -93,8 +93,8 @@ namespace gui {
             _sm.process_event(sm::IndexEvent{});
         }
 
-        inline void search(std::string text, bool caseSensitive) {
-            _sm.process_event(sm::SearchEvent{text, caseSensitive});
+        inline void search(std::string text, bool regex, bool caseSensitive) {
+            _sm.process_event(sm::SearchEvent{text, regex, caseSensitive});
         }
 
         inline void interrupt() {
