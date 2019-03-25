@@ -45,8 +45,6 @@ namespace gui::grid {
                 }
             }
 
-            auto elided = fm.elidedText(text, Qt::ElideRight, sectionSize);
-
             auto textWidth = [&](QString const& text, int len) {
                 return fm.size(Qt::TextExpandTabs, text.left(len), _tabDistance).width();
             };
@@ -76,7 +74,8 @@ namespace gui::grid {
             rect.setBottom(y + _rowHeight);
             QTextOption option;
             option.setTabStopDistance(_tabDistance);
-            painter->drawText(rect, elided, option);
+            option.setWrapMode(QTextOption::WrapAnywhere);
+            painter->drawText(rect, text, option);
         }
     }
 

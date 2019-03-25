@@ -4,7 +4,7 @@ project(logseer)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(logseer_VERSION "0.0.1")
+set(logseer_VERSION "0.0.2")
 
 configure_file (
     "${CMAKE_SOURCE_DIR}/version.h.in"
