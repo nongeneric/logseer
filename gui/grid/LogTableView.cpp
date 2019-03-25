@@ -138,7 +138,7 @@ namespace gui::grid {
             return;
 
         QPainter painter(this);
-        painter.setRenderHints(QPainter::Antialiasing, QPainter::TextAntialiasing);
+        painter.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing);
 
         int row = _firstRow;
         int y = 0;
