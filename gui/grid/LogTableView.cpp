@@ -46,7 +46,15 @@ namespace gui::grid {
             }
 
             auto textWidth = [&](QString const& text, int len) {
-                return fm.size(Qt::TextExpandTabs, text.left(len), _tabDistance).width();
+                int index = 0;
+                const auto& split = text.left(len).split("\t");
+                for (int i = 0; i < split.size(); ++i) {
+                    index += split[i].length();
+                    if (i != split.size() - 1) {
+                        index += _tabWidth - (index % _tabWidth);
+                    }
+                }
+                return index * _charWidth;
             };
 
             if (_searcher && !model->isSelected(row)) {
@@ -59,7 +67,7 @@ namespace gui::grid {
                     auto sectionSize = _table->header()->sectionSize(column);
                     QRect r;
                     r.setLeft(x + textWidth(text, first));
-                    r.setRight(x + std::min(textWidth(text, last), sectionSize));
+                    r.setRight(x + std::min<float>(textWidth(text, last), sectionSize));
                     r.setTop(y);
                     r.setBottom(y + _rowHeight);
                     painter->fillRect(r, QBrush(QColor::fromRgb(0xfb, 0xfa, 0x08)));
@@ -73,7 +81,7 @@ namespace gui::grid {
             rect.setTop(y);
             rect.setBottom(y + _rowHeight);
             QTextOption option;
-            option.setTabStopDistance(_tabDistance);
+            option.setTabStopDistance(_charWidth * _tabWidth);
             option.setWrapMode(QTextOption::WrapAnywhere);
             painter->drawText(rect, text, option);
         }
@@ -112,7 +120,7 @@ namespace gui::grid {
         setFont(font);
         QFontMetricsF fm(font);
         _rowHeight = fm.height();
-        _tabDistance = fm.width(' ') * 4;
+        _charWidth = fm.width(' ');
         setMouseTracking(true);
 
         auto copyAction = new QAction(_table->scrollArea());
