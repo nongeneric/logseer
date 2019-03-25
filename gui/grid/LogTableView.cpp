@@ -37,12 +37,10 @@ namespace gui::grid {
             assert(index.isValid());
             auto text = model->data(index, Qt::DisplayRole).toString();
             auto sectionSize = _table->header()->sectionSize(column);
-            if (column == columns - 1) {
+            if (!_table->expanded() && column == columns - 1) {
                 sectionSize -= _table->scrollArea()->verticalScrollBar()->width();
-                if (!_table->expanded()) {
-                    sectionSize -= _table->histMap()->width();
-                    sectionSize -= 2;
-                }
+                sectionSize -= _table->histMap()->width();
+                sectionSize -= 2;
             }
 
             auto textWidth = [&](QString const& text, int len) {
@@ -66,7 +64,10 @@ namespace gui::grid {
                     int last = first + len;
                     auto sectionSize = _table->header()->sectionSize(column);
                     QRect r;
-                    r.setLeft(x + textWidth(text, first));
+                    auto width = textWidth(text, first);
+                    if (width >= sectionSize)
+                        break;
+                    r.setLeft(x + width);
                     r.setRight(x + std::min<float>(textWidth(text, last), sectionSize));
                     r.setTop(y);
                     r.setBottom(y + _rowHeight);
@@ -75,7 +76,7 @@ namespace gui::grid {
                 }
             }
 
-            QRectF rect;
+            QRect rect;
             rect.setLeft(x);
             rect.setRight(x + sectionSize);
             rect.setTop(y);

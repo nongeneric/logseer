@@ -159,6 +159,8 @@ namespace gui {
                 &SearchLine::searchRequested,
                 this,
                 [=, file = file.get()] (std::string text, bool regex, bool caseSensitive) {
+            if (text.empty())
+                return;
             file->search(text, regex, caseSensitive);
             searchTable->setSearchHighlight(text, regex, caseSensitive);
             table->setSearchHighlight(text, regex, caseSensitive);

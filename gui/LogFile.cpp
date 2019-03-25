@@ -113,6 +113,10 @@ namespace gui {
             widths.push_back(_index->maxWidth(i));
         }
         logTableModel()->setColumnWidths(widths);
+        auto searchModel = searchLogTableModel();
+        if (searchModel) {
+            searchModel->setColumnWidths(widths);
+        }
         emit stateChanged();
     }
 

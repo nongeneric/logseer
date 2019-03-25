@@ -556,6 +556,18 @@ TEST_CASE("column_max_width_should_be_set_after_file_has_been_indexed") {
     REQUIRE( model->maxColumnWidth(3) == 4 );
     REQUIRE( model->maxColumnWidth(4) == 9 );
 
+    file.search("abc", false, false);
+
+    waitFor([&] { return file.isState(gui::sm::CompleteState); });
+
+    model = file.searchLogTableModel();
+
+    REQUIRE( model->maxColumnWidth(0) == 1 );
+    REQUIRE( model->maxColumnWidth(1) == 2 );
+    REQUIRE( model->maxColumnWidth(2) == 4 );
+    REQUIRE( model->maxColumnWidth(3) == 4 );
+    REQUIRE( model->maxColumnWidth(4) == 9 );
+
     file.interrupt();
 
     waitFor([&] { return file.isState(gui::sm::InterruptedState); });
