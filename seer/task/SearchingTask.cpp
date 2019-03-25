@@ -8,11 +8,13 @@ namespace seer::task {
                                  Index* index,
                                  std::string text,
                                  bool regex,
-                                 bool caseSensitive)
+                                 bool caseSensitive,
+                                 bool messageOnly)
         : _fileParser(fileParser),
           _text(text),
           _regex(regex),
           _caseSensitive(caseSensitive),
+          _messageOnly(messageOnly),
           _index(new Index(*index)) {}
 
     std::shared_ptr<Index> SearchingTask::index() {
@@ -30,6 +32,7 @@ namespace seer::task {
             _text,
             _regex,
             _caseSensitive,
+            _messageOnly,
             *_hist,
             [=] { return this->isStopRequested(); },
             [&](auto done, auto total) { reportProgress((done * 100) / total); });

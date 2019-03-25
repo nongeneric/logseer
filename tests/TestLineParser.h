@@ -39,6 +39,15 @@ inline std::string multilineLog = "10 INFO CORE message 1\n"
                                   "message 5 c\n"
                                   "40 WARN SUB message 6\n";
 
+inline std::string multilineFirstLog = "message 1\n"
+                                       "message 1 a\n"
+                                       "message 1 b\n"
+                                       "15 INFO SUB message 2\n"
+                                       "30 ERR CORE message 5\n"
+                                       "message - a\n"
+                                       "message - b\n"
+                                       "40 WARN SUB message 6\n";
+
 inline std::string threeColumnLog = "10 INFO CORE F1 message 1\n"
                                     "15 INFO SUB F2 message 2\n"
                                     "17 WARN CORE F1 message 3\n"
@@ -124,15 +133,19 @@ inline std::string threeColumnTestConfig =
     )_";
 
 inline std::shared_ptr<seer::ILineParser> createTestParser(std::istream& stream) {
-    seer::LineParserRepository repository;
+    seer::LineParserRepository repository(false);
     repository.addRegexParser("test parser", 0, testConfig);
-    return repository.resolve(stream);
+    auto parser = repository.resolve(stream);
+    REQUIRE( dynamic_cast<seer::RegexLineParser*>(parser.get()) );
+    return parser;
 }
 
 inline std::shared_ptr<seer::ILineParser> createThreeColumnTestParser(std::istream& stream) {
-    seer::LineParserRepository repository;
+    seer::LineParserRepository repository(false);
     repository.addRegexParser("test parser", 0, threeColumnTestConfig);
-    return repository.resolve(stream);
+    auto parser = repository.resolve(stream);
+    REQUIRE( dynamic_cast<seer::RegexLineParser*>(parser.get()) );
+    return parser;
 }
 
 class TestLineParserRepository : public seer::ILineParserRepository {

@@ -14,6 +14,7 @@ namespace gui {
             std::string text;
             bool regex;
             bool caseSensitive;
+            bool messageOnly;
         };
         struct InterruptEvent {};
         struct FinishEvent {};

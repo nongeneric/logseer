@@ -102,8 +102,10 @@ namespace gui {
 
         auto mainTableAndSearch = new QWidget();
         auto vbox = new QVBoxLayout();
-        auto searchLine = new SearchLine(g_Config.searchConfig().regex,
-                                         g_Config.searchConfig().caseSensitive);
+        const auto& searchConfig = g_Config.searchConfig();
+        auto searchLine = new SearchLine(searchConfig.regex,
+                                         searchConfig.caseSensitive,
+                                         searchConfig.messageOnly);
         mainTableAndSearch->setLayout(vbox);
 
         auto searchTable = new grid::LogTable(font);
@@ -156,14 +158,23 @@ namespace gui {
         });
 
         connect(searchLine,
+                &SearchLine::messageOnlyChanged,
+                this,
+                [&] (bool messageOnly) {
+            auto config = g_Config.searchConfig();
+            config.messageOnly = messageOnly;
+            g_Config.save(config);
+        });
+
+        connect(searchLine,
                 &SearchLine::searchRequested,
                 this,
-                [=, file = file.get()] (std::string text, bool regex, bool caseSensitive) {
+                [=, file = file.get()] (std::string text, bool regex, bool caseSensitive, bool messageOnly) {
             if (text.empty())
                 return;
-            file->search(text, regex, caseSensitive);
-            searchTable->setSearchHighlight(text, regex, caseSensitive);
-            table->setSearchHighlight(text, regex, caseSensitive);
+            file->search(text, regex, caseSensitive, messageOnly);
+            searchTable->setSearchHighlight(text, regex, caseSensitive, messageOnly);
+            table->setSearchHighlight(text, regex, caseSensitive, messageOnly);
         });
 
         connect(

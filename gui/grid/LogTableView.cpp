@@ -55,7 +55,8 @@ namespace gui::grid {
                 return index * _charWidth;
             };
 
-            if (_searcher && !model->isSelected(row)) {
+            auto isMessageColumn = column == columns - 1;
+            if (_searcher && !model->isSelected(row) && (isMessageColumn || !_messageOnlyHighlight)) {
                 int currentIndex = 0;
                 for (;;) {
                     auto [first, len] = _searcher->search(text, currentIndex);
@@ -182,7 +183,11 @@ namespace gui::grid {
         return height() / _rowHeight;
     }
 
-    void LogTableView::setSearchHighlight(std::string text, bool regex, bool caseSensitive) {
+    void LogTableView::setSearchHighlight(std::string text,
+                                          bool regex,
+                                          bool caseSensitive,
+                                          bool messageOnly) {
+        _messageOnlyHighlight = messageOnly;
         auto qText = QString::fromStdString(text);
         _searcher = seer::createSearcher(qText, regex, caseSensitive);
         update();

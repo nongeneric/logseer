@@ -17,6 +17,7 @@ namespace seer {
             std::string _text;
             bool _regex;
             bool _caseSensitive;
+            bool _messageOnly;
             std::shared_ptr<Index> _index;
             std::shared_ptr<Hist> _hist;
 
@@ -25,7 +26,8 @@ namespace seer {
                           Index* index,
                           std::string text,
                           bool regex,
-                          bool caseSensitive);
+                          bool caseSensitive,
+                          bool messageOnly);
             std::shared_ptr<Index> index();
             std::shared_ptr<Hist> hist();
 

@@ -16,15 +16,22 @@ namespace gui {
         QPushButton* _button;
 
     public:
-        explicit SearchLine(bool regexInitial, bool caseSensitive, QWidget* parent = nullptr);
+        explicit SearchLine(bool regexInitial,
+                            bool caseSensitiveInitial,
+                            bool messageOnlyInitial,
+                            QWidget* parent = nullptr);
         void setStatus(std::string status);
         void setProgress(int progress);
         void setSearchEnabled(bool enabled);
 
     signals:
-        void searchRequested(std::string string, bool regex, bool caseSensitive);
+        void searchRequested(std::string string,
+                             bool regex,
+                             bool caseSensitive,
+                             bool messageOnly);
         void regexChanged(bool regex);
         void caseSensitiveChanged(bool caseSensitive);
+        void messageOnlyChanged(bool messageOnly);
     };
 
 } // namespace gui

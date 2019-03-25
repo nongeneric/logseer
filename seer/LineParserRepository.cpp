@@ -31,8 +31,10 @@ namespace seer {
         }
     };
 
-    LineParserRepository::LineParserRepository() {
-        _parsers[std::numeric_limits<int>::max()] = std::make_shared<DefaultLineParser>();
+    LineParserRepository::LineParserRepository(bool initializeDefaultParser) {
+        if (initializeDefaultParser) {
+            _parsers[std::numeric_limits<int>::max()] = std::make_shared<DefaultLineParser>();
+        }
     }
 
     void LineParserRepository::addRegexParser(std::string name, int priority, std::string json) {
@@ -53,7 +55,7 @@ namespace seer {
         }
         for (auto& [_, parser] : _parsers) {
             log_infof("trying parser [%s]", parser->name());
-            if (parser->isMatch(sample, "")) {
+            if (parser->isMatch(sample, "") || parser == (--end(_parsers))->second) {
                 stream.clear();
                 stream.seekg(0);
                 log_infof("selected parser [%s]", parser->name());

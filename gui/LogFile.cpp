@@ -77,8 +77,12 @@ namespace gui {
 
     void LogFile::searchFromComplete(sm::SearchEvent event) {
         emit stateChanged();
-        _searchingTask.reset(new SearchingTask(
-            _fileParser.get(), _index.get(), event.text, event.regex, event.caseSensitive));
+        _searchingTask.reset(new SearchingTask(_fileParser.get(),
+                                               _index.get(),
+                                               event.text,
+                                               event.regex,
+                                               event.caseSensitive,
+                                               event.messageOnly));
         _searchingTask->setStateChanged([=](auto state) {
             assert(state != TaskState::Failed);
             if (state == TaskState::Finished) {

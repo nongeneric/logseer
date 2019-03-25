@@ -366,7 +366,7 @@ TEST_CASE("log_file_search_basic") {
         }
     });
 
-    file.search("4", false, false);
+    file.search("4", false, false, false);
 
     while (!complete) {
         QApplication::processEvents();
@@ -428,7 +428,7 @@ TEST_CASE("log_file_search_case") {
 
     // sensitive
 
-    file.search("sub", false, true);
+    file.search("sub", false, true, false);
 
     while (!complete) {
         QApplication::processEvents();
@@ -444,7 +444,7 @@ TEST_CASE("log_file_search_case") {
 
     complete = false;
 
-    file.search("sub", false, false);
+    file.search("sub", false, false, false);
 
     while (!complete) {
         QApplication::processEvents();
@@ -477,7 +477,7 @@ TEST_CASE("log_file_search_regex") {
 
     // sensitive
 
-    file.search("ERR|warn", true, true);
+    file.search("ERR|warn", true, true, false);
 
     while (!complete) {
         QApplication::processEvents();
@@ -493,7 +493,7 @@ TEST_CASE("log_file_search_regex") {
 
     complete = false;
 
-    file.search("ERR|warn", true, false);
+    file.search("ERR|warn", true, false, false);
 
     while (!complete) {
         QApplication::processEvents();
@@ -509,7 +509,7 @@ TEST_CASE("log_file_search_regex") {
 
     complete = false;
 
-    file.search("[6-+", true, false);
+    file.search("[6-+", true, false, false);
 
     while (!complete) {
         QApplication::processEvents();
@@ -520,6 +520,38 @@ TEST_CASE("log_file_search_regex") {
 
     REQUIRE( model->rowCount({}) == 6 );
     REQUIRE( searchModel->rowCount({}) == 0 );
+}
+
+TEST_CASE("log_file_search_message_only") {
+    char arg[] = "arg";
+    int count = 1; char* args[] = { arg };
+    QApplication app(count, args);
+
+    auto ss = std::make_unique<std::stringstream>(simpleLog);
+    auto repository = std::make_shared<TestLineParserRepository>();
+    LogFile file(std::move(ss), repository->resolve(*ss));
+    waitParsingAndIndexing(file);
+
+    bool complete = false;
+
+    file.connect(&file, &LogFile::stateChanged, [&] {
+        if (file.isState(gui::sm::CompleteState)) {
+            complete = true;
+        }
+    });
+
+    file.search("4", false, true, true);
+
+    while (!complete) {
+        QApplication::processEvents();
+    }
+
+    auto model = file.logTableModel();
+    auto searchModel = file.searchLogTableModel();
+
+    REQUIRE( model->rowCount({}) == 6 );
+    REQUIRE( searchModel->rowCount({}) == 1 );
+    REQUIRE( searchModel->data(model->index(0, 1), Qt::DisplayRole).toString() == "20" );
 }
 
 TEST_CASE("column_max_width_should_be_set_after_file_has_been_indexed") {
@@ -556,7 +588,7 @@ TEST_CASE("column_max_width_should_be_set_after_file_has_been_indexed") {
     REQUIRE( model->maxColumnWidth(3) == 4 );
     REQUIRE( model->maxColumnWidth(4) == 9 );
 
-    file.search("abc", false, false);
+    file.search("abc", false, false, false);
 
     waitFor([&] { return file.isState(gui::sm::CompleteState); });
 

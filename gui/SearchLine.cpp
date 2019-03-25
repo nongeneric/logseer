@@ -8,7 +8,12 @@
 
 namespace gui {
 
-    SearchLine::SearchLine(bool regexInitial, bool caseSensitiveInitial, QWidget* parent) : QWidget(parent) {
+    SearchLine::SearchLine(bool regexInitial,
+                           bool caseSensitiveInitial,
+                           bool messageOnlyInitial,
+                           QWidget* parent)
+        : QWidget(parent)
+    {
         setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 
         auto edit = new QLineEdit();
@@ -27,6 +32,10 @@ namespace gui {
         regex->setChecked(regexInitial);
         regex->setText("RegEx");
 
+        auto messageOnly = new QCheckBox();
+        messageOnly->setChecked(messageOnlyInitial);
+        messageOnly->setText("Message Only");
+
         _status = new QLabel();
         _progress = new QProgressBar();
         _progress->setMaximum(100);
@@ -38,12 +47,14 @@ namespace gui {
         bottomHbox->addStretch();
         bottomHbox->addWidget(regex);
         bottomHbox->addWidget(caseSensitive);
+        bottomHbox->addWidget(messageOnly);
 
         auto vbox = new QVBoxLayout();
         vbox->addLayout(topHbox);
         vbox->addLayout(bottomHbox);
         vbox->setAlignment(regex, Qt::AlignRight);
         vbox->setAlignment(caseSensitive, Qt::AlignRight);
+        vbox->setAlignment(messageOnly, Qt::AlignRight);
         setLayout(vbox);
 
         auto focusShortcut = new QShortcut(QKeySequence::Find, this);
@@ -56,13 +67,15 @@ namespace gui {
         auto search = [=] {
             emit searchRequested(edit->text().toStdString(),
                                  regex->isChecked(),
-                                 caseSensitive->isChecked());
+                                 caseSensitive->isChecked(),
+                                 messageOnly->isChecked());
         };
 
         connect(edit, &QLineEdit::returnPressed, this, search);
         connect(_button, &QPushButton::clicked, this, search);
         connect(regex, &QCheckBox::clicked, this, &SearchLine::regexChanged);
         connect(caseSensitive, &QCheckBox::clicked, this, &SearchLine::caseSensitiveChanged);
+        connect(messageOnly, &QCheckBox::clicked, this, &SearchLine::messageOnlyChanged);
     }
 
     void SearchLine::setStatus(std::string status) {

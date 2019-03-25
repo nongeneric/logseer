@@ -55,6 +55,7 @@ namespace seer {
                     std::string text,
                     bool regex,
                     bool caseSensitive,
+                    bool messageOnly,
                     Hist& hist,
                     std::function<bool()> stopRequested = [] { return false; },
                     std::function<void(uint64_t, uint64_t)> progress = {});

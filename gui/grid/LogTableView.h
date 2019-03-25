@@ -17,6 +17,7 @@ namespace gui::grid {
         std::unique_ptr<seer::ISearcher> _searcher;
         float _charWidth;
         int _tabWidth = 4;
+        bool _messageOnlyHighlight = false;
 
         void paintRow(QPainter* painter, int row, int y);
         int getRow(int y);
@@ -26,7 +27,10 @@ namespace gui::grid {
         explicit LogTableView(QFont font, LogTable* parent);
         void setFirstRow(int row);
         int visibleRows();
-        void setSearchHighlight(std::string text, bool regex, bool caseSensitive);
+        void setSearchHighlight(std::string text,
+                                bool regex,
+                                bool caseSensitive,
+                                bool messageOnly);
 
     signals:
 
