@@ -31,3 +31,12 @@ TEST_CASE("hist_simple_2") {
     REQUIRE(hist.get(48, 50) == 0);
     REQUIRE(hist.get(49, 50) == 1);
 }
+
+TEST_CASE("hist_simple_3") {
+    Hist hist(1000);
+    hist.add(2, 3);
+    hist.freeze();
+    REQUIRE(hist.get(0, 3) == 0);
+    REQUIRE(hist.get(1, 3) == 0);
+    REQUIRE(hist.get(2, 3) == 1);
+}

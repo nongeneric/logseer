@@ -22,10 +22,8 @@ namespace gui::grid {
 
     void LogScrollArea::setRowCount(int count) {
         _rowCount = count;
-        auto max = count - _view->visibleRows();
-        if (max < 0)
-            return;
-        verticalScrollBar()->setMaximum(count - _view->visibleRows());
+        auto max = std::max(count - _view->visibleRows(), 0);
+        verticalScrollBar()->setMaximum(max);
     }
 
     void LogScrollArea::ensureVisible(int row) {

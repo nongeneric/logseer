@@ -26,15 +26,15 @@ namespace gui {
 
         auto caseSensitive = new QCheckBox();
         caseSensitive->setChecked(caseSensitiveInitial);
-        caseSensitive->setText("Case-sensitive");
+        caseSensitive->setText("Case sensitive");
 
         auto regex = new QCheckBox();
         regex->setChecked(regexInitial);
-        regex->setText("RegEx");
+        regex->setText("Regex");
 
         auto messageOnly = new QCheckBox();
         messageOnly->setChecked(messageOnlyInitial);
-        messageOnly->setText("Message Only");
+        messageOnly->setText("Message only");
 
         _status = new QLabel();
         _progress = new QProgressBar();

@@ -328,6 +328,62 @@ TEST_CASE("search_multiline") {
     REQUIRE( indexCopy.mapIndex(0) == 4 );
 }
 
+TEST_CASE("search_progress") {
+    std::stringstream ss(simpleLog);
+    auto lineParser = createTestParser(ss);
+    FileParser fileParser(&ss, lineParser.get());
+    fileParser.index();
+
+    Index index;
+    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+
+    seer::Hist hist(1);
+
+    std::vector<std::tuple<uint64_t, uint64_t>> progress;
+
+    auto indexCopy = index;
+    indexCopy.search(
+        &fileParser,
+        "4",
+        false,
+        false,
+        false,
+        hist,
+        [] { return false; },
+        [&](auto i, auto j) {
+            progress.push_back({i, j});
+        });
+    REQUIRE( progress.size() == 6 );
+    REQUIRE( progress[0] == std::tuple{0,6} );
+    REQUIRE( progress[1] == std::tuple{1,6} );
+    REQUIRE( progress[2] == std::tuple{2,6} );
+    REQUIRE( progress[3] == std::tuple{3,6} );
+    REQUIRE( progress[4] == std::tuple{4,6} );
+    REQUIRE( progress[5] == std::tuple{5,6} );
+
+    indexCopy = index;
+    progress.clear();
+    std::vector<ColumnFilter> filters;
+    filters = {{1, {"INFO"}}};
+    indexCopy.filter(filters);
+    indexCopy.search(
+        &fileParser,
+        "4",
+        false,
+        false,
+        false,
+        hist,
+        [] { return false; },
+        [&](auto i, auto j) {
+            progress.push_back({i, j});
+        });
+    REQUIRE( progress.size() == 3 );
+    REQUIRE( progress[0] == std::tuple{0,6} );
+    REQUIRE( progress[1] == std::tuple{1,6} );
+    REQUIRE( progress[2] == std::tuple{3,6} );
+}
+
+
 TEST_CASE("multiline_index") {
     std::stringstream ss(multilineLog);
     auto lineParser = createTestParser(ss);

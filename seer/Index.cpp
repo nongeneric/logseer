@@ -280,7 +280,7 @@ namespace seer {
         auto searcher = createSearcher(QString::fromStdString(text), regex, caseSensitive);
         auto lineMap = new RandomBitArray(1024);
         std::vector<std::string> columns;
-        auto add = [&] (auto index, auto size) {
+        auto add = [&] (auto index, auto histIndex, auto histSize) {
             fileParser->readLine(index, line);
             auto lineToSearch = &line;
             if (messageOnly) {
@@ -292,7 +292,7 @@ namespace seer {
             }
             if (std::get<0>(searcher->search(QString::fromStdString(*lineToSearch), 0)) != -1) {
                 lineMap->add(index);
-                hist.add(index, size);
+                hist.add(histIndex, histSize);
             }
         };
 
@@ -301,23 +301,22 @@ namespace seer {
             _lineMap.reset(lineMap);
         });
 
-        uint64_t done = 0;
         if (_filtered) {
-            auto size = _filter.sizeInBits();
+            auto size = _filter.numberOfOnes();
+            uint64_t done = 0;
             for (auto index : _filter) {
                 if (stopRequested())
                     return;
-                add(index, size);
+                add(index, done, size);
                 done++;
                 if (progress)
-                    progress(done, size);
+                    progress(index, _unfilteredLineCount);
             }
         } else {
             for (uint64_t i = 0; i < _unfilteredLineCount; ++i) {
                 if (stopRequested())
                     return;
-                add(i, _unfilteredLineCount);
-                done++;
+                add(i, i, _unfilteredLineCount);
                 if (progress)
                     progress(i, _unfilteredLineCount);
             }
