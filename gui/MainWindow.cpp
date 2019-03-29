@@ -51,9 +51,16 @@ namespace gui {
         }
     }
 
+    void MainWindow::updateTabWidgetVisibility() {
+        _centralLayout->setCurrentWidget(_tabWidget->count() == 0
+                                             ? _dragAndDropTip
+                                             : static_cast<QWidget*>(_tabWidget));
+    }
+
     void MainWindow::closeTab(int index) {
         _tabWidget->removeTab(index);
         _logs.erase(begin(_logs) + index);
+        updateTabWidgetVisibility();
     }
 
     void MainWindow::interrupt(int index) {
@@ -77,10 +84,20 @@ namespace gui {
                 this,
                 &MainWindow::interrupt);
 
-        setCentralWidget(_tabWidget);
+        _dragAndDropTip = new QLabel("Drag & Drop Files Here to Open");
+        _dragAndDropTip->setAlignment(Qt::AlignCenter);
+        _centralLayout = new QStackedLayout();
+        _centralLayout->addWidget(_dragAndDropTip);
+        _centralLayout->addWidget(_tabWidget);
+
+        auto centralWidget = new QWidget(this);
+        centralWidget->setLayout(_centralLayout);
+
+        setCentralWidget(centralWidget);
         setAcceptDrops(true);
-        setWindowTitle(QString("logseer %0").arg(g_version));
+        setWindowTitle(QString("logseer %0%1").arg(g_version).arg(g_debug ? " [DEBUG]" : ""));
         resize(800, 600);
+        updateTabWidgetVisibility();
     }
 
     void MainWindow::openLog(std::string path) {
@@ -201,6 +218,7 @@ namespace gui {
         _tabWidget->setTabToolTip(index, QString::fromStdString(toolTip));
 
         _logs.push_back(std::move(file));
+        updateTabWidgetVisibility();
     }
 
     void MainWindow::dragEnterEvent(QDragEnterEvent* event) {

@@ -5,6 +5,8 @@
 #include <QMainWindow>
 #include <QTabWidget>
 #include <QTableView>
+#include <QStackedLayout>
+#include <QLabel>
 #include <memory>
 #include <vector>
 
@@ -16,7 +18,10 @@ namespace gui {
         QTabWidget* _tabWidget;
         FilterDialog* _filterDialog;
         std::vector<std::unique_ptr<LogFile>> _logs;
+        QStackedLayout* _centralLayout;
+        QLabel* _dragAndDropTip;
 
+        void updateTabWidgetVisibility();
         void closeTab(int index);
         void interrupt(int index);
         QFont loadFont();

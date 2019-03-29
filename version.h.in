@@ -1,3 +1,10 @@
 #pragma once
 
-const char* const g_version = "@logseer_VERSION@";
+inline auto g_version = "@logseer_VERSION@";
+
+inline bool g_debug =
+#ifdef NDEBUG
+    false;
+#else
+    true;
+#endif
