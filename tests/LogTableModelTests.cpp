@@ -112,3 +112,36 @@ TEST_CASE("model_selection_extending_past_last_line") {
     REQUIRE( first == 0 );
     REQUIRE( last == 4 );
 }
+
+TEST_CASE("model_selection_extending_without_previous_selection") {
+    std::stringstream ss(simpleLog);
+    auto lineParser = createTestParser(ss);
+    FileParser fileParser(&ss, lineParser.get());
+    fileParser.index();
+
+    Index index;
+    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+    LogTableModel model(&fileParser);
+
+    REQUIRE( model.rowCount({}) == 6 );
+
+    int changed = 0;
+    model.connect(&model, &LogTableModel::selectionChanged, [&] {
+        changed++;
+    });
+
+    model.extendSelection(100);
+    auto [first, last] = model.getSelection();
+    REQUIRE( first == -1 );
+    REQUIRE( last == -1 );
+    REQUIRE( changed == 0 );
+
+    model.setSelection(1);
+    REQUIRE( changed == 1 );
+
+    model.extendSelection(100);
+    std::tie(first, last) = model.getSelection();
+    REQUIRE( first == 1 );
+    REQUIRE( last == 6 );
+    REQUIRE( changed == 2 );
+}

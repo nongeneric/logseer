@@ -22,6 +22,8 @@ namespace gui {
     }
 
     void LogTableModel::extendSelection(int row) {
+        if (_selectedFirstRow == -1)
+            return;
         row = std::max(row, 0);
         row = std::min(row, rowCount({}) - 1);
         _selectedLastRow = row + 1;

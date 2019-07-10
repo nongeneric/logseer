@@ -358,19 +358,9 @@ TEST_CASE("log_file_search_basic") {
     LogFile file(std::move(ss), repository->resolve(*ss));
     waitParsingAndIndexing(file);
 
-    bool complete = false;
-
-    file.connect(&file, &LogFile::stateChanged, [&] {
-        if (file.isState(gui::sm::CompleteState)) {
-            complete = true;
-        }
-    });
-
     file.search("4", false, false, false);
 
-    while (!complete) {
-        QApplication::processEvents();
-    }
+    waitFor([&] { return file.isState(gui::sm::CompleteState); });
 
     auto model = file.logTableModel();
     auto searchModel = file.searchLogTableModel();
@@ -418,21 +408,11 @@ TEST_CASE("log_file_search_case") {
     LogFile file(std::move(ss), repository->resolve(*ss));
     waitParsingAndIndexing(file);
 
-    bool complete = false;
-
-    file.connect(&file, &LogFile::stateChanged, [&] {
-        if (file.isState(gui::sm::CompleteState)) {
-            complete = true;
-        }
-    });
-
     // sensitive
 
     file.search("sub", false, true, false);
 
-    while (!complete) {
-        QApplication::processEvents();
-    }
+    waitFor([&] { return file.isState(gui::sm::CompleteState); });
 
     auto model = file.logTableModel();
     auto searchModel = file.searchLogTableModel();
@@ -442,13 +422,9 @@ TEST_CASE("log_file_search_case") {
 
     // insensitive
 
-    complete = false;
-
     file.search("sub", false, false, false);
 
-    while (!complete) {
-        QApplication::processEvents();
-    }
+    waitFor([&] { return file.isState(gui::sm::CompleteState); });
 
     model = file.logTableModel();
     searchModel = file.searchLogTableModel();
@@ -467,21 +443,11 @@ TEST_CASE("log_file_search_regex") {
     LogFile file(std::move(ss), repository->resolve(*ss));
     waitParsingAndIndexing(file);
 
-    bool complete = false;
-
-    file.connect(&file, &LogFile::stateChanged, [&] {
-        if (file.isState(gui::sm::CompleteState)) {
-            complete = true;
-        }
-    });
-
     // sensitive
 
     file.search("ERR|warn", true, true, false);
 
-    while (!complete) {
-        QApplication::processEvents();
-    }
+    waitFor([&] { return file.isState(gui::sm::CompleteState); });
 
     auto model = file.logTableModel();
     auto searchModel = file.searchLogTableModel();
@@ -491,13 +457,9 @@ TEST_CASE("log_file_search_regex") {
 
     // insensitive
 
-    complete = false;
-
     file.search("ERR|warn", true, false, false);
 
-    while (!complete) {
-        QApplication::processEvents();
-    }
+    waitFor([&] { return file.isState(gui::sm::CompleteState); });
 
     model = file.logTableModel();
     searchModel = file.searchLogTableModel();
@@ -507,13 +469,9 @@ TEST_CASE("log_file_search_regex") {
 
     // bad pattern
 
-    complete = false;
-
     file.search("[6-+", true, false, false);
 
-    while (!complete) {
-        QApplication::processEvents();
-    }
+    waitFor([&] { return file.isState(gui::sm::CompleteState); });
 
     model = file.logTableModel();
     searchModel = file.searchLogTableModel();
@@ -532,19 +490,9 @@ TEST_CASE("log_file_search_message_only") {
     LogFile file(std::move(ss), repository->resolve(*ss));
     waitParsingAndIndexing(file);
 
-    bool complete = false;
-
-    file.connect(&file, &LogFile::stateChanged, [&] {
-        if (file.isState(gui::sm::CompleteState)) {
-            complete = true;
-        }
-    });
-
     file.search("4", false, true, true);
 
-    while (!complete) {
-        QApplication::processEvents();
-    }
+    waitFor([&] { return file.isState(gui::sm::CompleteState); });
 
     auto model = file.logTableModel();
     auto searchModel = file.searchLogTableModel();
