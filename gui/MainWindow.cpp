@@ -102,6 +102,12 @@ namespace gui {
 
     void MainWindow::openLog(std::string path) {
         seer::log_infof("opening [%s]", path);
+
+        if (boost::filesystem::is_directory(path)) {
+            seer::log_info("attempted to open a directory, ignoring");
+            return;
+        }
+
         auto stream = std::make_unique<std::ifstream>(path, std::ios_base::binary);
         assert(stream->is_open());
 
