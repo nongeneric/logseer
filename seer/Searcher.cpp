@@ -34,6 +34,9 @@ namespace seer {
             }
 
             std::tuple<int, int> search(const QString &text, int start) override {
+                if (start >= text.size())
+                    return {-1, -1};
+
                 if (!_re)
                     return {-1,-1};
 
@@ -45,9 +48,12 @@ namespace seer {
                                           _matchData.get(),
                                           nullptr);
                 if (rc < 0)
-                    return {-1,-1};
+                    return {-1, -1};
 
                 auto vec = pcre2_get_ovector_pointer(_matchData.get());
+                if (vec[0] >= static_cast<size_t>(text.size()))
+                    return {-1, -1};
+
                 return {vec[0], vec[1] - vec[0]};
             }
         };
