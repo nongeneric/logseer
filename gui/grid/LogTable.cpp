@@ -30,8 +30,9 @@ namespace gui::grid {
                                           QHeaderView::ResizeMode::Interactive);
             QFontMetrics metrics(_view->font());
             auto lastColumnWidth =
-                metrics.size(Qt::TextSingleLine, "_") * lastColumnCharWidth;
-            _header->resizeSection(last, lastColumnWidth.width());
+                metrics.size(Qt::TextSingleLine, "_").width() * lastColumnCharWidth;
+            lastColumnWidth = std::min(lastColumnWidth, _header->maximumSectionSize());
+            _header->resizeSection(last, lastColumnWidth);
         } else {
             _header->setSectionResizeMode(last, QHeaderView::ResizeMode::Stretch);
         }
