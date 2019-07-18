@@ -3,6 +3,7 @@
 #include "LogTableView.h"
 #include "FilterHeaderView.h"
 #include <QAbstractScrollArea>
+#include <tuple>
 
 namespace gui::grid {
 
@@ -13,11 +14,14 @@ namespace gui::grid {
         FilterHeaderView* _header;
         int _rowCount = 0;
 
+        std::tuple<int, int> visibleRowRange();
+
     public:
         explicit LogScrollArea(QWidget* parent = nullptr);
         void setWidget(LogTableView* view, FilterHeaderView* header);
         void setRowCount(int count);
         void ensureVisible(int row);
+        bool isVisible(int row);
 
     signals:
 

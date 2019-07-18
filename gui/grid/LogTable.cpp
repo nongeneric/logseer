@@ -80,7 +80,10 @@ namespace gui::grid {
 
         connect(_model, &LogTableModel::selectionChanged, this, [=] {
             auto [first, last] = _model->getSelection();
-            _scrollArea->ensureVisible(first);
+            if (!_scrollArea->isVisible(first) &&
+                !_scrollArea->isVisible(last)) {
+                _scrollArea->ensureVisible(first);
+            }
             _view->update();
         });
     }

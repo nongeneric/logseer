@@ -7,6 +7,7 @@
 #include <QScrollBar>
 #include <QAction>
 #include <QGuiApplication>
+#include <QApplication>
 #include <QClipboard>
 
 namespace gui::grid {
@@ -161,7 +162,11 @@ namespace gui::grid {
         if (row == -1)
             return;
         if (row < _table->model()->rowCount({})) {
-            _table->model()->setSelection(row);
+            if (QApplication::keyboardModifiers() & Qt::ShiftModifier) {
+                _table->model()->extendSelection(row);
+            } else {
+                _table->model()->setSelection(row);
+            }
         }
     }
 

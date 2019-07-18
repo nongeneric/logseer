@@ -5,7 +5,13 @@
 
 namespace gui::grid {
 
-    LogScrollArea::LogScrollArea(QWidget* parent) : QAbstractScrollArea(parent) {
+std::tuple<int, int> LogScrollArea::visibleRowRange() {
+    auto firstVisible = verticalScrollBar()->value();
+    auto lastVisible = firstVisible + _view->visibleRows();
+    return {firstVisible, lastVisible};
+}
+
+LogScrollArea::LogScrollArea(QWidget* parent) : QAbstractScrollArea(parent) {
         setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
         setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
         setBackgroundRole(QPalette::Light);
@@ -27,13 +33,17 @@ namespace gui::grid {
     }
 
     void LogScrollArea::ensureVisible(int row) {
-        auto firstVisible = verticalScrollBar()->value();
-        auto lastVisible = firstVisible + _view->visibleRows();
-        if (firstVisible <= row && row <= lastVisible)
+        if (isVisible(row))
             return;
-        auto newFirstRow = std::max(row - (lastVisible - firstVisible) / 2, 0);
+        auto [first, last] = visibleRowRange();
+        auto newFirstRow = std::max(row - (last - first) / 2, 0);
         _view->setFirstRow(newFirstRow);
         verticalScrollBar()->setValue(newFirstRow);
+    }
+
+    bool LogScrollArea::isVisible(int row) {
+        auto [first, last] = visibleRowRange();
+        return first <= row && row <= last;
     }
 
     void LogScrollArea::resizeEvent(QResizeEvent* event) {

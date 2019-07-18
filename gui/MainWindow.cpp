@@ -108,6 +108,11 @@ namespace gui {
             return;
         }
 
+        if (!boost::filesystem::exists(path)) {
+            seer::log_info("attempted to open a nonexisting file, ignoring");
+            return;
+        }
+
         auto stream = std::make_unique<std::ifstream>(path, std::ios_base::binary);
         assert(stream->is_open());
 
