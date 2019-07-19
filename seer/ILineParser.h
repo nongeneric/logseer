@@ -12,7 +12,8 @@ namespace seer {
         bool indexed;
     };
 
-    struct ILineParser {
+    class ILineParser {
+    public:
         virtual bool parseLine(std::string_view line,
                                std::vector<std::string>& columns) = 0;
         virtual std::vector<ColumnFormat> getColumnFormats() = 0;

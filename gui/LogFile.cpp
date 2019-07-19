@@ -112,7 +112,7 @@ namespace gui {
         logTableModel()->showIndexedColumns();
         std::vector<int> widths;
         auto columnCount = logTableModel()->columnCount({});
-        widths.push_back(seer::ssnprintf("%d", logTableModel()->rowCount({}) + 1).size());
+        widths.push_back(bformat("%d", logTableModel()->rowCount({}) + 1).size());
         for (auto i = 0; i < columnCount - 1; ++i) {
             widths.push_back(_index->maxWidth(i));
         }

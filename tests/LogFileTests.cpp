@@ -11,11 +11,18 @@
 #include <condition_variable>
 #include <mutex>
 #include <QBrush>
+#include <iostream>
 
 using namespace seer;
 using namespace gui;
 
 namespace {
+
+    QApplication* qapp() {
+        static int count = 0;
+        static auto app = std::make_unique<QApplication>(count, nullptr);
+        return app.get();
+    }
 
     class TestTask : public task::Task {
         std::mutex _m;
@@ -99,6 +106,13 @@ namespace {
 
 } // namespace
 
+template <class P>
+void waitFor(P predicate) {
+    while (!predicate()) {
+        QApplication::processEvents();
+    }
+}
+
 void waitParsingAndIndexing(LogFile& file) {
     REQUIRE(file.isState(gui::sm::IdleState));
 
@@ -114,35 +128,31 @@ void waitParsingAndIndexing(LogFile& file) {
 
     file.parse();
 
-    while (!parsed) {
-        QApplication::processEvents();
-    }
+    waitFor([&] { return parsed; });
 
     REQUIRE((parsed && !indexed));
 
     file.index();
 
-    while (!indexed) {
-        QApplication::processEvents();
-    }
+    waitFor([&] { return indexed; });
 
     REQUIRE((parsed && indexed));
+
+    file.disconnect();
 }
 
-void waitFor(auto predicate) {
-    while (!predicate()) {
-        QApplication::processEvents();
-    }
+template <class T = LogFile>
+T makeLogFile(std::string log) {
+    auto ss = std::make_unique<std::stringstream>(log);
+    auto repository = std::make_shared<TestLineParserRepository>();
+    auto lineParser = repository->resolve(*ss);
+    return T(std::move(ss), lineParser);
 }
 
 TEST_CASE("set_is_filter_active") {
-    char arg[] = "arg";
-    int count = 1; char* args[] = { arg };
-    QApplication app(count, args);
+    qapp();
 
-    auto ss = std::make_unique<std::stringstream>(simpleLog);
-    auto repository = std::make_shared<TestLineParserRepository>();
-    LogFile file(std::move(ss), repository->resolve(*ss));
+    auto file = makeLogFile(simpleLog);
     waitParsingAndIndexing(file);
 
     auto model = file.logTableModel();
@@ -186,13 +196,9 @@ TEST_CASE("set_is_filter_active") {
 }
 
 TEST_CASE("headers_should_not_be_clickable_until_file_indexed") {
-    char arg[] = "arg";
-    int count = 1; char* args[] = { arg };
-    QApplication app(count, args);
+    qapp();
 
-    auto ss = std::make_unique<std::stringstream>(simpleLog);
-    auto repository = std::make_shared<TestLineParserRepository>();
-    TestLogFile file(std::move(ss), repository->resolve(*ss));
+    auto file = makeLogFile<TestLogFile>(simpleLog);
     file.parse();
 
     waitFor([&] { return file.isState(gui::sm::ParsingState); });
@@ -251,13 +257,9 @@ TEST_CASE("headers_should_not_be_clickable_until_file_indexed") {
 }
 
 TEST_CASE("log_file_filtering") {
-    char arg[] = "arg";
-    int count = 1; char* args[] = { arg };
-    QApplication app(count, args);
+    qapp();
 
-    auto ss = std::make_unique<std::stringstream>(simpleLog);
-    auto repository = std::make_shared<TestLineParserRepository>();
-    LogFile file(std::move(ss), repository->resolve(*ss));
+    auto file = makeLogFile(simpleLog);
     waitParsingAndIndexing(file);
 
     auto model = file.logTableModel();
@@ -268,13 +270,9 @@ TEST_CASE("log_file_filtering") {
 }
 
 TEST_CASE("log_file_multiline") {
-    char arg[] = "arg";
-    int count = 1; char* args[] = { arg };
-    QApplication app(count, args);
+    qapp();
 
-    auto ss = std::make_unique<std::stringstream>(multilineLog);
-    auto repository = std::make_shared<TestLineParserRepository>();
-    LogFile file(std::move(ss), repository->resolve(*ss));
+    auto file = makeLogFile(multilineLog);
     waitParsingAndIndexing(file);
 
     auto model = file.logTableModel();
@@ -294,13 +292,9 @@ TEST_CASE("log_file_multiline") {
 }
 
 TEST_CASE("count_lines_from_one") {
-    char arg[] = "arg";
-    int count = 1; char* args[] = { arg };
-    QApplication app(count, args);
+    qapp();
 
-    auto ss = std::make_unique<std::stringstream>(simpleLog);
-    auto repository = std::make_shared<TestLineParserRepository>();
-    LogFile file(std::move(ss), repository->resolve(*ss));
+    auto file = makeLogFile(simpleLog);
     waitParsingAndIndexing(file);
 
     auto model = file.logTableModel();
@@ -315,15 +309,11 @@ TEST_CASE("count_lines_from_one") {
 }
 
 TEST_CASE("interrupt_parsing") {
-    char arg[] = "arg";
-    int count = 1; char* args[] = { arg };
-    QApplication app(count, args);
+    qapp();
 
     std::vector<std::string> trace;
 
-    auto ss = std::make_unique<std::stringstream>(simpleLog);
-    auto repository = std::make_shared<TestLineParserRepository>();
-    TestLogFile file(std::move(ss), repository->resolve(*ss));
+    auto file = makeLogFile<TestLogFile>(simpleLog);
 
     QObject::connect(&file, &LogFile::stateChanged, [&] {
         trace.push_back(file.dbgStateName());
@@ -349,13 +339,9 @@ TEST_CASE("interrupt_parsing") {
 }
 
 TEST_CASE("log_file_search_basic") {
-    char arg[] = "arg";
-    int count = 1; char* args[] = { arg };
-    QApplication app(count, args);
+    qapp();
 
-    auto ss = std::make_unique<std::stringstream>(simpleLog);
-    auto repository = std::make_shared<TestLineParserRepository>();
-    LogFile file(std::move(ss), repository->resolve(*ss));
+    auto file = makeLogFile(simpleLog);
     waitParsingAndIndexing(file);
 
     file.search("4", false, false, false);
@@ -399,13 +385,9 @@ TEST_CASE("log_file_search_basic") {
 }
 
 TEST_CASE("log_file_search_case") {
-    char arg[] = "arg";
-    int count = 1; char* args[] = { arg };
-    QApplication app(count, args);
+    qapp();
 
-    auto ss = std::make_unique<std::stringstream>(simpleLog);
-    auto repository = std::make_shared<TestLineParserRepository>();
-    LogFile file(std::move(ss), repository->resolve(*ss));
+    auto file = makeLogFile(simpleLog);
     waitParsingAndIndexing(file);
 
     // sensitive
@@ -434,13 +416,9 @@ TEST_CASE("log_file_search_case") {
 }
 
 TEST_CASE("log_file_search_regex") {
-    char arg[] = "arg";
-    int count = 1; char* args[] = { arg };
-    QApplication app(count, args);
+    qapp();
 
-    auto ss = std::make_unique<std::stringstream>(simpleLog);
-    auto repository = std::make_shared<TestLineParserRepository>();
-    LogFile file(std::move(ss), repository->resolve(*ss));
+    auto file = makeLogFile(simpleLog);
     waitParsingAndIndexing(file);
 
     // sensitive
@@ -481,13 +459,9 @@ TEST_CASE("log_file_search_regex") {
 }
 
 TEST_CASE("log_file_search_message_only") {
-    char arg[] = "arg";
-    int count = 1; char* args[] = { arg };
-    QApplication app(count, args);
+    qapp();
 
-    auto ss = std::make_unique<std::stringstream>(simpleLog);
-    auto repository = std::make_shared<TestLineParserRepository>();
-    LogFile file(std::move(ss), repository->resolve(*ss));
+    auto file = makeLogFile(simpleLog);
     waitParsingAndIndexing(file);
 
     file.search("4", false, true, true);
@@ -503,13 +477,9 @@ TEST_CASE("log_file_search_message_only") {
 }
 
 TEST_CASE("column_max_width_should_be_set_after_file_has_been_indexed") {
-    char arg[] = "arg";
-    int count = 1; char* args[] = { arg };
-    QApplication app(count, args);
+    qapp();
 
-    auto ss = std::make_unique<std::stringstream>(simpleLog);
-    auto repository = std::make_shared<TestLineParserRepository>();
-    TestLogFile file(std::move(ss), repository->resolve(*ss));
+    auto file = makeLogFile<TestLogFile>(simpleLog);
     file.parse();
 
     waitFor([&] { return file.isState(gui::sm::ParsingState); });
@@ -554,13 +524,9 @@ TEST_CASE("column_max_width_should_be_set_after_file_has_been_indexed") {
 }
 
 TEST_CASE("log_file_color") {
-    char arg[] = "arg";
-    int count = 1; char* args[] = { arg };
-    QApplication app(count, args);
+    qapp();
 
-    auto ss = std::make_unique<std::stringstream>(simpleLog);
-    auto repository = std::make_shared<TestLineParserRepository>();
-    LogFile file(std::move(ss), repository->resolve(*ss));
+    auto file = makeLogFile(simpleLog);
     waitParsingAndIndexing(file);
 
     auto regularColor = QColor(Qt::black);

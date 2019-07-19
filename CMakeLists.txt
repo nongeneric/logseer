@@ -16,7 +16,6 @@ include_directories("${CMAKE_SOURCE_DIR}")
 include_directories(SYSTEM thirdparty/Catch2/single_include)
 include_directories(SYSTEM thirdparty/EWAHBoolArray/headers)
 include_directories(SYSTEM thirdparty/sml/include/boost)
-include_directories(SYSTEM thirdparty/cmcstl2/include)
 include_directories(SYSTEM thirdparty/concurrentqueue)
 include_directories(SYSTEM thirdparty/json/include)
 
@@ -28,7 +27,7 @@ include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 option(CMAKE_RELEASE "CMAKE_RELEASE" FALSE)
 
-set(CMAKE_CXX_FLAGS "-Werror=return-type -Wall -Wextra -Werror -Wno-implicit-fallthrough -fconcepts ${CMAKE_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS "-Werror=return-type -Wall -Wextra -Werror -Wno-implicit-fallthrough ${CMAKE_CXX_FLAGS}")
 
 if(CMAKE_RELEASE)
     add_definitions(-DNDEBUG)

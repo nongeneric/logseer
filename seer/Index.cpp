@@ -8,7 +8,7 @@
 #include <optional>
 #include <thread>
 #include <tuple>
-#include <experimental/ranges/algorithm>
+#include <algorithm>
 #include <QString>
 
 namespace seer {
@@ -28,7 +28,7 @@ namespace seer {
         std::vector<std::thread> _threads;
         std::vector<ewah_bitset> _failures;
 
-        void combine(auto& index, auto& failed, auto& result) {
+        void combine(const ewah_bitset& index, const ewah_bitset& failed, ewah_bitset& result) {
             auto i = index.begin();
             auto f = failed.begin();
             auto ii = index.toArray();
@@ -379,7 +379,9 @@ namespace seer {
             values.push_back({value, checked, count});
         }
 
-        std::experimental::ranges::sort(values, std::less{}, &ColumnIndexInfo::value);
+        std::sort(begin(values), end(values), [](auto& a, auto& b) {
+            return a.value < b.value;
+        });
 
         return values;
     }

@@ -16,6 +16,7 @@
 #include <QVBoxLayout>
 #include <boost/filesystem.hpp>
 #include <fstream>
+#include "seer/bformat.h"
 
 namespace gui {
 
@@ -40,8 +41,8 @@ namespace gui {
         } else if (file->isState(sm::SearchingState)) {
             searchLine->setStatus("Searching...");
         } else if (file->isState(sm::CompleteState)) {
-            auto status = searchModel ? seer::ssnprintf("%d matches found",
-                                                        searchModel->rowCount({}))
+            auto status = searchModel ? bformat("%d matches found",
+                                                searchModel->rowCount({}))
                                       : "";
             searchLine->setStatus(status);
             searchLine->setProgress(-1);
@@ -225,7 +226,7 @@ namespace gui {
 
         auto fileName = boost::filesystem::path(path).stem().string();
         auto index = _tabWidget->addTab(splitter, QString::fromStdString(fileName));
-        auto toolTip = seer::ssnprintf("%s\nparser type: %s", path.c_str(), lineParser->name());
+        auto toolTip = bformat("%s\nparser type: %s", path.c_str(), lineParser->name());
         _tabWidget->setTabToolTip(index, QString::fromStdString(toolTip));
 
         _logs.push_back(std::move(file));

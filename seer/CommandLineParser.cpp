@@ -43,13 +43,13 @@ namespace seer {
             }
 
             if (console_vm.count("version")) {
-                _version = ssnprintf("logseer %s", g_version);
+                _version = bformat("logseer %s", g_version);
                 return true;
             }
 
             po::notify(console_vm);
         } catch(std::exception& e) {
-            _error = ssnprintf(
+            _error = bformat(
                 "can't parse program options:\n%s\n\n%s", e.what(), help());
             return false;
         }

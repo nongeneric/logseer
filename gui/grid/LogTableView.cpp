@@ -102,7 +102,6 @@ namespace gui::grid {
         auto model = _table->model();
         if (!model)
             return;
-        auto a = model->_index;(void)a;
         auto [first, last] = model->getSelection();
         if (first == -1)
             return;

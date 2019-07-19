@@ -36,9 +36,6 @@ namespace gui {
         int _selectedFirstRow = -1;
         int _selectedLastRow = -1;
 
-        void setSelection(int row, int last = -1);
-        void extendSelection(int row);
-
     public:
         LogTableModel(seer::FileParser* parser);
         void invalidate();
@@ -55,6 +52,8 @@ namespace gui {
         virtual int columnCount(const QModelIndex &parent) const override;
         virtual QVariant data(const QModelIndex &index, int role) const override;
         virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
+        void setSelection(int row, int last = -1);
+        void extendSelection(int row);
 
     signals:
         void selectionChanged();

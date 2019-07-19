@@ -119,7 +119,8 @@ namespace gui {
         LogTableModel* searchLogTableModel();
         const seer::Hist* searchHist();
 
-        inline bool isState(auto state) {
+        template <class S>
+        inline bool isState(S state) {
             return _sm.is(state);
         }
 
