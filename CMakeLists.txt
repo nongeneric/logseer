@@ -1,10 +1,10 @@
-cmake_minimum_required (VERSION 3.11)
+cmake_minimum_required (VERSION 3.14)
 
-project(logseer)
+project(logseer VERSION 0.0.2 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
-
-set(logseer_VERSION "0.0.2")
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 configure_file (
     "${CMAKE_SOURCE_DIR}/version.h.in"
@@ -25,15 +25,14 @@ set(Boost_USE_STATIC_RUNTIME    OFF)
 find_package(Boost 1.56 COMPONENTS system program_options filesystem REQUIRED)
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
-option(CMAKE_RELEASE "CMAKE_RELEASE" FALSE)
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Debug)
+endif()
 
-set(CMAKE_CXX_FLAGS "-Werror=return-type -Wall -Wextra -Werror -Wno-implicit-fallthrough ${CMAKE_CXX_FLAGS}")
-
-if(CMAKE_RELEASE)
-    add_definitions(-DNDEBUG)
-    set(CMAKE_CXX_FLAGS "-O3 ${CMAKE_CXX_FLAGS}")
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+    add_compile_options(-O0 -ggdb)
 else()
-    set(CMAKE_CXX_FLAGS "-O0 -ggdb ${CMAKE_CXX_FLAGS}")
+    add_compile_options(-O3)
 endif()
 
 add_subdirectory(gui)
@@ -47,7 +46,7 @@ if(WIN32)
         @ONLY
     )
     install(SCRIPT "${CMAKE_BINARY_DIR}/install.cmake")
-    set(CPACK_PACKAGE_FILE_NAME "logseer-${logseer_VERSION}-win64")
+    set(CPACK_PACKAGE_FILE_NAME "${PROJECT_NAME}-${PROJECT_VERSION}-win64")
     set(CPACK_GENERATOR "ZIP")
     include(CPack)
 endif()

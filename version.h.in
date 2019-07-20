@@ -1,6 +1,6 @@
 #pragma once
 
-inline auto g_version = "@logseer_VERSION@";
+inline auto g_version = "@PROJECT_VERSION@";
 
 inline bool g_debug =
 #ifdef NDEBUG
