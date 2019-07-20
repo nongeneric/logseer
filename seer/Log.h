@@ -7,6 +7,7 @@
 namespace seer {
 
     void log_info(const char* message);
+    void log_enable(bool value);
 
     template <typename... Args>
     void log_infof(const char* message, const Args&... args) {

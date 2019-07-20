@@ -113,3 +113,30 @@ TEST_CASE("command_line_parser_8") {
     REQUIRE( parser.paths()[0] == "/path/to" );
     REQUIRE( parser.paths()[1] == "/another/path" );
 }
+
+TEST_CASE("command_line_parser_9") {
+    seer::CommandLineParser parser;
+    std::vector<const char*> args {
+        "path",
+    };
+
+    REQUIRE( parser.parse(args.size(), &args[0]) );
+    REQUIRE( parser.version().empty() );
+    REQUIRE( parser.help().empty() );
+    REQUIRE( parser.paths().empty() );
+    REQUIRE( !parser.verbose() );
+}
+
+TEST_CASE("command_line_parser_10") {
+    seer::CommandLineParser parser;
+    std::vector<const char*> args {
+        "path",
+        "--verbose"
+    };
+
+    REQUIRE( parser.parse(args.size(), &args[0]) );
+    REQUIRE( parser.version().empty() );
+    REQUIRE( parser.help().empty() );
+    REQUIRE( parser.paths().empty() );
+    REQUIRE( parser.verbose() );
+}

@@ -12,7 +12,8 @@
 #include <iomanip>
 
 namespace {
-    std::shared_ptr<spdlog::logger> logger;
+    std::shared_ptr<spdlog::logger> g_logger;
+    bool g_enabled = false;
 
     std::string getLogPath() {
         auto now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
@@ -22,15 +23,15 @@ namespace {
     }
 
     void init() {
-        if (logger)
+        if (g_logger)
             return;
         std::vector<spdlog::sink_ptr> sinks = {
             std::make_shared<spdlog::sinks::basic_file_sink_mt>(getLogPath(), true)
         };
-        logger = std::make_shared<spdlog::logger>("name", begin(sinks), end(sinks));
-        spdlog::register_logger(logger);
+        g_logger = std::make_shared<spdlog::logger>("name", begin(sinks), end(sinks));
+        spdlog::register_logger(g_logger);
         spdlog::set_pattern("%v");
-        logger->info("logseer log");
+        g_logger->info("logseer log");
         spdlog::set_pattern("%H:%M:%S.%f [%t] %v");
         spdlog::flush_every(std::chrono::seconds(3));
     }
@@ -38,8 +39,14 @@ namespace {
 }
 
 void seer::log_info(const char* message) {
+    if (!g_enabled)
+        return;
     init();
-    logger->info(message);
+    g_logger->info(message);
+}
+
+void seer::log_enable(bool value) {
+    g_enabled = value;
 }
 
 #else
@@ -48,4 +55,6 @@ void seer::log_info(const char* message) {
 void seer::log_info(const char* message) {
     std::cout << message << std::endl;
 }
+
+void seer::log_enable(bool) { }
 #endif

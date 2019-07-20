@@ -6,6 +6,7 @@
 #include <iostream>
 #include "Config.h"
 #include "seer/CommandLineParser.h"
+#include "seer/Log.h"
 
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
@@ -15,6 +16,7 @@ int main(int argc, char *argv[]) {
 
     seer::CommandLineParser parser;
     if (parser.parse(argc, argv)) {
+        seer::log_enable(parser.verbose());
         gui::g_Config.init();
 
         if (!parser.help().empty()) {

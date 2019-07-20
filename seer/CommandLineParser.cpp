@@ -20,6 +20,7 @@ namespace seer {
                 ("help", "produce help message")
                 (logName, po::value(&_paths), "log file path")
                 ("version,v", "print version")
+                ("verbose", "enable logging")
                 ;
 
             po::variables_map console_vm;
@@ -47,6 +48,8 @@ namespace seer {
                 return true;
             }
 
+            _verbose = console_vm.count("verbose");
+
             po::notify(console_vm);
         } catch(std::exception& e) {
             _error = bformat(
@@ -71,6 +74,10 @@ namespace seer {
 
     std::vector<std::string> CommandLineParser::paths() const {
         return _paths;
+    }
+
+    bool CommandLineParser::verbose() const {
+        return _verbose;
     }
 
 } // namespace seer
