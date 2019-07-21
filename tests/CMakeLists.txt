@@ -21,6 +21,7 @@ add_executable(tests
     HistTests.cpp
     LineColorTests.cpp
     SearcherTests.cpp
+    ConfigTests.cpp
 )
 
 target_link_libraries(tests gui)

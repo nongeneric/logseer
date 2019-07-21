@@ -2,60 +2,34 @@
 
 #include "seer/Log.h"
 #include <QResource>
-#include <boost/filesystem.hpp>
 #include <nlohmann/json.hpp>
 #include <fstream>
 #include <regex>
 #include <sstream>
-#include <stdio.h>
+#include <fstream>
 
 using namespace boost::filesystem;
 using namespace nlohmann;
 
 namespace {
-    std::vector<uint8_t> read_all_bytes(std::string_view path) {
-        auto f = fopen(begin(path), "r");
-        if (!f)
-            throw std::runtime_error("can't open file");
-        fseek(f, 0, SEEK_END);
-        auto filesize = ftell(f);
-        std::vector<uint8_t> res(filesize);
-        fseek(f, 0, SEEK_SET);
-        fread(&res[0], 1, res.size(), f);
-        fclose(f);
-        return res;
-    }
 
-    std::string read_all_text(std::string_view path) {
-        auto vec = read_all_bytes(path);
-        return std::string((const char*)&vec[0], vec.size());
-    }
+    struct {
+        const char* fontGroup = "font";
+        const char* fontName = "name";
+        const char* fontSize = "size";
+        const char* searchGroup = "search";
+        const char* searchMessageOnly = "messageOnly";
+        const char* searchRegex = "regex";
+        const char* searchCaseSensitive = "caseSensitive";
+        const char* sessionGroup = "session";
+        const char* sessionOpenedFiles = "openedFiles";
+    } g_consts;
 
-    void write_all_bytes(const void* ptr, uint32_t size, std::string_view path) {
-        auto f = fopen(begin(path), "w");
-        if (!f)
-            throw std::runtime_error("can't open file");
-        auto res = fwrite(ptr, 1, size, f);
-        if (res != size)
-            throw std::runtime_error("incomplete write");
-        fclose(f);
-    }
+}
 
-    path getHomeDirectory() {
-        auto userProfile = std::getenv("USERPROFILE");
-        if (userProfile)
-            return userProfile;
-        auto homeDrive = std::getenv("HOMEDRIVE");
-        auto homePath = std::getenv("HOMEPATH");
-        if (homeDrive && homePath)
-            return path(homeDrive) / homePath;
-        auto home = std::getenv("HOME");
-        if (home)
-            return home;
-        return {};
-    }
+namespace gui {
 
-    path getConfigDirectory() {
+    path Config::getConfigDirectory() {
         auto home = getHomeDirectory();
         if (home.empty()) {
             home = boost::filesystem::current_path();
@@ -63,12 +37,23 @@ namespace {
         return home / ".logseer";
     }
 
-    path getConfigJsonPath() {
+    path Config::getHomeDirectory() {
+        auto userProfile = _fileSystem->getenv("USERPROFILE");
+        if (!userProfile.empty())
+            return userProfile;
+        auto homeDrive = _fileSystem->getenv("HOMEDRIVE");
+        auto homePath = _fileSystem->getenv("HOMEPATH");
+        if (!homeDrive.empty() && !homePath.empty())
+            return path(homeDrive) / homePath;
+        auto home = _fileSystem->getenv("HOME");
+        if (!home.empty())
+            return home;
+        return {};
+    }
+
+    path Config::getConfigJsonPath() {
         return getConfigDirectory() / "logseer.json";
     }
-}
-
-namespace gui {
 
     void Config::initRegexConfigs() {
         auto dir = getConfigDirectory() / "regex";
@@ -79,26 +64,23 @@ namespace gui {
             seer::log_info("initializing the default set of regex configs");
 
             for (auto rname : { "200_journalctl.json", "500_logseer.json" }) {
-                create_directories(dir);
                 QResource resource(QString(":/") + rname);
-                write_all_bytes(resource.data(), resource.size(), (dir / rname).string());
+                _fileSystem->writeFile(dir / rname, resource.data(), resource.size());
             }
         }
 
         std::regex rxFileName{R"(^(\d\d\d)_(.*?)\.json$)"};
 
-        for (auto& p : directory_iterator(dir)) {
-            if (!is_regular_file(p))
-                continue;
+        for (auto& p : _fileSystem->files(dir)) {
             std::smatch match;
-            auto fileName = p.path().filename().string();
+            auto fileName = p.filename().string();
             if (!std::regex_search(fileName, match, rxFileName)) {
                 seer::log_infof("parser config name [%s] doesn't have the right format", fileName);
                 continue;
             }
             auto priority = std::stoi(match.str(1));
             auto name = match.str(2);
-            auto json = read_all_text(p.path().string());
+            auto json = _fileSystem->readFile(p);
             _regexConfigs.push_back({name, priority, json});
         }
     }
@@ -106,43 +88,57 @@ namespace gui {
     void Config::save() {
         json j = {
             {
-                "font", {
-                    {"name", _fontConfig.name},
-                    {"size", _fontConfig.size}
+                g_consts.fontGroup, {
+                    {g_consts.fontName, _fontConfig.name},
+                    {g_consts.fontSize, _fontConfig.size}
                 }
             },
             {
-                "search", {
-                    {"messageOnly", _searchConfig.messageOnly},
-                    {"regex", _searchConfig.regex},
-                    {"caseSensitive", _searchConfig.caseSensitive}
+                g_consts.searchGroup, {
+                    {g_consts.searchMessageOnly, _searchConfig.messageOnly},
+                    {g_consts.searchRegex, _searchConfig.regex},
+                    {g_consts.searchCaseSensitive, _searchConfig.caseSensitive}
+                }
+            },
+            {
+                g_consts.sessionGroup, {
+                    {g_consts.sessionOpenedFiles, _sessionConfig.openedFiles}
                 }
             }
         };
         auto str = j.dump(4);
-        write_all_bytes(&str[0], str.size(), getConfigJsonPath().string());
+        _fileSystem->writeFile(getConfigJsonPath(), &str[0], str.size());
     }
 
-    void Config::init() {
+    void Config::init(std::shared_ptr<IFileSystem> fileSystem) {
+        _fileSystem = fileSystem;
         initRegexConfigs();
 
         auto configPath = getConfigJsonPath();
-        if (!is_regular_file(configPath)) {
+        auto files = _fileSystem->files(configPath.parent_path());
+        if (std::find(begin(files), end(files), configPath) == end(files)) {
             seer::log_infof("no config found at [%s]", configPath);
             save();
             return;
         }
 
-        std::stringstream ss(read_all_text(configPath.string()));
+        std::stringstream ss(_fileSystem->readFile(configPath));
         json j;
         ss >> j;
-        auto font = j["font"];
-        _fontConfig.name = font["name"].get<std::string>();
-        _fontConfig.size = font["size"].get<int>();
-        auto search = j["search"];
-        _searchConfig.messageOnly = search["messageOnly"].get<bool>();
-        _searchConfig.regex = search["regex"].get<bool>();
-        _searchConfig.caseSensitive = search["caseSensitive"].get<bool>();
+        auto font = j[g_consts.fontGroup];
+        _fontConfig.name = font[g_consts.fontName].get<std::string>();
+        _fontConfig.size = font[g_consts.fontSize].get<int>();
+        auto search = j[g_consts.searchGroup];
+        _searchConfig.messageOnly = search[g_consts.searchMessageOnly].get<bool>();
+        _searchConfig.regex = search[g_consts.searchRegex].get<bool>();
+        _searchConfig.caseSensitive = search[g_consts.searchCaseSensitive].get<bool>();
+        auto session = j[g_consts.sessionGroup];
+        if (!session.is_null()) {
+            auto openedFiles = session[g_consts.sessionOpenedFiles];
+            if (openedFiles.is_array()) {
+                _sessionConfig.openedFiles = openedFiles.get<std::vector<std::string>>();
+            }
+        }
     }
 
     std::vector<RegexConfig> Config::regexConfigs() {
@@ -157,6 +153,10 @@ namespace gui {
         return _searchConfig;
     }
 
+    SessionConfig Config::sessionConfig() {
+        return _sessionConfig;
+    }
+
     void Config::save(FontConfig const& config) {
         _fontConfig = config;
         save();
@@ -167,6 +167,46 @@ namespace gui {
         save();
     }
 
+    void Config::save(const SessionConfig &config) {
+        _sessionConfig = config;
+        save();
+    }
+
     Config g_Config;
+
+    std::string RuntimeFileSystem::readFile(path path) {
+        std::ifstream f(path.c_str());
+        if (!f.is_open())
+            throw std::runtime_error("can't open file");
+        f.seekg(0, std::ios_base::end);
+        auto filesize = f.tellg();
+        std::string res(filesize, '\0');
+        f.seekg(0);
+        f.read(&res[0], res.size());
+        return res;
+    }
+
+    void RuntimeFileSystem::writeFile(path path, const void* content, unsigned size) {
+        std::ofstream f(path.c_str());
+        if (!f.is_open())
+            throw std::runtime_error("can't open file");
+        create_directories(path.parent_path());
+        f.write(reinterpret_cast<const char*>(content), size);
+    }
+
+    std::vector<path> RuntimeFileSystem::files(path directory) {
+        std::vector<path> res;
+        for (auto& p : directory_iterator(directory)) {
+            if (!is_regular_file(p))
+                continue;
+            res.push_back(p.path());
+        }
+        return res;
+    }
+
+    std::string RuntimeFileSystem::getenv(const char* name) {
+        auto value = std::getenv(name);
+        return value ? value : "";
+    }
 
 } // namespace gui

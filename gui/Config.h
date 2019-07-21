@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include <boost/filesystem.hpp>
 #include <stdint.h>
 
 namespace gui {
@@ -23,21 +24,49 @@ namespace gui {
         bool messageOnly = false;
     };
 
+    struct SessionConfig {
+        std::vector<std::string> openedFiles;
+    };
+
+    class IFileSystem {
+    public:
+        virtual ~IFileSystem() = default;
+        virtual std::string readFile(boost::filesystem::path path) = 0;
+        virtual void writeFile(boost::filesystem::path path, const void* content, unsigned size) = 0;
+        virtual std::vector<boost::filesystem::path> files(boost::filesystem::path directory) = 0;
+        virtual std::string getenv(const char* name) = 0;
+    };
+
+    class RuntimeFileSystem : public IFileSystem {
+    public:
+        std::string readFile(boost::filesystem::path path) override;
+        void writeFile(boost::filesystem::path path, const void* content, unsigned size) override;
+        std::vector<boost::filesystem::path> files(boost::filesystem::path directory) override;
+        std::string getenv(const char* name) override;
+    };
+
     class Config {
         std::vector<RegexConfig> _regexConfigs;
         FontConfig _fontConfig;
         SearchConfig _searchConfig;
+        SessionConfig _sessionConfig;
+        std::shared_ptr<IFileSystem> _fileSystem;
 
+        boost::filesystem::path getConfigDirectory();
+        boost::filesystem::path getHomeDirectory();
+        boost::filesystem::path getConfigJsonPath();
         void initRegexConfigs();
         void save();
 
     public:
-        void init();
+        void init(std::shared_ptr<IFileSystem> fileSystem = std::make_shared<RuntimeFileSystem>());
         std::vector<RegexConfig> regexConfigs();
         FontConfig fontConfig();
         SearchConfig searchConfig();
+        SessionConfig sessionConfig();
         void save(FontConfig const& config);
         void save(SearchConfig const& config);
+        void save(SessionConfig const& config);
     };
 
     extern Config g_Config;

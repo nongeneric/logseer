@@ -27,6 +27,9 @@ int main(int argc, char *argv[]) {
             std::cout << parser.version() << std::endl;
             return 0;
         }
+        for (auto& path : gui::g_Config.sessionConfig().openedFiles) {
+            w.openLog(path);
+        }
         for (auto& path : parser.paths()) {
             w.openLog(path);
         }

@@ -12,18 +12,24 @@
 
 namespace gui {
 
+    struct OpenedLogFile {
+        std::string path;
+        std::unique_ptr<LogFile> file;
+    };
+
     class MainWindow : public QMainWindow {
         Q_OBJECT
 
         QTabWidget* _tabWidget;
         FilterDialog* _filterDialog;
-        std::vector<std::unique_ptr<LogFile>> _logs;
+        std::vector<OpenedLogFile> _logs;
         QStackedLayout* _centralLayout;
         QLabel* _dragAndDropTip;
 
         void updateTabWidgetVisibility();
         void closeTab(int index);
         void interrupt(int index);
+        void saveOpenedFilesToConfig();
         QFont loadFont();
 
     public:

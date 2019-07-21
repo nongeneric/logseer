@@ -65,7 +65,16 @@ namespace gui {
     }
 
     void MainWindow::interrupt(int index) {
-        _logs[index]->interrupt();
+        _logs[index].file->interrupt();
+    }
+
+    void MainWindow::saveOpenedFilesToConfig() {
+        auto config = g_Config.sessionConfig();
+        config.openedFiles.clear();
+        for (auto& logFile : _logs) {
+            config.openedFiles.push_back(logFile.path);
+        }
+        g_Config.save(config);
     }
 
     QFont MainWindow::loadFont() {
@@ -142,7 +151,7 @@ namespace gui {
         connect(file.get(), &LogFile::stateChanged, this, [=, file = file.get()] {
             handleStateChanged(file, table, searchTable, searchLine, [=] {
                 auto it = std::find_if(begin(_logs), end(_logs), [=] (auto& x) {
-                    return x.get() == file;
+                    return x.file.get() == file;
                 });
                 assert(it != end(_logs));
                 this->closeTab(std::distance(begin(_logs), it));
@@ -229,8 +238,9 @@ namespace gui {
         auto toolTip = bformat("%s\nparser type: %s", path.c_str(), lineParser->name());
         _tabWidget->setTabToolTip(index, QString::fromStdString(toolTip));
 
-        _logs.push_back(std::move(file));
+        _logs.push_back({path, std::move(file)});
         updateTabWidgetVisibility();
+        saveOpenedFilesToConfig();
     }
 
     void MainWindow::dragEnterEvent(QDragEnterEvent* event) {
@@ -248,9 +258,10 @@ namespace gui {
     }
 
     void MainWindow::closeEvent(QCloseEvent*) {
+        saveOpenedFilesToConfig();
         std::vector<LogFile*> logs;
         for (auto& logFile : _logs) {
-            logs.push_back(logFile.get());
+            logs.push_back(logFile.file.get());
         }
         for (auto& logFile : logs) {
             logFile->interrupt();
