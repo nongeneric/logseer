@@ -22,6 +22,7 @@ namespace gui::grid {
         bool _showHistMap = false;
 
         void flipExpanded();
+        void setColumnWidth(int column, int width);
 
     public:
         explicit LogTable(QFont font, QWidget* parent = nullptr);

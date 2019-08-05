@@ -187,6 +187,10 @@ namespace gui::grid {
         return height() / _rowHeight;
     }
 
+    float LogTableView::charWidth() const {
+        return _charWidth;
+    }
+
     void LogTableView::setSearchHighlight(std::string text,
                                           bool regex,
                                           bool caseSensitive,

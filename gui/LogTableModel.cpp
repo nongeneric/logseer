@@ -47,10 +47,10 @@ namespace gui {
 
     LogTableModel::LogTableModel(seer::FileParser* parser)
         : _parser(parser) {
-        _columns.push_back({"#", false});
+        _columns.push_back({"#", false, true});
         for (auto& column : parser->lineParser()->getColumnFormats()) {
             _columns.push_back(
-                {QString::fromStdString(column.header), column.indexed});
+                {QString::fromStdString(column.header), column.indexed, column.autosize});
         }
     }
 
@@ -101,6 +101,7 @@ namespace gui {
         for (auto i = 0u; i < widths.size(); ++i) {
             _columns[i].maxWidth = widths[i];
         }
+        emit columnWidthsChanged();
     }
 
     QVariant LogTableModel::headerData(int section, Qt::Orientation orientation, int role) const {
@@ -116,6 +117,9 @@ namespace gui {
             if (section == (int)_columns.size() - 1)
                 return {};
             return _columns[section].name;
+        }
+        if (role == (int)HeaderDataRole::Autosize) {
+            return _columns[section].autosize ? _columns[section].maxWidth : -1;
         }
         return QVariant();
     }

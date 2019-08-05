@@ -19,7 +19,7 @@ namespace seer {
         }
 
         std::vector<ColumnFormat> getColumnFormats() override {
-            return {{"Message", false}};
+            return {{"Message", false, false}};
         }
 
         bool isMatch(std::vector<std::string>, std::string_view) override {

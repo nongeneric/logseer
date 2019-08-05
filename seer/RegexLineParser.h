@@ -20,6 +20,7 @@ namespace seer {
         std::string name;
         int group;
         bool indexed;
+        bool autosize;
     };
 
     class RegexLineParser : public ILineParser {

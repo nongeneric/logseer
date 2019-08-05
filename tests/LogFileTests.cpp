@@ -552,3 +552,17 @@ TEST_CASE("log_file_color") {
     REQUIRE( model->data(model->index(5, 2), Qt::ForegroundRole).value<QColor>() == warningColor );
     REQUIRE( model->data(model->index(5, 3), Qt::ForegroundRole).value<QColor>() == warningColor );
 }
+
+TEST_CASE("log_file_get_autosize_attibute") {
+    qapp();
+
+    auto file = makeLogFile(simpleLog);
+    waitParsingAndIndexing(file);
+    auto model = file.logTableModel();
+
+    REQUIRE(model->headerData(0, Qt::Horizontal, (int)HeaderDataRole::Autosize).toInt() == 1);
+    REQUIRE(model->headerData(1, Qt::Horizontal, (int)HeaderDataRole::Autosize).toInt() == 2);
+    REQUIRE(model->headerData(2, Qt::Horizontal, (int)HeaderDataRole::Autosize).toInt() == -1);
+    REQUIRE(model->headerData(3, Qt::Horizontal, (int)HeaderDataRole::Autosize).toInt() == -1);
+    REQUIRE(model->headerData(4, Qt::Horizontal, (int)HeaderDataRole::Autosize).toInt() == -1);
+}

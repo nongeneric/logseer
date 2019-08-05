@@ -40,8 +40,9 @@ namespace seer {
         for (auto it = begin(columns); it != end(columns); ++it) {
             auto name = (*it)["name"].get<std::string>();
             auto group = (*it)["group"].get<int>();
-            auto indexed = (*it)["indexed"].get<bool>();
-            _formats.push_back({name, group, indexed});
+            auto indexed = it->value("indexed", false);
+            auto autosize = it->value("autosize", false);
+            _formats.push_back({name, group, indexed, autosize});
         }
 
         auto colors = j["colors"];
@@ -94,7 +95,7 @@ namespace seer {
     std::vector<ColumnFormat> RegexLineParser::getColumnFormats() {
         std::vector<ColumnFormat> formats;
         for (auto& format : _formats) {
-            formats.push_back({format.name, format.indexed});
+            formats.push_back({format.name, format.indexed, format.autosize});
         }
         return formats;
     }

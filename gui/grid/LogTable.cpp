@@ -10,6 +10,8 @@
 
 namespace gui::grid {
 
+    constexpr inline int g_columnAutosizePadding = 3;
+
     void emulateResize(QWidget* widget) {
         auto size = widget->size();
         size.rheight()++;
@@ -26,18 +28,19 @@ namespace gui::grid {
         _expanded = !_expanded;
         auto last = _header->count() - 1;
         if (_expanded) {
-            _header->setSectionResizeMode(last,
-                                          QHeaderView::ResizeMode::Interactive);
-            QFontMetrics metrics(_view->font());
-            auto lastColumnWidth =
-                metrics.size(Qt::TextSingleLine, "_").width() * lastColumnCharWidth;
-            lastColumnWidth = std::min(lastColumnWidth, _header->maximumSectionSize());
-            _header->resizeSection(last, lastColumnWidth);
+            _header->setSectionResizeMode(last, QHeaderView::ResizeMode::Interactive);
+            setColumnWidth(last, lastColumnCharWidth);
         } else {
             _header->setSectionResizeMode(last, QHeaderView::ResizeMode::Stretch);
         }
         emulateResize(this);
         emulateResize(_header);
+    }
+
+    void LogTable::setColumnWidth(int column, int width) {
+        auto pxWidth = static_cast<int>(_view->charWidth() * width);
+        pxWidth = std::min(pxWidth, _header->maximumSectionSize());
+        _header->resizeSection(column, pxWidth);
     }
 
     LogTable::LogTable(QFont font, QWidget* parent) : QWidget(parent) {
@@ -85,6 +88,15 @@ namespace gui::grid {
                 _scrollArea->ensureVisible(first);
             }
             _view->update();
+        });
+
+        connect(_model, &LogTableModel::columnWidthsChanged, this, [=] {
+            for (auto column = 0; column < _model->columnCount({}); ++column) {
+                auto autosize = _model->headerData(column, Qt::Horizontal, (int)HeaderDataRole::Autosize).toInt();
+                if (autosize != -1) {
+                    setColumnWidth(column, autosize + g_columnAutosizePadding);
+                }
+            }
         });
     }
 

@@ -64,7 +64,8 @@ inline std::string testConfig =
                 {
                     "name": "Timestamp",
                     "group": 1,
-                    "indexed": false
+                    "indexed": false,
+                    "autosize": true
                 },
                 {
                     "name": "Level",
@@ -106,12 +107,14 @@ inline std::string threeColumnTestConfig =
                 {
                     "name": "Timestamp",
                     "group": 1,
-                    "indexed": false
+                    "indexed": false,
+                    "autosize": true
                 },
                 {
                     "name": "Level",
                     "group": 2,
-                    "indexed": true
+                    "indexed": true,
+                    "autosize": true
                 },
                 {
                     "name": "Component",
@@ -121,7 +124,8 @@ inline std::string threeColumnTestConfig =
                 {
                     "name": "Flag",
                     "group": 4,
-                    "indexed": true
+                    "indexed": true,
+                    "autosize": false
                 },
                 {
                     "name": "Message",

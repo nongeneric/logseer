@@ -10,6 +10,7 @@ namespace seer {
     struct ColumnFormat {
         std::string header;
         bool indexed;
+        bool autosize;
     };
 
     class ILineParser {

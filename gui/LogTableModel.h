@@ -11,6 +11,7 @@ namespace gui {
     struct ColumnInfo {
         QString name;
         bool indexed = false;
+        bool autosize = false;
         bool filterActive = false;
         int maxWidth = -1;
     };
@@ -19,6 +20,7 @@ namespace gui {
         IsIndexed = Qt::UserRole,
         IsFilterActive,
         FirstLine,
+        Autosize
     };
 
     enum class CellDataRole {
@@ -57,6 +59,7 @@ namespace gui {
 
     signals:
         void selectionChanged();
+        void columnWidthsChanged();
     };
 
 } // namespace gui

@@ -732,3 +732,14 @@ TEST_CASE("parse_zeroes") {
     REQUIRE( line.size() == std::string("message1").size() );
     REQUIRE( line == "message1" );
 }
+
+TEST_CASE("parse_autosize_attribute") {
+    std::stringstream ss(threeColumnLog);
+    auto lineParser = createThreeColumnTestParser(ss);
+    auto columns = lineParser->getColumnFormats();
+    REQUIRE( columns[0].autosize == true );
+    REQUIRE( columns[1].autosize == true );
+    REQUIRE( columns[2].autosize == false );
+    REQUIRE( columns[3].autosize == false );
+    REQUIRE( columns[4].autosize == false );
+}
