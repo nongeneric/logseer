@@ -168,9 +168,10 @@ namespace gui::grid {
         _scrollArea->resize(size.width(),
                             size.height() - _header->height());
 
+        auto histMapWidth = _showHistMap ? 28 : 0;
         auto vScrollBar = _scrollArea->verticalScrollBar();
         auto hScrollBar = _scrollArea->horizontalScrollBar();
-        _histMap->resize(_showHistMap ? 28 : 0,
+        _histMap->resize(histMapWidth,
                          _scrollArea->height() - hScrollBar->height() -
                              _scrollArea->contentsMargins().top() -
                              _scrollArea->contentsMargins().bottom());
@@ -178,13 +179,15 @@ namespace gui::grid {
                            _histMap->width() -
                            _scrollArea->contentsMargins().right(),
                        _header->height() + _scrollArea->contentsMargins().top());
-        auto minHeaderWidth = _header->sectionPosition(_header->count() - 1);
+
+        auto contentWidth = _header->sectionPosition(_header->count() - 1);
         if (_expanded) {
-            minHeaderWidth += _header->sectionSize(_header->count() - 1);
+            contentWidth += _header->sectionSize(_header->count() - 1);
         }
 
-        if (minHeaderWidth > size.width()) {
-            hScrollBar->setMaximum(minHeaderWidth - size.width());
+        auto availableWidth = size.width() - histMapWidth;
+        if (contentWidth > availableWidth) {
+            hScrollBar->setMaximum(contentWidth - availableWidth);
             hScrollBar->setPageStep(size.width());
         } else {
             hScrollBar->setMaximum(0);

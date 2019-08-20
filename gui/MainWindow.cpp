@@ -4,8 +4,8 @@
 #include "LogTableModel.h"
 #include "SearchLine.h"
 #include "Config.h"
-#include "grid/FilterHeaderView.h"
 #include "grid/LogTable.h"
+#include "grid/FilterHeaderView.h"
 #include "seer/LineParserRepository.h"
 #include "seer/Log.h"
 #include "version.h"
@@ -20,6 +20,13 @@
 
 namespace gui {
 
+    void copySectionSizes(grid::FilterHeaderView* from, grid::FilterHeaderView* to) {
+        assert(from->size() == to->size());
+        for (auto i = 0; i < from->count(); ++i) {
+            to->resizeSection(i, from->sectionSize(i));
+        }
+    }
+
     void handleStateChanged(LogFile* file,
                             grid::LogTable* table,
                             grid::LogTable* searchTable,
@@ -30,6 +37,7 @@ namespace gui {
         if (searchModel) {
             searchTable->setModel(searchModel);
             table->setHist(file->searchHist());
+            copySectionSizes(table->header(), searchTable->header());
         }
 
         if (file->isState(sm::ParsingState)) {
