@@ -38,7 +38,16 @@ namespace gui::grid {
     }
 
     void LogTable::setColumnWidth(int column, int width) {
+        QFontMetricsF fm(_header->font());
+        auto isIndexed = _model->headerData(column, Qt::Horizontal, (int)HeaderDataRole::IsIndexed).toBool();
+        auto headerText = _model->headerData(column, Qt::Horizontal, Qt::DisplayRole).toString();
+        const auto padding = 20;
+        auto headerWidth = fm.width(headerText) + padding;
+        if (isIndexed) {
+            headerWidth += _header->style()->pixelMetric(QStyle::PM_SmallIconSize);
+        }
         auto pxWidth = static_cast<int>(_view->charWidth() * width);
+        pxWidth = std::max(static_cast<int>(headerWidth), pxWidth);
         pxWidth = std::min(pxWidth, _header->maximumSectionSize());
         _header->resizeSection(column, pxWidth);
     }

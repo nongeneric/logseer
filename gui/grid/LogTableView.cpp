@@ -16,8 +16,6 @@ namespace gui::grid {
         auto model = _table->model();
         auto columns = _table->header()->count();
 
-        QFontMetrics fm(font());
-
         if (model->isSelected(row)) {
             QBrush b(palette().color(QPalette::Highlight));
             QRect r(0, y, width(), _rowHeight);
