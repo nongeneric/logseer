@@ -9,6 +9,7 @@
 #include <QGuiApplication>
 #include <QApplication>
 #include <QClipboard>
+#include <cmath>
 
 namespace gui::grid {
 
@@ -28,6 +29,8 @@ namespace gui::grid {
             painter->setPen(brush.color());
         }
 
+        QFontMetrics fm(font());
+
         for (auto column = 0; column < columns; ++column) {
             auto x = _table->header()->sectionPosition(column);
             assert(row < model->rowCount({}));
@@ -46,7 +49,7 @@ namespace gui::grid {
                 int index = 0;
                 const auto& split = text.left(len).split("\t");
                 for (int i = 0; i < split.size(); ++i) {
-                    index += split[i].length();
+                    index += std::round(fm.width(split[i]) / _charWidth);
                     if (i != split.size() - 1) {
                         index += _tabWidth - (index % _tabWidth);
                     }
