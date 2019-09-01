@@ -39,11 +39,6 @@ namespace gui::grid {
             assert(index.isValid());
             auto text = model->data(index, Qt::DisplayRole).toString();
             auto sectionSize = _table->header()->sectionSize(column);
-            if (!_table->expanded() && column == columns - 1) {
-                sectionSize -= _table->scrollArea()->verticalScrollBar()->width();
-                sectionSize -= _table->histMap()->width();
-                sectionSize -= 2;
-            }
 
             auto textWidth = [&](QString const& text, int len) {
                 int index = 0;

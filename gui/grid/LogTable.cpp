@@ -11,6 +11,7 @@
 namespace gui::grid {
 
     constexpr inline int g_columnAutosizePadding = 3;
+    constexpr inline int g_defaultMessageColumnSize = 1000;
 
     void emulateResize(QWidget* widget) {
         auto size = widget->size();
@@ -18,23 +19,6 @@ namespace gui::grid {
         widget->resize(size);
         size.rheight()--;
         widget->resize(size);
-    }
-
-    void LogTable::flipExpanded() {
-        auto lastColumnCharWidth =
-            _model->maxColumnWidth(_model->columnCount({}) - 1);
-        if (lastColumnCharWidth == -1)
-            return;
-        _expanded = !_expanded;
-        auto last = _header->count() - 1;
-        if (_expanded) {
-            _header->setSectionResizeMode(last, QHeaderView::ResizeMode::Interactive);
-            setColumnWidth(last, lastColumnCharWidth);
-        } else {
-            _header->setSectionResizeMode(last, QHeaderView::ResizeMode::Stretch);
-        }
-        emulateResize(this);
-        emulateResize(_header);
     }
 
     void LogTable::setColumnWidth(int column, int width) {
@@ -65,9 +49,7 @@ namespace gui::grid {
         });
 
         connect(_header, &QHeaderView::sectionClicked, this, [=](int column) {
-            if (column == _header->count() - 1) {
-                flipExpanded();
-            } else if (column != 0) {
+            if (column != 0) {
                 emit requestFilter(column);
             }
         });
@@ -77,10 +59,11 @@ namespace gui::grid {
         _model = model;
         _header->setModel(model);
         auto count = model->columnCount(QModelIndex());
-        for (auto i = 0; i < count - 1; ++i) {
+        for (auto i = 0; i < count; ++i) {
             _header->setSectionResizeMode(i, QHeaderView::ResizeMode::Interactive);
         }
-        _header->setSectionResizeMode(count - 1, QHeaderView::ResizeMode::Stretch);
+        _header->setSectionResizeMode(count - 1, QHeaderView::ResizeMode::Fixed);
+        setColumnWidth(count - 1, g_defaultMessageColumnSize);
         _view->update();
         _header->updateGeometry();
         _scrollArea->setRowCount(_model->rowCount({}));
@@ -106,6 +89,8 @@ namespace gui::grid {
                     setColumnWidth(column, autosize + g_columnAutosizePadding);
                 }
             }
+            auto lastColumn = _model->columnCount({}) - 1;
+            setColumnWidth(lastColumn, _model->maxColumnWidth(lastColumn));
         });
     }
 
@@ -131,10 +116,6 @@ namespace gui::grid {
 
     HistMap *LogTable::histMap() const {
         return _histMap;
-    }
-
-    bool LogTable::expanded() const {
-        return _expanded;
     }
 
     void LogTable::showHistMap() {
@@ -180,10 +161,8 @@ namespace gui::grid {
                            _scrollArea->contentsMargins().right(),
                        _header->height() + _scrollArea->contentsMargins().top());
 
-        auto contentWidth = _header->sectionPosition(_header->count() - 1);
-        if (_expanded) {
-            contentWidth += _header->sectionSize(_header->count() - 1);
-        }
+        auto contentWidth = _header->sectionPosition(_header->count() - 1) +
+                            _header->sectionSize(_header->count() - 1);
 
         auto availableWidth = size.width() - histMapWidth;
         if (contentWidth > availableWidth) {

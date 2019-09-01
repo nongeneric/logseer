@@ -18,10 +18,8 @@ namespace gui::grid {
         LogTableView* _view = nullptr;
         LogScrollArea* _scrollArea = nullptr;
         HistMap* _histMap = nullptr;
-        bool _expanded = false;
         bool _showHistMap = false;
 
-        void flipExpanded();
         void setColumnWidth(int column, int width);
 
     public:
@@ -32,7 +30,6 @@ namespace gui::grid {
         FilterHeaderView* header() const;
         LogScrollArea* scrollArea() const;
         HistMap* histMap() const;
-        bool expanded() const;
         void showHistMap();
         void setSearchHighlight(std::string text,
                                 bool regex,

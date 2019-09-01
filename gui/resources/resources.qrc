@@ -2,7 +2,6 @@
     <qresource prefix="/">
         <file>filter-fill.svg</file>
         <file>filter.svg</file>
-        <file>plus.svg</file>
         <file>200_journalctl.json</file>
         <file>500_logseer.json</file>
     </qresource>

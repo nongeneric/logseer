@@ -56,14 +56,6 @@ namespace gui::grid {
                                       (header->state & State_Enabled),
                                       header->text,
                                       QPalette::ButtonText);
-
-                if (!_parent->logTable()->expanded() && header->section == model->columnCount({}) - 1) {
-                    auto icon = QIcon(":/plus.svg");
-                    int iconExtent = proxy()->pixelMetric(PM_SmallIconSize);
-                    auto pixmap = icon.pixmap(QSize(iconExtent, iconExtent), QIcon::Normal);
-                    auto y = rect.top() + (rect.height() - pixmap.height()) / 2;
-                    p->drawPixmap(rect.right() - iconExtent, y, pixmap);
-                }
             } else {
                 QProxyStyle::drawControl(element, opt, p, widget);
             }
