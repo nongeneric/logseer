@@ -27,6 +27,7 @@ namespace seer {
         std::vector<Result> _results;
         std::vector<std::thread> _threads;
         std::vector<ewah_bitset> _failures;
+        ewah_bitset _combinedFailures;
 
         void combine(const ewah_bitset& index, const ewah_bitset& failed, ewah_bitset& result) {
             auto i = index.begin();
@@ -146,7 +147,7 @@ namespace seer {
                 failurePointers.push_back(&failure);
             }
 
-            auto multilines = fast_logicalor(failurePointers.size(), &failurePointers[0]);
+            _combinedFailures = fast_logicalor(failurePointers.size(), &failurePointers[0]);
             std::vector<ewah_bitset*> allIndexes;
             for (auto tid = 0u; tid < _threadCount; ++tid) {
                 auto& result = _results[tid];
@@ -159,7 +160,7 @@ namespace seer {
 
             parallelFor(allIndexes, [=](auto index) {
                 ewah_bitset combined;
-                combine(*index, multilines, combined);
+                combine(*index, _combinedFailures, combined);
                 *index = combined;
             });
         }
@@ -180,6 +181,26 @@ namespace seer {
                             existingSet = existingSet | set;
                         }
                     }
+                }
+            }
+        }
+
+        void patchFailedStartingLines() {
+            ewah_bitset set;
+            auto i = 0u;
+            for (auto value : _combinedFailures) {
+                if (value != i)
+                    break;
+                set.set(i);
+                ++i;
+            }
+
+            if (set.numberOfOnes() == 0)
+                return;
+
+            for (auto& column : *_columns) {
+                if (auto [it, inserted] = column.index.insert({"", set}); !inserted) {
+                    it->second = it->second | set;
                 }
             }
         }
@@ -217,6 +238,7 @@ namespace seer {
             log_info("consolidating indexes");
 
             reduceIndexes();
+            patchFailedStartingLines();
 
             log_info("indexing complete");
 

@@ -328,6 +328,41 @@ TEST_CASE("search_multiline") {
     REQUIRE( indexCopy.mapIndex(0) == 4 );
 }
 
+TEST_CASE("filter_multilines") {
+    std::stringstream ss(multilineFirstLog);
+    auto lineParser = createTestParser(ss);
+    FileParser fileParser(&ss, lineParser.get());
+    fileParser.index();
+    REQUIRE( fileParser.lineCount() == 8 );
+
+    Index index;
+    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+    REQUIRE( index.getLineCount() == 8 );
+
+    auto formats = lineParser->getColumnFormats();
+    for (auto i = 0u; i < formats.size(); ++i) {
+        if (!formats[i].indexed)
+            continue;
+        auto values = index.getValues(i);
+        auto it = std::find_if(begin(values), end(values), [](auto& v) { return v.value == ""; });
+        REQUIRE( it != end(values) );
+        REQUIRE( it->count == 3 );
+    }
+
+    seer::Hist hist(1);
+
+    std::vector<ColumnFilter> filters;
+    filters = {{1, {"ERR"}}};
+    index.filter(filters);
+    REQUIRE( index.getLineCount() == 3 );
+    index.filter({});
+    REQUIRE( index.getLineCount() == 8 );
+
+    filters = {{1, {""}}};
+    index.filter(filters);
+    REQUIRE( index.getLineCount() == 3 );
+}
+
 TEST_CASE("search_progress") {
     std::stringstream ss(simpleLog);
     auto lineParser = createTestParser(ss);
