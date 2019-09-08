@@ -29,7 +29,7 @@ namespace gui::grid {
             painter->setPen(brush.color());
         }
 
-        QFontMetrics fm(font());
+        QFontMetricsF fm(font());
 
         for (auto column = 0; column < columns; ++column) {
             auto x = _table->header()->sectionPosition(column);
