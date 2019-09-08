@@ -11,13 +11,14 @@ using namespace seer;
 
 TEST_CASE("get_parser_name") {
     std::stringstream ss(simpleLog);
-    auto lineParser = createTestParser(ss);
-    REQUIRE(lineParser->name() == "test parser");
+    TestLineParserRepository repository;
+    auto lineParser = repository.resolve(ss);
+    REQUIRE(lineParser->name() == g_singleColumnTestParserName);
 }
 
 TEST_CASE("simple_parser") {
     std::stringstream ss(simpleLog);
-    auto lineParser = createTestParser(ss);
+    auto lineParser = createTestParser();
     FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
 
@@ -50,7 +51,7 @@ TEST_CASE("simple_parser") {
 
 TEST_CASE("simple_index") {
     std::stringstream ss(simpleLog);
-    auto lineParser = createTestParser(ss);
+    auto lineParser = createTestParser();
     FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
 
@@ -92,7 +93,7 @@ TEST_CASE("simple_index") {
 
 TEST_CASE("get_values") {
     std::stringstream ss(simpleLog);
-    auto lineParser = createTestParser(ss);
+    auto lineParser = createTestParser();
     FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
 
@@ -141,7 +142,7 @@ TEST_CASE("get_values") {
 
 TEST_CASE("get_values_three_columns") {
     std::stringstream ss(threeColumnLog);
-    auto lineParser = createThreeColumnTestParser(ss);
+    auto lineParser = createThreeColumnTestParser();
     FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
 
@@ -215,7 +216,7 @@ TEST_CASE("get_values_three_columns") {
 
 TEST_CASE("search") {
     std::stringstream ss(simpleLog);
-    auto lineParser = createTestParser(ss);
+    auto lineParser = createTestParser();
     FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
 
@@ -260,7 +261,7 @@ TEST_CASE("search") {
 
 TEST_CASE("search_regex") {
     std::stringstream ss(simpleLog);
-    auto lineParser = createTestParser(ss);
+    auto lineParser = createTestParser();
     FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
 
@@ -304,7 +305,7 @@ TEST_CASE("search_regex") {
 
 TEST_CASE("search_multiline") {
     std::stringstream ss(multilineFirstLog);
-    auto lineParser = createTestParser(ss);
+    auto lineParser = createTestParser();
     FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
     REQUIRE( fileParser.lineCount() == 8 );
@@ -330,7 +331,7 @@ TEST_CASE("search_multiline") {
 
 TEST_CASE("filter_multilines") {
     std::stringstream ss(multilineFirstLog);
-    auto lineParser = createTestParser(ss);
+    auto lineParser = createTestParser();
     FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
     REQUIRE( fileParser.lineCount() == 8 );
@@ -365,7 +366,7 @@ TEST_CASE("filter_multilines") {
 
 TEST_CASE("search_progress") {
     std::stringstream ss(simpleLog);
-    auto lineParser = createTestParser(ss);
+    auto lineParser = createTestParser();
     FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
 
@@ -421,7 +422,7 @@ TEST_CASE("search_progress") {
 
 TEST_CASE("multiline_index") {
     std::stringstream ss(multilineLog);
-    auto lineParser = createTestParser(ss);
+    auto lineParser = createTestParser();
     FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
 
@@ -472,7 +473,7 @@ TEST_CASE("get_values_adjacent") {
         adjacentLog += "10 INFO CORE message 1\n";
     }
     std::stringstream ss(adjacentLog);
-    auto lineParser = createTestParser(ss);
+    auto lineParser = createTestParser();
     FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
 
@@ -484,7 +485,7 @@ TEST_CASE("get_values_adjacent") {
 
 TEST_CASE("get_values_counts") {
     std::stringstream ss(simpleLog);
-    auto lineParser = createTestParser(ss);
+    auto lineParser = createTestParser();
     FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
 
@@ -561,7 +562,7 @@ TEST_CASE("get_values_counts") {
 
 TEST_CASE("index_column_width") {
     std::stringstream ss(simpleLog);
-    auto lineParser = createTestParser(ss);
+    auto lineParser = createTestParser();
     FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
 
@@ -576,7 +577,7 @@ TEST_CASE("index_column_width") {
 
 TEST_CASE("multiline_index_column_width") {
     std::stringstream ss(multilineLog);
-    auto lineParser = createTestParser(ss);
+    auto lineParser = createTestParser();
     FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
 
@@ -591,7 +592,7 @@ TEST_CASE("multiline_index_column_width") {
 
 TEST_CASE("search_hist_simple") {
     std::stringstream ss(simpleLog);
-    auto lineParser = createTestParser(ss);
+    auto lineParser = createTestParser();
     FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
 
@@ -646,7 +647,7 @@ TEST_CASE("search_hist_simple") {
 
 TEST_CASE("search_unicode") {
     std::stringstream ss(unicodeLog);
-    auto lineParser = createTestParser(ss);
+    auto lineParser = createTestParser();
     FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
 
@@ -770,7 +771,7 @@ TEST_CASE("parse_zeroes") {
 
 TEST_CASE("parse_autosize_attribute") {
     std::stringstream ss(threeColumnLog);
-    auto lineParser = createThreeColumnTestParser(ss);
+    auto lineParser = createThreeColumnTestParser();
     auto columns = lineParser->getColumnFormats();
     REQUIRE( columns[0].autosize == true );
     REQUIRE( columns[1].autosize == true );

@@ -6,7 +6,7 @@ using namespace seer;
 
 TEST_CASE("line_color_simple") {
     std::stringstream ss(simpleLog);
-    auto lineParser = createTestParser(ss);
+    auto lineParser = createTestParser();
     FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
 

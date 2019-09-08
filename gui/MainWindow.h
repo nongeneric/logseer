@@ -2,6 +2,7 @@
 
 #include "FilterDialog.h"
 #include "LogFile.h"
+#include "seer/LineParserRepository.h"
 #include <QMainWindow>
 #include <QTabWidget>
 #include <QTableView>
@@ -25,16 +26,24 @@ namespace gui {
         std::vector<OpenedLogFile> _logs;
         QStackedLayout* _centralLayout;
         QLabel* _dragAndDropTip;
+        seer::LineParserRepository _repository;
+        std::function<void()> _updateMenu;
 
         void updateTabWidgetVisibility();
         void closeTab(int index);
         void interrupt(int index);
         void saveOpenedFilesToConfig();
+        void addRecentFileToConfig(std::string path);
+        void createMenu();
         QFont loadFont();
+        void openFile();
+        void closeCurrentTab();
+        void clearFilters();
+        void showAbout();
 
     public:
         explicit MainWindow(QWidget* parent = nullptr);
-        void openLog(std::string path);
+        void openLog(std::string path, std::string parser = "");
 
     protected:
         void dragEnterEvent(QDragEnterEvent* event) override;

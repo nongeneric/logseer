@@ -65,4 +65,8 @@ namespace seer {
         return nullptr;
     }
 
+    const ParserMap& LineParserRepository::parsers() const {
+        return _parsers;
+    }
+
 } // namespace seer

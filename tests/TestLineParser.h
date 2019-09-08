@@ -20,6 +20,13 @@ inline std::string simpleLog = "10 INFO CORE message 1\n"
                                "30 ERR CORE message 5\n"
                                "40 WARN SUB message 6\n";
 
+inline std::string simpleLogAlt = "10 WARN CORE alt 1\n"
+                                  "15 INFO SUB alt 2\n"
+                                  "17 INFO SUB alt 3\n"
+                                  "20 ALTINFO SUB alt 4\n"
+                                  "30 ALTERR CORE alt 5\n"
+                                  "40 ALTERR CORE alt 6\n";
+
 inline std::string unicodeLog = u8"10 ИНФО CORE message 1\n"
                                 u8"15 ИНФО SUB message 2\n"
                                 u8"17 WARN CORE message 3\n"
@@ -136,27 +143,35 @@ inline std::string threeColumnTestConfig =
         }
     )_";
 
-inline std::shared_ptr<seer::ILineParser> createTestParser(std::istream& stream) {
-    seer::LineParserRepository repository(false);
-    repository.addRegexParser("test parser", 0, testConfig);
-    auto parser = repository.resolve(stream);
-    REQUIRE( dynamic_cast<seer::RegexLineParser*>(parser.get()) );
-    return parser;
-}
-
-inline std::shared_ptr<seer::ILineParser> createThreeColumnTestParser(std::istream& stream) {
-    seer::LineParserRepository repository(false);
-    repository.addRegexParser("test parser", 0, threeColumnTestConfig);
-    auto parser = repository.resolve(stream);
-    REQUIRE( dynamic_cast<seer::RegexLineParser*>(parser.get()) );
-    return parser;
-}
+inline std::string g_singleColumnTestParserName = "single_column_test_parser";
+inline std::string g_threeColumnTestParserName = "three_column_test_parser";
 
 class TestLineParserRepository : public seer::ILineParserRepository {
+    seer::LineParserRepository _repository;
+
 public:
-    inline std::shared_ptr<seer::ILineParser> resolve(std::istream& stream) override {
-        return createTestParser(stream);
+    TestLineParserRepository() : _repository(false) {
+        _repository.addRegexParser(g_singleColumnTestParserName, 0, testConfig);
+        _repository.addRegexParser(g_threeColumnTestParserName, 1, threeColumnTestConfig);
+    }
+
+    std::shared_ptr<seer::ILineParser> resolve(std::istream& stream) override {
+        return _repository.resolve(stream);
+    }
+
+    const seer::ParserMap& parsers() const override {
+        return _repository.parsers();
     }
 };
+
+inline std::shared_ptr<seer::ILineParser> createTestParser() {
+    TestLineParserRepository repository;
+    return resolveByName(&repository, g_singleColumnTestParserName);
+}
+
+inline std::shared_ptr<seer::ILineParser> createThreeColumnTestParser() {
+    TestLineParserRepository repository;
+    return resolveByName(&repository, g_threeColumnTestParserName);
+}
 
 inline constexpr int g_TestLogColumns = 4;

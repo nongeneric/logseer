@@ -7,12 +7,12 @@
 [submodule "thirdparty/sml"]
 	path = thirdparty/sml
 	url = https://github.com/boost-experimental/sml.git
-[submodule "thirdparty/cmcstl2"]
-	path = thirdparty/cmcstl2
-	url = https://github.com/CaseyCarter/cmcstl2.git
 [submodule "thirdparty/concurrentqueue"]
 	path = thirdparty/concurrentqueue
 	url = https://github.com/cameron314/concurrentqueue.git
 [submodule "thirdparty/json"]
 	path = thirdparty/json
 	url = https://github.com/nlohmann/json.git
+[submodule "thirdparty/range-v3"]
+	path = thirdparty/range-v3
+	url = https://github.com/ericniebler/range-v3.git

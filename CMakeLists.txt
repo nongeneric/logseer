@@ -18,6 +18,7 @@ include_directories(SYSTEM thirdparty/EWAHBoolArray/headers)
 include_directories(SYSTEM thirdparty/sml/include/boost)
 include_directories(SYSTEM thirdparty/concurrentqueue)
 include_directories(SYSTEM thirdparty/json/include)
+include_directories(SYSTEM thirdparty/range-v3/include)
 
 set(Boost_USE_STATIC_LIBS       OFF)
 set(Boost_USE_MULTITHREADED      ON)

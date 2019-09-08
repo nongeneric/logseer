@@ -1,6 +1,10 @@
 #include "LogFile.h"
+#include <range/v3/view.hpp>
+#include <range/v3/action.hpp>
+#include <range/v3/algorithm.hpp>
 
 using namespace seer::task;
+using namespace ranges;
 
 namespace gui {
     LogFile::LogFile(std::unique_ptr<std::istream>&& stream,
@@ -109,6 +113,8 @@ namespace gui {
 
     void LogFile::enterComplete() {
         logTableModel()->showIndexedColumns();
+        adaptFilter();
+        applyFilter();
 
         if (!_indexingComplete) {
             std::vector<int> widths;
@@ -133,6 +139,23 @@ namespace gui {
         searchFromComplete(*_scheduledSearchEvent);
     }
 
+    void LogFile::reloadFromComplete(sm::ReloadEvent event) {
+        if (event.parser) {
+            if (_lineParser != event.parser) {
+                _columnFilters.clear();
+            }
+            _lineParser = std::move(event.parser);
+        }
+        _stream = std::move(event.stream);
+        _logTableModel.reset();
+        _indexingComplete = false;
+        enterParsing();
+    }
+
+    void LogFile::reloadFromParsingOrIndexing(sm::ReloadEvent event) {
+        (void)event;
+    }
+
     void LogFile::subscribeToSelectionChanged(LogTableModel *oldModel, LogTableModel *newModel) {
         if (oldModel) {
             disconnect(oldModel);
@@ -143,6 +166,31 @@ namespace gui {
             auto row = _logTableModel->findRow(lineOffset);
             _logTableModel->setSelection(row);
         });
+    }
+
+    void LogFile::applyFilter() {
+        std::vector<seer::ColumnFilter> filters;
+        for (auto i = 0; i < _logTableModel->columnCount({}); ++i) {
+            _logTableModel->setFilterActive(i, false);
+        }
+        for (auto& [c, v] : _columnFilters) {
+            _logTableModel->setFilterActive(c + 1, v.size() != _index->getValues(c).size());
+            filters.push_back({c, v});
+        }
+        _index->filter(filters);
+        _logTableModel->setIndex(_index.get());
+        _logTableModel->setSelection(-1);
+    }
+
+    void LogFile::adaptFilter() {
+        for (auto& [c, filters] : _columnFilters) {
+            const auto& columnInfos = _index->getValues(c);
+            auto values = columnInfos |
+                views::transform(&seer::ColumnIndexInfo::value) |
+                to<std::vector<std::string>>() |
+                actions::sort;
+            filters = views::set_intersection(values, filters) | to<std::set<std::string>>;
+        }
     }
 
     seer::task::Task* LogFile::createIndexingTask(seer::Index* index,
@@ -170,6 +218,15 @@ namespace gui {
         return _searchHist.get();
     }
 
+    seer::ILineParser *LogFile::lineParser() {
+        return _lineParser.get();
+    }
+
+    void LogFile::clearFilters() {
+        _columnFilters.clear();
+        applyFilter();
+    }
+
     void LogFile::requestFilter(int column) {
         if (column == 0 || !_indexingComplete)
             return;
@@ -182,16 +239,12 @@ namespace gui {
     void LogFile::setColumnFilter(int column, std::set<std::string> values) {
         if (column == 0)
             return;
-        _logTableModel->setFilterActive(
-            column, values.size() != _index->getValues(column - 1).size());
         _columnFilters[column - 1] = values;
-        std::vector<seer::ColumnFilter> filters;
-        for (auto& [c, v] : _columnFilters) {
-            filters.push_back({c, v});
-        }
-        _index->filter(filters);
-        _logTableModel->setIndex(_index.get());
-        _logTableModel->setSelection(-1);
+        applyFilter();
+    }
+
+    std::set<std::string> LogFile::getColumnFilter(int column) {
+        return _columnFilters[column - 1];
     }
 
 } // namespace gui

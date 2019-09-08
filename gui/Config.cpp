@@ -23,6 +23,9 @@ namespace {
         const char* searchCaseSensitive = "caseSensitive";
         const char* sessionGroup = "session";
         const char* sessionOpenedFiles = "openedFiles";
+        const char* sessionOpenedFilePath = "path";
+        const char* sessionOpenedFileParser = "parser";
+        const char* sessionRecentFiles = "recentFiles";
     } g_consts;
 
 }
@@ -86,6 +89,9 @@ namespace gui {
     }
 
     void Config::save() {
+        _sessionConfig.recentFiles.resize(
+            std::min<size_t>(g_maxRecentFiles, _sessionConfig.recentFiles.size()));
+
         json j = {
             {
                 g_consts.fontGroup, {
@@ -102,10 +108,23 @@ namespace gui {
             },
             {
                 g_consts.sessionGroup, {
-                    {g_consts.sessionOpenedFiles, _sessionConfig.openedFiles}
+                    {g_consts.sessionOpenedFiles, 0},
+                    {g_consts.sessionRecentFiles, _sessionConfig.recentFiles},
                 }
             }
         };
+
+        auto openedFiles = json::array();
+        for (auto& [path, parser] : _sessionConfig.openedFiles) {
+            auto file = json{
+                {g_consts.sessionOpenedFilePath, path},
+                {g_consts.sessionOpenedFileParser, parser}
+            };
+            openedFiles.push_back(file);
+        }
+
+        j[g_consts.sessionGroup][g_consts.sessionOpenedFiles] = openedFiles;
+
         auto str = j.dump(4);
         _fileSystem->writeFile(getConfigJsonPath(), &str[0], str.size());
     }
@@ -136,7 +155,15 @@ namespace gui {
         if (!session.is_null()) {
             auto openedFiles = session[g_consts.sessionOpenedFiles];
             if (openedFiles.is_array()) {
-                _sessionConfig.openedFiles = openedFiles.get<std::vector<std::string>>();
+                for (auto openedFile : openedFiles) {
+                    auto path = openedFile[g_consts.sessionOpenedFilePath].get<std::string>();
+                    auto parser = openedFile[g_consts.sessionOpenedFileParser].get<std::string>();
+                    _sessionConfig.openedFiles.push_back({path, parser});
+                }
+            }
+            auto recentFiles = session[g_consts.sessionRecentFiles];
+            if (recentFiles.is_array()) {
+                _sessionConfig.recentFiles = recentFiles.get<std::vector<std::string>>();
             }
         }
     }

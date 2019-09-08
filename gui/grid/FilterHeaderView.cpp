@@ -32,6 +32,10 @@ namespace gui::grid {
                 }
 
                 auto model = _parent->logTable()->model();
+
+                if (!model)
+                    return;
+
                 auto isIndexed = model->headerData(header->section,
                                                    Qt::Orientation::Horizontal,
                                                    (int)HeaderDataRole::IsIndexed).toBool();

@@ -34,7 +34,7 @@ namespace gui {
         std::unique_ptr<LogTableModel> _logTableModel;
         std::unique_ptr<LogTableModel> _searchLogTableModel;
         std::map<int, std::set<std::string>> _columnFilters;
-        std::unique_ptr<std::istream> _stream;
+        std::shared_ptr<std::istream> _stream;
         std::unique_ptr<seer::task::Task> _parsingTask;
         std::unique_ptr<seer::task::Task> _indexingTask;
         std::unique_ptr<seer::task::SearchingTask> _searchingTask;
@@ -57,6 +57,8 @@ namespace gui {
         void enterComplete() override;
         void enterInterrupted() override;
         void searchFromPaused() override;
+        void reloadFromComplete(sm::ReloadEvent) override;
+        void reloadFromParsingOrIndexing(sm::ReloadEvent) override;
 
         inline void finish() {
             _sm.process_event(sm::FinishEvent{});
@@ -71,6 +73,8 @@ namespace gui {
         }
 
         void subscribeToSelectionChanged(LogTableModel* oldModel, LogTableModel* newModel);
+        void applyFilter();
+        void adaptFilter();
 
     protected:
         virtual seer::task::Task* createIndexingTask(
@@ -105,6 +109,11 @@ namespace gui {
             _sm.process_event(sm::InterruptEvent{});
         }
 
+        inline void reload(std::shared_ptr<std::istream> stream,
+                           std::shared_ptr<seer::ILineParser> parser = {}) {
+            _sm.process_event(sm::ReloadEvent{stream, parser});
+        }
+
         inline std::string dbgStateName() {
             std::string name;
             _sm.visit_current_states([&](auto state) {
@@ -115,9 +124,12 @@ namespace gui {
 
         void requestFilter(int column);
         void setColumnFilter(int column, std::set<std::string> values);
+        std::set<std::string> getColumnFilter(int column);
         LogTableModel* logTableModel();
         LogTableModel* searchLogTableModel();
         const seer::Hist* searchHist();
+        seer::ILineParser* lineParser();
+        void clearFilters();
 
         template <class S>
         inline bool isState(S state) {

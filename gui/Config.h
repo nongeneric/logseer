@@ -7,6 +7,8 @@
 
 namespace gui {
 
+    inline constexpr int g_maxRecentFiles = 15;
+
     struct RegexConfig {
         std::string name;
         int priority;
@@ -24,8 +26,14 @@ namespace gui {
         bool messageOnly = false;
     };
 
+    struct OpenedFile {
+        std::string path;
+        std::string parser;
+    };
+
     struct SessionConfig {
-        std::vector<std::string> openedFiles;
+        std::vector<OpenedFile> openedFiles;
+        std::vector<std::string> recentFiles;
     };
 
     class IFileSystem {

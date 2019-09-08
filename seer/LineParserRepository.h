@@ -6,12 +6,13 @@
 namespace seer {
 
     class LineParserRepository : public ILineParserRepository {
-        std::map<int, std::shared_ptr<ILineParser>> _parsers;
+        ParserMap _parsers;
 
     public:
         LineParserRepository(bool initializeDefaultParser = true);
         void addRegexParser(std::string name, int priority, std::string json);
         std::shared_ptr<ILineParser> resolve(std::istream &stream) override;
+        const ParserMap& parsers() const;
     };
 
 } // namespace seer

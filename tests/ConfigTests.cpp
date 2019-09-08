@@ -1,6 +1,7 @@
 #include <catch2/catch.hpp>
 
 #include "gui/Config.h"
+#include "seer/bformat.h"
 #include <map>
 
 using namespace boost::filesystem;
@@ -98,7 +99,10 @@ TEST_CASE("config_parse_opened_files") {
             },
             "session": {
                 "openedFiles": [
-                    "/file/a"
+                    {
+                        "path": "/file/a",
+                        "parser": "parser A"
+                    }
                 ]
             }
         }
@@ -112,16 +116,75 @@ TEST_CASE("config_parse_opened_files") {
 
     auto session = config.sessionConfig();
     REQUIRE( session.openedFiles.size() == 1 );
-    REQUIRE( session.openedFiles[0] == "/file/a" );
+    REQUIRE( session.openedFiles[0].path == "/file/a" );
+    REQUIRE( session.openedFiles[0].parser == "parser A" );
 
-    session.openedFiles.push_back("/file/b");
+    session.openedFiles.push_back({"/file/b", "parser B"});
     config.save(session);
 
     Config config2;
     config2.init(fs);
 
-    session = config.sessionConfig();
+    session = config2.sessionConfig();
     REQUIRE( session.openedFiles.size() == 2 );
-    REQUIRE( session.openedFiles[0] == "/file/a" );
-    REQUIRE( session.openedFiles[1] == "/file/b" );
+    REQUIRE( session.openedFiles[0].path == "/file/a" );
+    REQUIRE( session.openedFiles[0].parser == "parser A" );
+    REQUIRE( session.openedFiles[1].path == "/file/b" );
+    REQUIRE( session.openedFiles[1].parser == "parser B" );
+}
+
+TEST_CASE("config_parse_recent_files") {
+    auto json = R"(
+        {
+            "font": {
+                "name": "Liberation Mono",
+                "size": 12
+            },
+            "search": {
+                "caseSensitive": true,
+                "messageOnly": false,
+                "regex": true
+            },
+            "session": {
+                "recentFiles": [
+                    "/file/a",
+                    "/file/b"
+                ]
+            }
+        }
+    )";
+
+    auto fs = std::make_shared<TestFileSystem>();
+    fs->environment["HOME"] = "/home/user";
+    fs->fileMap["/home/user/.logseer/logseer.json"] = json;
+    Config config;
+    config.init(fs);
+
+    auto session = config.sessionConfig();
+    REQUIRE( session.recentFiles.size() == 2 );
+    REQUIRE( session.recentFiles[0] == "/file/a" );
+    REQUIRE( session.recentFiles[1] == "/file/b" );
+
+    session.recentFiles.push_back("/file/c");
+    config.save(session);
+
+    Config config2;
+    config2.init(fs);
+
+    session = config2.sessionConfig();
+    REQUIRE( session.recentFiles.size() == 3 );
+    REQUIRE( session.recentFiles[0] == "/file/a" );
+    REQUIRE( session.recentFiles[1] == "/file/b" );
+    REQUIRE( session.recentFiles[2] == "/file/c" );
+
+    session.recentFiles.clear();
+    for (auto i = 0; i < 2 * g_maxRecentFiles; ++i) {
+        session.recentFiles.push_back(bformat("file %d.txt", i));
+    }
+    config2.save(session);
+
+    config2.init(fs);
+    session = config2.sessionConfig();
+    REQUIRE( session.recentFiles.size() == g_maxRecentFiles );
+    REQUIRE( session.recentFiles[0] == "file 0.txt" );
 }

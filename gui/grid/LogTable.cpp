@@ -58,6 +58,10 @@ namespace gui::grid {
     void LogTable::setModel(LogTableModel* model) {
         _model = model;
         _header->setModel(model);
+
+        if (!model)
+            return;
+
         auto count = model->columnCount(QModelIndex());
         for (auto i = 0; i < count; ++i) {
             _header->setSectionResizeMode(i, QHeaderView::ResizeMode::Interactive);

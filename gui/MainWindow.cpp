@@ -6,7 +6,6 @@
 #include "Config.h"
 #include "grid/LogTable.h"
 #include "grid/FilterHeaderView.h"
-#include "seer/LineParserRepository.h"
 #include "seer/Log.h"
 #include "version.h"
 #include <QDragEnterEvent>
@@ -14,9 +13,16 @@
 #include <QSplitter>
 #include <QStatusBar>
 #include <QVBoxLayout>
+#include <QMessageBox>
+#include <QActionGroup>
+#include <QMenuBar>
+#include <QMenu>
+#include <QActionGroup>
+#include <QFileDialog>
 #include <boost/filesystem.hpp>
 #include <fstream>
 #include "seer/bformat.h"
+#include <range/v3/algorithm.hpp>
 
 namespace gui {
 
@@ -42,6 +48,8 @@ namespace gui {
 
         if (file->isState(sm::ParsingState)) {
             searchLine->setStatus("Parsing...");
+            table->setModel(nullptr);
+            searchLine->setSearchEnabled(false);
         } else if (file->isState(sm::IndexingState)) {
             searchLine->setStatus("Indexing...");
             table->setModel(file->logTableModel());
@@ -64,9 +72,12 @@ namespace gui {
         _centralLayout->setCurrentWidget(_tabWidget->count() == 0
                                              ? _dragAndDropTip
                                              : static_cast<QWidget*>(_tabWidget));
+        if (_updateMenu)
+            _updateMenu();
     }
 
     void MainWindow::closeTab(int index) {
+        addRecentFileToConfig(_logs[index].path);
         _tabWidget->removeTab(index);
         _logs.erase(begin(_logs) + index);
         updateTabWidgetVisibility();
@@ -80,9 +91,99 @@ namespace gui {
         auto config = g_Config.sessionConfig();
         config.openedFiles.clear();
         for (auto& logFile : _logs) {
-            config.openedFiles.push_back(logFile.path);
+            config.openedFiles.push_back({logFile.path, logFile.file->lineParser()->name()});
         }
         g_Config.save(config);
+    }
+
+    void MainWindow::addRecentFileToConfig(std::string path) {
+        auto config = g_Config.sessionConfig();
+        config.recentFiles.erase(ranges::remove_if(config.recentFiles, [&](auto& p) {
+            return p == path || !boost::filesystem::exists(p);
+        }), end(config.recentFiles));
+        config.recentFiles.insert(begin(config.recentFiles), path);
+        g_Config.save(config);
+    }
+
+    void MainWindow::createMenu() {
+        auto fileMenu = menuBar()->addMenu("&File");
+        auto editMenu = menuBar()->addMenu("&Edit");
+        auto reloadAction = new QAction("&Reload", this);
+        connect(reloadAction, &QAction::triggered, this, [=] {
+            auto index = _tabWidget->currentIndex();
+            auto& log = _logs[index];
+            auto stream = std::make_shared<std::ifstream>(log.path, std::ios_base::binary);
+            log.file->reload(stream);
+        });
+        editMenu->addAction(reloadAction);
+
+        auto clearFiltersAction = new QAction("&Clear filters", this);
+        connect(clearFiltersAction, &QAction::triggered, this, &MainWindow::clearFilters);
+        editMenu->addAction(clearFiltersAction);
+
+        auto parsersMenu = editMenu->addMenu("&Parser");
+        auto parserGroup = new QActionGroup(this);
+        parserGroup->setExclusive(true);
+        std::map<std::string, QAction*> parserActions;
+        for (const auto& [priority, parser] : _repository.parsers()) {
+            auto action = new QAction(QString::fromStdString(parser->name()), this);
+            action->setCheckable(true);
+            //action->setToolTip(QString::fromStdString(parser->description()));
+            connect(action, &QAction::triggered, this, [=] {
+                auto index = _tabWidget->currentIndex();
+                auto& log = _logs[index];
+                auto stream = std::make_shared<std::ifstream>(log.path, std::ios_base::binary);
+                auto lineParser = resolveByName(&_repository, parser->name());
+                log.file->reload(stream, lineParser);
+            });
+            parsersMenu->addAction(action);
+            parserGroup->addAction(action);
+            parserActions[parser->name()] = action;
+        }
+
+        auto helpMenu = menuBar()->addMenu("&Help");
+        auto aboutAction = new QAction("&About");
+        connect(aboutAction, &QAction::triggered, this, &MainWindow::showAbout);
+        helpMenu->addAction(aboutAction);
+
+        _updateMenu = [=] {
+            fileMenu->clear();
+            auto openAction = new QAction("&Open", this);
+            connect(openAction, &QAction::triggered, this, &MainWindow::openFile);
+            fileMenu->addAction(openAction);
+            auto closeAction = new QAction("&Close", this);
+            connect(closeAction, &QAction::triggered, this, &MainWindow::closeCurrentTab);
+            fileMenu->addAction(closeAction);
+
+            fileMenu->addSeparator();
+            for (auto recentFile : g_Config.sessionConfig().recentFiles) {
+                auto action = new QAction(QString::fromStdString(recentFile), this);
+                connect(action, &QAction::triggered, this, [=] {
+                    openLog(recentFile);
+                });
+                fileMenu->addAction(action);
+            }
+
+            fileMenu->addSeparator();
+            auto exitAction = new QAction("&Exit", this);
+            connect(exitAction, &QAction::triggered, this, &MainWindow::close);
+            fileMenu->addAction(exitAction);
+
+            auto index = _tabWidget->currentIndex();
+            auto noTabsOpened = index == -1;
+            reloadAction->setEnabled(!noTabsOpened);
+            clearFiltersAction->setEnabled(!noTabsOpened);
+            parsersMenu->setEnabled(!noTabsOpened);
+            closeAction->setEnabled(!noTabsOpened);
+
+            if (noTabsOpened)
+                return;
+
+            auto& log = _logs[index];
+            parserActions.at(log.file->lineParser()->name())->setChecked(true);
+        };
+
+        _updateMenu();
     }
 
     QFont MainWindow::loadFont() {
@@ -91,6 +192,39 @@ namespace gui {
         font.setFamily(QString::fromStdString(config.name));
         font.setPointSize(config.size);
         return font;
+    }
+
+    void MainWindow::openFile() {
+        QFileDialog dialog(this);
+        dialog.setWindowTitle("Open Log");
+        dialog.setFileMode(QFileDialog::ExistingFiles);
+        if (dialog.exec()) {
+            for (auto path : dialog.selectedFiles()) {
+                openLog(path.toStdString());
+            }
+        }
+    }
+
+    void MainWindow::closeCurrentTab() {
+        auto index = _tabWidget->currentIndex();
+        assert(index != -1);
+        closeTab(index);
+    }
+
+    void MainWindow::clearFilters() {
+        auto index = _tabWidget->currentIndex();
+        assert(index != -1);
+        _logs[index].file->clearFilters();
+    }
+
+    void MainWindow::showAbout() {
+        auto debugBuild = bformat(" [DEBUG]");
+        auto title = bformat("About %s", g_name);
+        auto text = bformat("<b>%s %s%s</b><p>"
+                            "Home Page: <a href=\"https://rcebits.com/logseer/\">https://rcebits.com/logseer/</a><p>"
+                            "GitHub: <a href=\"https://github.com/nongeneric/logseer\">https://github.com/nongeneric/logseer</a>",
+                            g_name, g_version, debugBuild);
+        QMessageBox::about(this, QString::fromStdString(title), QString::fromStdString(text));
     }
 
     MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
@@ -116,9 +250,15 @@ namespace gui {
         setWindowTitle(QString("logseer %0%1").arg(g_version).arg(g_debug ? " [DEBUG]" : ""));
         resize(800, 600);
         updateTabWidgetVisibility();
+
+        for (auto& config : g_Config.regexConfigs()) {
+            _repository.addRegexParser(config.name, config.priority, config.json);
+        }
+
+        createMenu();
     }
 
-    void MainWindow::openLog(std::string path) {
+    void MainWindow::openLog(std::string path, std::string parser) {
         seer::log_infof("opening [%s]", path);
 
         if (boost::filesystem::is_directory(path)) {
@@ -134,12 +274,7 @@ namespace gui {
         auto stream = std::make_unique<std::ifstream>(path, std::ios_base::binary);
         assert(stream->is_open());
 
-        seer::LineParserRepository repository;
-        for (auto& config : g_Config.regexConfigs()) {
-            repository.addRegexParser(config.name, config.priority, config.json);
-        }
-
-        auto lineParser = repository.resolve(*stream);
+        auto lineParser = parser.empty() ? _repository.resolve(*stream) : resolveByName(&_repository, parser);
         auto file = std::make_unique<LogFile>(std::move(stream), lineParser);
 
         auto font = loadFont();

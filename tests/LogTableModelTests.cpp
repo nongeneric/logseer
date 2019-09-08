@@ -11,7 +11,7 @@ using namespace gui;
 
 TEST_CASE("return_roles") {
     std::stringstream ss(simpleLog);
-    auto lineParser = createTestParser(ss);
+    auto lineParser = createTestParser();
     FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
 
@@ -44,7 +44,7 @@ TEST_CASE("return_roles") {
 
 TEST_CASE("model_selection") {
     std::stringstream ss(simpleLog);
-    auto lineParser = createTestParser(ss);
+    auto lineParser = createTestParser();
     FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
 
@@ -90,7 +90,7 @@ TEST_CASE("model_selection") {
 
 TEST_CASE("model_selection_extending_past_last_line") {
     std::stringstream ss(simpleLog);
-    auto lineParser = createTestParser(ss);
+    auto lineParser = createTestParser();
     FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
 
@@ -115,7 +115,7 @@ TEST_CASE("model_selection_extending_past_last_line") {
 
 TEST_CASE("model_selection_extending_without_previous_selection") {
     std::stringstream ss(simpleLog);
-    auto lineParser = createTestParser(ss);
+    auto lineParser = createTestParser();
     FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
 

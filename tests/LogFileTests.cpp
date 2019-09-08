@@ -11,7 +11,7 @@
 #include <condition_variable>
 #include <mutex>
 #include <QBrush>
-#include <iostream>
+#include <fstream>
 
 using namespace seer;
 using namespace gui;
@@ -142,10 +142,17 @@ void waitParsingAndIndexing(LogFile& file) {
 }
 
 template <class T = LogFile>
-T makeLogFile(std::string log) {
+T makeLogFile(std::string log, std::string parserName = "") {
     auto ss = std::make_unique<std::stringstream>(log);
     auto repository = std::make_shared<TestLineParserRepository>();
-    auto lineParser = repository->resolve(*ss);
+
+    std::shared_ptr<ILineParser> lineParser;
+    if (parserName.empty()) {
+        lineParser = repository->resolve(*ss);
+    } else {
+        lineParser = resolveByName(repository.get(), parserName);
+    }
+
     return T(std::move(ss), lineParser);
 }
 
@@ -553,4 +560,109 @@ TEST_CASE("log_file_get_autosize_attibute") {
     REQUIRE(model->headerData(2, Qt::Horizontal, (int)HeaderDataRole::Autosize).toInt() == -1);
     REQUIRE(model->headerData(3, Qt::Horizontal, (int)HeaderDataRole::Autosize).toInt() == -1);
     REQUIRE(model->headerData(4, Qt::Horizontal, (int)HeaderDataRole::Autosize).toInt() == -1);
+}
+
+
+TEST_CASE("dump_statemachine", "[.]") {
+    boost::sml::sm<gui::sm::StateMachine> sm;
+    std::ofstream f("/tmp/uml.txt");
+    f << gui::sm::dump(sm);
+}
+
+TEST_CASE("reload_from_complete_state") {
+    qapp();
+
+    auto file = makeLogFile(simpleLog);
+    waitParsingAndIndexing(file);
+
+    auto model = file.logTableModel();
+
+    REQUIRE(model->data(model->index(0, 4), Qt::DisplayRole).toString() == "message 1");
+
+    file.reload(std::make_shared<std::stringstream>(simpleLogAlt));
+
+    waitFor([&] { return file.isState(gui::sm::CompleteState); });
+
+    model = file.logTableModel();
+
+    REQUIRE(model->data(model->index(0, 4), Qt::DisplayRole).toString() == "alt 1");
+}
+
+TEST_CASE("reload_from_complete_state_with_different_parser") {
+    qapp();
+
+    auto file = makeLogFile(threeColumnLog, g_threeColumnTestParserName);
+    waitParsingAndIndexing(file);
+
+    auto model = file.logTableModel();
+
+    REQUIRE(model->data(model->index(0, 4), Qt::DisplayRole).toString() == "F1");
+
+    auto twoColumnParser = createTestParser();
+    file.reload(std::make_shared<std::stringstream>(threeColumnLog), twoColumnParser);
+
+    waitFor([&] { return file.isState(gui::sm::CompleteState); });
+
+    model = file.logTableModel();
+
+    REQUIRE(model->data(model->index(0, 4), Qt::DisplayRole).toString() == "F1 message 1");
+}
+
+TEST_CASE("reload_from_complete_state_adapt_filters") {
+    qapp();
+
+    auto file = makeLogFile(simpleLog);
+    waitParsingAndIndexing(file);
+
+    file.setColumnFilter(2, {"INFO", "ERR"});
+
+    file.reload(std::make_shared<std::stringstream>(simpleLogAlt));
+
+    waitFor([&] { return file.isState(gui::sm::CompleteState); });
+
+    REQUIRE( file.getColumnFilter(2) == std::set<std::string>{"INFO"} );
+
+    auto model = file.logTableModel();
+
+    REQUIRE( model->rowCount({}) == 2 );
+    REQUIRE( model->data(model->index(0, 4), Qt::DisplayRole).toString() == "alt 2" );
+    REQUIRE( model->data(model->index(1, 4), Qt::DisplayRole).toString() == "alt 3" );
+}
+
+TEST_CASE("reload_from_complete_state_drop_filters_if_parser_changed") {
+    qapp();
+
+    auto file = makeLogFile(threeColumnLog, g_threeColumnTestParserName);
+    waitParsingAndIndexing(file);
+
+    file.setColumnFilter(2, {"INFO", "ERR"});
+
+    auto twoColumnParser = createTestParser();
+    file.reload(std::make_shared<std::stringstream>(threeColumnLog), twoColumnParser);
+
+    waitFor([&] { return file.isState(gui::sm::CompleteState); });
+
+    REQUIRE( file.getColumnFilter(2) == std::set<std::string>{} );
+
+    auto model = file.logTableModel();
+
+    REQUIRE( model->rowCount({}) == 6 );
+}
+
+TEST_CASE("log_file_clear_filters") {
+    qapp();
+
+    auto file = makeLogFile(simpleLog);
+    waitParsingAndIndexing(file);
+
+    file.setColumnFilter(2, {"INFO", "ERR"});
+
+    auto model = file.logTableModel();
+    REQUIRE(model->headerData(2, Qt::Horizontal, (int)HeaderDataRole::IsFilterActive).toBool() == true);
+    REQUIRE(model->rowCount({}) == 4);
+
+    file.clearFilters();
+
+    REQUIRE(model->headerData(2, Qt::Horizontal, (int)HeaderDataRole::IsFilterActive).toBool() == false);
+    REQUIRE( model->rowCount({}) == 6 );
 }

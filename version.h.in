@@ -1,5 +1,6 @@
 #pragma once
 
+inline auto g_name = "logseer";
 inline auto g_version = "@PROJECT_VERSION@";
 
 inline bool g_debug =
