@@ -108,6 +108,7 @@ namespace gui {
         auto fileMenu = menuBar()->addMenu("&File");
         auto editMenu = menuBar()->addMenu("&Edit");
         auto reloadAction = new QAction("&Reload", this);
+        reloadAction->setShortcut(QKeySequence::Refresh);
         connect(reloadAction, &QAction::triggered, this, [=] {
             auto index = _tabWidget->currentIndex();
             auto& log = _logs[index];
@@ -117,6 +118,7 @@ namespace gui {
         editMenu->addAction(reloadAction);
 
         auto clearFiltersAction = new QAction("&Clear filters", this);
+        clearFiltersAction->setShortcut(QKeySequence::Replace);
         connect(clearFiltersAction, &QAction::triggered, this, &MainWindow::clearFilters);
         editMenu->addAction(clearFiltersAction);
 
@@ -148,9 +150,11 @@ namespace gui {
         _updateMenu = [=] {
             fileMenu->clear();
             auto openAction = new QAction("&Open", this);
+            openAction->setShortcut(QKeySequence::Open);
             connect(openAction, &QAction::triggered, this, &MainWindow::openFile);
             fileMenu->addAction(openAction);
             auto closeAction = new QAction("&Close", this);
+            closeAction->setShortcut(QKeySequence::Close);
             connect(closeAction, &QAction::triggered, this, &MainWindow::closeCurrentTab);
             fileMenu->addAction(closeAction);
 
