@@ -72,8 +72,7 @@ namespace gui {
         _centralLayout->setCurrentWidget(_tabWidget->count() == 0
                                              ? _dragAndDropTip
                                              : static_cast<QWidget*>(_tabWidget));
-        if (_updateMenu)
-            _updateMenu();
+        _updateMenu();
     }
 
     void MainWindow::closeTab(int index) {
@@ -218,7 +217,7 @@ namespace gui {
     }
 
     void MainWindow::showAbout() {
-        auto debugBuild = bformat(" [DEBUG]");
+        auto debugBuild = g_debug ? bformat(" [DEBUG]") : "";
         auto title = bformat("About %s", g_name);
         auto text = bformat("<b>%s %s%s</b><p>"
                             "Home Page: <a href=\"https://rcebits.com/logseer/\">https://rcebits.com/logseer/</a><p>"
@@ -230,11 +229,17 @@ namespace gui {
     MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
         _tabWidget = new QTabWidget(this);
         _tabWidget->setTabsClosable(true);
+        _updateMenu = []{};
 
         connect(_tabWidget,
                 &QTabWidget::tabCloseRequested,
                 this,
                 &MainWindow::interrupt);
+
+        connect(_tabWidget,
+                &QTabWidget::currentChanged,
+                this,
+                [=] { _updateMenu(); });
 
         _dragAndDropTip = new QLabel("Drag & Drop Files Here to Open");
         _dragAndDropTip->setAlignment(Qt::AlignCenter);
@@ -376,12 +381,14 @@ namespace gui {
                 this,
                 [file = file.get()](int column) { file->requestFilter(column); });
 
+        _logs.push_back({path, std::move(file)});
+
         auto fileName = boost::filesystem::path(path).stem().string();
         auto index = _tabWidget->addTab(splitter, QString::fromStdString(fileName));
         auto toolTip = bformat("%s\nparser type: %s", path.c_str(), lineParser->name());
         _tabWidget->setTabToolTip(index, QString::fromStdString(toolTip));
+        _tabWidget->setCurrentIndex(index);
 
-        _logs.push_back({path, std::move(file)});
         updateTabWidgetVisibility();
         saveOpenedFilesToConfig();
     }
