@@ -1,7 +1,5 @@
 #include "FilterTableModel.h"
 
-#include <algorithm>
-
 namespace gui {
 
     void FilterTableModel::updateVisibleVec() {

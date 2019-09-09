@@ -7,6 +7,8 @@
 #include "seer/LineParserRepository.h"
 #include <sstream>
 
+#include <range/v3/algorithm.hpp>
+
 using namespace seer;
 
 TEST_CASE("get_parser_name") {
@@ -345,7 +347,7 @@ TEST_CASE("filter_multilines") {
         if (!formats[i].indexed)
             continue;
         auto values = index.getValues(i);
-        auto it = std::find_if(begin(values), end(values), [](auto& v) { return v.value == ""; });
+        auto it = ranges::find(values, "", &ColumnIndexInfo::value);
         REQUIRE( it != end(values) );
         REQUIRE( it->count == 3 );
     }

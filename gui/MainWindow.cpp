@@ -298,9 +298,7 @@ namespace gui {
 
         connect(file.get(), &LogFile::stateChanged, this, [=, file = file.get()] {
             handleStateChanged(file, table, searchTable, searchLine, [=] {
-                auto it = std::find_if(begin(_logs), end(_logs), [=] (auto& x) {
-                    return x.file.get() == file;
-                });
+                auto it = ranges::find_if(_logs, [=](auto& x) { return x.file.get() == file; });
                 assert(it != end(_logs));
                 this->closeTab(std::distance(begin(_logs), it));
             });

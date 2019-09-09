@@ -1,6 +1,7 @@
 #include <catch2/catch.hpp>
 
 #include "seer/OffsetIndex.h"
+#include <range/v3/algorithm.hpp>
 
 TEST_CASE("offset_index") {
     std::vector<uint64_t> offsets {
@@ -10,7 +11,7 @@ TEST_CASE("offset_index") {
     seer::OffsetIndex index;
     for (auto delta : {2, 4, 8, 16, 32, 64}) {
         index.reset(delta, [&](uint64_t offset) {
-            auto it = std::find(begin(offsets), end(offsets), offset);
+            auto it = ranges::find(offsets, offset);
             return it[1];
         });
 

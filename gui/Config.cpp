@@ -8,6 +8,8 @@
 #include <sstream>
 #include <fstream>
 
+#include <range/v3/algorithm.hpp>
+
 using namespace boost::filesystem;
 using namespace nlohmann;
 
@@ -135,7 +137,7 @@ namespace gui {
 
         auto configPath = getConfigJsonPath();
         auto files = _fileSystem->files(configPath.parent_path());
-        if (std::find(begin(files), end(files), configPath) == end(files)) {
+        if (ranges::find(files, configPath) == end(files)) {
             seer::log_infof("no config found at [%s]", configPath);
             save();
             return;

@@ -4,6 +4,8 @@
 #include <boost/algorithm/string.hpp>
 #include <sstream>
 
+#include <range/v3/algorithm.hpp>
+
 #define PCRE2_CODE_UNIT_WIDTH 8
 #include <pcre2.h>
 
@@ -51,9 +53,7 @@ namespace seer {
                 auto columnName = (*it)["column"].get<std::string>();
                 auto value = (*it)["value"].get<std::string>();
                 auto color = std::stoi((*it)["color"].get<std::string>(), 0, 16);
-                auto column = std::find_if(begin(_formats), end(_formats), [&](const auto& x) {
-                    return x.name == columnName;
-                });
+                auto column = ranges::find(_formats, columnName, &RegexColumnFormat::name);
                 if (column == end(_formats))
                     continue;
                 auto columnIndex = static_cast<int>(std::distance(begin(_formats), column));
