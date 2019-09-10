@@ -58,7 +58,8 @@ namespace gui {
         void enterInterrupted() override;
         void searchFromPaused() override;
         void reloadFromComplete(sm::ReloadEvent) override;
-        void reloadFromParsingOrIndexing(sm::ReloadEvent) override;
+        void reloadFromParsing(sm::ReloadEvent) override;
+        void reloadFromIndexing(sm::ReloadEvent) override;
 
         inline void finish() {
             _sm.process_event(sm::FinishEvent{});

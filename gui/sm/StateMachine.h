@@ -39,7 +39,8 @@ struct IStateHandler {
     virtual void enterInterrupted() = 0;
     virtual void searchFromPaused() = 0;
     virtual void reloadFromComplete(ReloadEvent) = 0;
-    virtual void reloadFromParsingOrIndexing(ReloadEvent) = 0;
+    virtual void reloadFromParsing(ReloadEvent) = 0;
+    virtual void reloadFromIndexing(ReloadEvent) = 0;
 };
 
 inline auto IdleState = state<class IdleState>;
@@ -81,7 +82,8 @@ struct StateMachine {
     MAKE_ACTION(enterInterrupted);
     MAKE_ACTION(searchFromPaused);
     MAKE_ACTION_E(reloadFromComplete);
-    MAKE_ACTION_E(reloadFromParsingOrIndexing);
+    MAKE_ACTION_E(reloadFromParsing);
+    MAKE_ACTION_E(reloadFromIndexing);
 
     inline auto operator()() const {
 #define ACTION(name) a_ ## name {}
@@ -91,12 +93,12 @@ struct StateMachine {
             *IdleState + event<ParseEvent> / ACTION(enterParsing) = ParsingState,
             ParsingState + event<InterruptEvent> / ACTION(interruptParsing) = InterruptingState,
             ParsingState + event<IndexEvent> / ACTION(enterIndexing) = IndexingState,
-            ParsingState + event<ReloadEvent> / ACTION(reloadFromParsingOrIndexing) = ParsingState,
+            //ParsingState + event<ReloadEvent> / ACTION(reloadFromParsing) = ParsingState,
             ParsingState + event<FailEvent> / ACTION(enterFailed) = FailedState,
             IndexingState + event<InterruptEvent> / ACTION(interruptIndexing) = InterruptingState,
             IndexingState + event<FinishEvent> / ACTION(enterComplete) = CompleteState,
             IndexingState + event<SearchEvent> / ACTION(pauseAndSearch) = PausingIndexingState,
-            IndexingState + event<ReloadEvent> / ACTION(reloadFromParsingOrIndexing) = ParsingState,
+            //IndexingState + event<ReloadEvent> / ACTION(reloadFromIndexing) = ParsingState,
             IndexingState + event<FailEvent> / ACTION(enterFailed) = FailedState,
             PausingIndexingState + event<PausedEvent> / ACTION(searchFromPaused) = SearchingState,
             PausingIndexingState + event<FinishEvent> / ACTION(searchFromPaused) = SearchingState,

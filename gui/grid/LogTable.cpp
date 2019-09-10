@@ -94,7 +94,7 @@ namespace gui::grid {
                 }
             }
             auto lastColumn = _model->columnCount({}) - 1;
-            setColumnWidth(lastColumn, _model->maxColumnWidth(lastColumn));
+            setColumnWidth(lastColumn, _model->maxColumnWidth(lastColumn) + g_columnAutosizePadding);
         });
     }
 

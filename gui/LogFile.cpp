@@ -152,8 +152,10 @@ namespace gui {
         enterParsing();
     }
 
-    void LogFile::reloadFromParsingOrIndexing(sm::ReloadEvent event) {
-        (void)event;
+    void LogFile::reloadFromParsing(sm::ReloadEvent) {
+    }
+
+    void LogFile::reloadFromIndexing(sm::ReloadEvent) {
     }
 
     void LogFile::subscribeToSelectionChanged(LogTableModel *oldModel, LogTableModel *newModel) {
