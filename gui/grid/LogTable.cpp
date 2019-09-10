@@ -168,7 +168,7 @@ namespace gui::grid {
         auto contentWidth = _header->sectionPosition(_header->count() - 1) +
                             _header->sectionSize(_header->count() - 1);
 
-        auto availableWidth = size.width() - histMapWidth;
+        auto availableWidth = size.width() - histMapWidth - vScrollBar->width();
         if (contentWidth > availableWidth) {
             hScrollBar->setMaximum(contentWidth - availableWidth);
             hScrollBar->setPageStep(size.width());

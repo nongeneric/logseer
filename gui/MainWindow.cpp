@@ -27,7 +27,7 @@
 namespace gui {
 
     void copySectionSizes(grid::FilterHeaderView* from, grid::FilterHeaderView* to) {
-        assert(from->size() == to->size());
+        assert(from->count() == to->count());
         for (auto i = 0; i < from->count(); ++i) {
             to->resizeSection(i, from->sectionSize(i));
         }
