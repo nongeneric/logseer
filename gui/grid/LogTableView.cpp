@@ -40,9 +40,9 @@ namespace gui::grid {
             auto text = model->data(index, Qt::DisplayRole).toString();
             auto sectionSize = _table->header()->sectionSize(column);
 
-            auto textWidth = [&](QString const& text, int len) {
+            auto textWidth = [&](QString const& text) {
                 int index = 0;
-                const auto& split = text.left(len).split("\t");
+                const auto& split = text.split("\t");
                 for (int i = 0; i < split.size(); ++i) {
                     index += std::round(fm.width(split[i]) / _charWidth);
                     if (i != split.size() - 1) {
@@ -53,30 +53,31 @@ namespace gui::grid {
             };
 
             auto isMessageColumn = column == columns - 1;
+            float left = 0;
             if (_searcher && !model->isSelected(row) && (isMessageColumn || !_messageOnlyHighlight)) {
                 int currentIndex = 0;
                 for (;;) {
                     auto [first, len] = _searcher->search(text, currentIndex);
                     if (first == -1)
                         break;
-                    int last = first + len;
-                    auto sectionSize = _table->header()->sectionSize(column);
                     QRect r;
-                    auto width = textWidth(text, first);
-                    if (width >= sectionSize)
+                    left += textWidth(text.mid(currentIndex, first - currentIndex));
+                    if (left >= sectionSize)
                         break;
-                    r.setLeft(x + width);
-                    r.setRight(x + std::min<float>(textWidth(text, last), sectionSize));
+                    r.setLeft(x + left);
+                    left = std::min<float>(sectionSize, left + textWidth(text.mid(first, len)));
+                    r.setRight(x + left);
                     r.setTop(y);
                     r.setBottom(y + _rowHeight);
                     painter->fillRect(r, QBrush(QColor::fromRgb(0xfb, 0xfa, 0x08)));
-                    currentIndex += len;
+                    currentIndex = first + len;
                 }
             }
 
-            QRect rect;
+            QRectF rect;
             rect.setLeft(x);
-            rect.setRight(x + sectionSize);
+            rect.setRight(std::min(x + sectionSize,
+                                   _table->scrollArea()->horizontalScrollBar()->value() + _table->width()));
             rect.setTop(y);
             rect.setBottom(y + _rowHeight);
             QTextOption option;
