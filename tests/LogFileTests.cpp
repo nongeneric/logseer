@@ -666,3 +666,47 @@ TEST_CASE("log_file_clear_filters") {
     REQUIRE(model->headerData(2, Qt::Horizontal, (int)HeaderDataRole::IsFilterActive).toBool() == false);
     REQUIRE( model->rowCount({}) == 6 );
 }
+
+TEST_CASE("reload_from_complete_state_after_search") {
+    qapp();
+
+    auto file = makeLogFile<TestLogFile>(simpleLog);
+    file.parse();
+    waitFor([&] { return file.isState(gui::sm::ParsingState); });
+    file.parsingTask->proceed();
+    waitFor([&] { return file.isState(gui::sm::IndexingState); });
+    file.indexingTask->proceed();
+    waitFor([&] { return file.isState(gui::sm::CompleteState); });
+
+    auto model = file.logTableModel();
+
+    REQUIRE( model->data(model->index(0, 4), Qt::DisplayRole).toString() == "message 1" );
+
+    file.search("message 1", false, false, false);
+
+    waitFor([&] { return file.isState(gui::sm::CompleteState); });
+
+    auto searchModel = file.searchLogTableModel();
+    REQUIRE( searchModel->rowCount({}) == 1 );
+    REQUIRE( searchModel->data(model->index(0, 4), Qt::DisplayRole).toString() == "message 1" );
+
+    file.reload(std::make_shared<std::stringstream>(simpleLogAlt));
+
+    waitFor([&] { return file.isState(gui::sm::ParsingState); });
+    file.parsingTask->proceed();
+    waitFor([&] { return file.isState(gui::sm::IndexingState); });
+    file.indexingTask->proceed();
+    waitFor([&] { return file.isState(gui::sm::CompleteState); });
+
+    searchModel = file.searchLogTableModel();
+    REQUIRE( searchModel == nullptr );
+
+    file.parsingTask->proceed();
+    file.indexingTask->proceed();
+
+    waitFor([&] { return file.isState(gui::sm::CompleteState); });
+
+    model = file.logTableModel();
+
+    REQUIRE( model->data(model->index(0, 4), Qt::DisplayRole).toString() == "alt 1" );
+}

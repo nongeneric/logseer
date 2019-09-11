@@ -148,6 +148,7 @@ namespace gui {
         }
         _stream = std::move(event.stream);
         _logTableModel.reset();
+        _searchLogTableModel.reset();
         _indexingComplete = false;
         enterParsing();
     }

@@ -40,8 +40,8 @@ namespace gui {
                             std::function<void()> close) {
         searchLine->setSearchEnabled(false);
         auto searchModel = file->searchLogTableModel();
+        searchTable->setModel(searchModel);
         if (searchModel) {
-            searchTable->setModel(searchModel);
             table->setHist(file->searchHist());
             copySectionSizes(table->header(), searchTable->header());
         }

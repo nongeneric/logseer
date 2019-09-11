@@ -59,8 +59,10 @@ namespace gui::grid {
         _model = model;
         _header->setModel(model);
 
-        if (!model)
+        if (!model) {
+            _view->update();
             return;
+        }
 
         auto count = model->columnCount(QModelIndex());
         for (auto i = 0; i < count; ++i) {
