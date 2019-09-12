@@ -19,6 +19,7 @@
 #include <QMenu>
 #include <QActionGroup>
 #include <QFileDialog>
+#include <QShortcut>
 #include <boost/filesystem.hpp>
 #include <fstream>
 #include "seer/bformat.h"
@@ -37,6 +38,7 @@ namespace gui {
                             grid::LogTable* table,
                             grid::LogTable* searchTable,
                             SearchLine* searchLine,
+                            std::function<void()> updateMenu,
                             std::function<void()> close) {
         searchLine->setSearchEnabled(false);
         auto searchModel = file->searchLogTableModel();
@@ -63,6 +65,7 @@ namespace gui {
             searchLine->setStatus(status);
             searchLine->setProgress(-1);
             searchLine->setSearchEnabled(true);
+            updateMenu();
         } else if (file->isState(sm::InterruptedState)) {
             close();
         }
@@ -122,6 +125,8 @@ namespace gui {
         connect(clearFiltersAction, &QAction::triggered, this, &MainWindow::clearFilters);
         editMenu->addAction(clearFiltersAction);
 
+        auto filtersMenu = editMenu->addMenu("&Filters");
+
         auto parsersMenu = editMenu->addMenu("&Parser");
         auto parserGroup = new QActionGroup(this);
         parserGroup->setExclusive(true);
@@ -177,12 +182,30 @@ namespace gui {
             reloadAction->setEnabled(!noTabsOpened);
             clearFiltersAction->setEnabled(!noTabsOpened);
             parsersMenu->setEnabled(!noTabsOpened);
+            filtersMenu->setEnabled(!noTabsOpened);
             closeAction->setEnabled(!noTabsOpened);
 
             if (noTabsOpened)
                 return;
 
             auto& log = _logs[index];
+
+            filtersMenu->clear();
+            auto indexColumn = 0;
+            auto model = log.file->logTableModel();
+            for (auto i = 0; i < model->columnCount({}); ++i) {
+                if (!model->headerData(i, Qt::Horizontal, (int)HeaderDataRole::IsIndexed).toBool())
+                    continue;
+                auto columnName = model->headerData(i, Qt::Horizontal, Qt::DisplayRole).toString();
+                auto action = new QAction(columnName, this);
+                action->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_1 + Qt::Key(indexColumn)));
+                connect(action, &QAction::triggered, this, [=, file=log.file.get()] {
+                    file->requestFilter(i);
+                });
+                filtersMenu->addAction(action);
+                indexColumn++;
+            }
+
             parserActions.at(log.file->lineParser()->name())->setChecked(true);
         };
 
@@ -301,7 +324,7 @@ namespace gui {
         auto searchTable = new grid::LogTable(font);
 
         connect(file.get(), &LogFile::stateChanged, this, [=, file = file.get()] {
-            handleStateChanged(file, table, searchTable, searchLine, [=] {
+            handleStateChanged(file, table, searchTable, searchLine, _updateMenu, [=] {
                 auto it = ranges::find_if(_logs, [=](auto& x) { return x.file.get() == file; });
                 assert(it != end(_logs));
                 this->closeTab(std::distance(begin(_logs), it));

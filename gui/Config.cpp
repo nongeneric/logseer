@@ -204,7 +204,7 @@ namespace gui {
     Config g_Config;
 
     std::string RuntimeFileSystem::readFile(path path) {
-        std::ifstream f(path.c_str());
+        std::ifstream f(path.string());
         if (!f.is_open())
             throw std::runtime_error("can't open file");
         f.seekg(0, std::ios_base::end);
@@ -216,7 +216,7 @@ namespace gui {
     }
 
     void RuntimeFileSystem::writeFile(path path, const void* content, unsigned size) {
-        std::ofstream f(path.c_str());
+        std::ofstream f(path.string());
         if (!f.is_open())
             throw std::runtime_error("can't open file");
         create_directories(path.parent_path());

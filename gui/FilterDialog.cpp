@@ -27,9 +27,9 @@ namespace gui {
         vbox->addLayout(hbox);
         vbox->addWidget(_table);
 
-        _selectAll->setText("All");
-        _selectNone->setText("None");
-        _selectFound->setText("Found");
+        _selectAll->setText("&All");
+        _selectNone->setText("&None");
+        _selectFound->setText("&Found");
 
         setLayout(vbox);
 
