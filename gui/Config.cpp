@@ -216,10 +216,10 @@ namespace gui {
     }
 
     void RuntimeFileSystem::writeFile(path path, const void* content, unsigned size) {
+        create_directories(path.parent_path());
         std::ofstream f(path.string());
         if (!f.is_open())
             throw std::runtime_error("can't open file");
-        create_directories(path.parent_path());
         f.write(reinterpret_cast<const char*>(content), size);
     }
 
