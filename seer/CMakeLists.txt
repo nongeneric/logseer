@@ -1,6 +1,8 @@
 project(seer)
 
 find_package(Qt5Core)
+find_library(PCRE2 pcre2-8)
+find_library(PCRE2_16 pcre2-16)
 
 add_library(${PROJECT_NAME} STATIC
     ILineParser.h
@@ -39,8 +41,8 @@ add_library(${PROJECT_NAME} STATIC
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
     Qt5::Core
-    pcre2-8
-    pcre2-16
+    ${PCRE2}
+    ${PCRE2_16}
     pthread
     ${Boost_LIBRARIES}
 )
