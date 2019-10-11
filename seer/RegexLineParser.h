@@ -28,7 +28,7 @@ namespace seer {
         std::vector<RegexColumnColor> _colors;
         std::string _magic;
         std::string _name;
-        pcre2_real_code_8* _re;
+        std::shared_ptr<pcre2_real_code_8> _re;
 
     public:
         RegexLineParser(std::string name);
