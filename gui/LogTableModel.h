@@ -23,11 +23,6 @@ namespace gui {
         Autosize
     };
 
-    enum class CellDataRole {
-        IsIndexed = Qt::UserRole,
-        RawLine
-    };
-
     class LogTableModel : public QAbstractTableModel {
         Q_OBJECT;
 
@@ -39,13 +34,17 @@ namespace gui {
         int _selectedLastRow = -1;
 
     public:
+        using LineHandler = std::function<void(const std::string&)>;
+
         LogTableModel(seer::FileParser* parser);
         void invalidate();
         void setFilterActive(int column, bool active);
         void setIndex(seer::Index* index);
         void showIndexedColumns();
+        void copyRawLines(uint64_t begin, uint64_t end, LineHandler accept);
+        void copyLines(uint64_t begin, uint64_t end, LineHandler accept);
         bool isSelected(int row);
-        uint64_t lineOffset(uint64_t row);
+        uint64_t lineOffset(uint64_t row) const;
         int findRow(uint64_t lineOffset);
         int maxColumnWidth(int column);
         void setColumnWidths(std::vector<int> widths);

@@ -1,5 +1,7 @@
 #include "FilterTableModel.h"
 
+#include <range/v3/algorithm.hpp>
+
 namespace gui {
 
     void FilterTableModel::updateVisibleVec() {
@@ -56,6 +58,21 @@ namespace gui {
         endResetModel();
     }
 
+    void FilterTableModel::invertSelection(std::vector<int> rows) {
+        auto unchecked = [=] (int r) { return !_infos.at(r).checked; };
+        auto setAll = [&] (bool value) {
+            for (auto row : rows) {
+                _infos.at(row).checked = value;
+            }
+        };
+        if (ranges::any_of(rows, unchecked)) {
+            setAll(true);
+        } else {
+            setAll(false);
+        }
+        emitAllChanged();
+    }
+
     int FilterTableModel::rowCount(const QModelIndex&) const {
         return _visibleVec.size();
     }
@@ -71,7 +88,7 @@ namespace gui {
         } else if (index.column() == 1 && role == Qt::DisplayRole) {
             return QString::fromStdString(info.value);
         } else if (index.column() == 2 && role == Qt::DisplayRole) {
-            return QString("%0").arg(info.count);
+            return QVariant::fromValue(info.count);
         }
         return {};
     }

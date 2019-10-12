@@ -1,7 +1,9 @@
 #include "LogTableModel.h"
 
 #include <QColor>
+#include <seer/bformat.h>
 #include <boost/range/irange.hpp>
+#include <numeric>
 
 namespace gui {
 
@@ -71,13 +73,84 @@ namespace gui {
         _showIndexedColumns = true;
     }
 
+    void LogTableModel::copyRawLines(uint64_t begin, uint64_t end, LogTableModel::LineHandler accept) {
+        std::string line;
+        for (auto i = begin; i != end; ++i) {
+            _parser->readLine(lineOffset(i), line);
+            accept(line);
+        }
+    }
+
+    void LogTableModel::copyLines(uint64_t begin, uint64_t end, LogTableModel::LineHandler accept) {
+        std::vector<size_t> widths;
+        widths.push_back(bformat("%d", lineOffset(end) + 1).size());
+        for (auto i = 1u; i < _columns.size(); ++i) {
+            widths.push_back(_columns[i].name.size());
+        }
+        std::vector<std::string> columns;
+        copyRawLines(begin, end, [&] (auto& line) {
+            if (_parser->lineParser()->parseLine(line, columns)) {
+                for (auto i = 0u; i < columns.size(); ++i) {
+                    auto& width = widths.at(i + 1);
+                    width = std::max(width, columns[i].size());
+                }
+            } else {
+                widths.back() = std::max(widths.back(), line.size());
+            }
+        });
+
+        std::string formatted;
+
+        auto appendSpaces = [&] (auto count, char ch = ' ') {
+            for (auto i = 0u; i < count; ++i) {
+                formatted += ch;
+            }
+        };
+
+        const auto spacing = 3;
+        auto append = [&](const auto& column, auto index) {
+            auto actualSpacing = static_cast<size_t>(index) == _columns.size() - 1 ? 0u : spacing;
+            auto width = widths.at(index) + actualSpacing;
+            formatted += column;
+            appendSpaces(width - column.size());
+        };
+
+        for (auto i = 0u; i < _columns.size(); ++i) {
+            append(_columns[i].name.toStdString(), i);
+        }
+        accept(formatted);
+
+        formatted.clear();
+        auto separatorWidth = std::accumulate(widths.begin(), widths.end(), 0u);
+        separatorWidth += (widths.size() - 1) * spacing;
+        appendSpaces(separatorWidth, '-');
+        accept(formatted);
+
+        auto index = begin;
+        copyRawLines(begin, end, [&] (auto& line) {
+            formatted.clear();
+            if (_parser->lineParser()->parseLine(line, columns)) {
+                append(bformat("%d", lineOffset(index) + 1), 0);
+                for (auto i = 0u; i < columns.size(); ++i) {
+                    append(columns[i], i + 1);
+                }
+            } else {
+                auto width = std::accumulate(widths.begin(), widths.end() - 1, 0u);
+                appendSpaces(width + (widths.size() - 1) * spacing);
+                append(line, widths.size() - 1);
+            }
+            accept(formatted);
+            index++;
+        });
+    }
+
     bool LogTableModel::isSelected(int row) {
         auto [first, last] = getSelection();
         return first <= row && row < last;
     }
 
-    uint64_t LogTableModel::lineOffset(uint64_t row) {
-        return _index->mapIndex(row);
+    uint64_t LogTableModel::lineOffset(uint64_t row) const {
+        return _index ? _index->mapIndex(row) : row;
     }
 
     int LogTableModel::findRow(uint64_t lineOffset) {
@@ -135,14 +208,7 @@ namespace gui {
     }
 
     QVariant LogTableModel::data(const QModelIndex& index, int role) const {
-        auto lineIndex = _index ? _index->mapIndex(index.row()) : index.row();
-        auto getRawLine = [&] {
-            std::string rawLine;
-            _parser->readLine(lineIndex, rawLine);
-            return QString::fromStdString(rawLine);
-        };
-        if (role == (int)CellDataRole::RawLine)
-            return getRawLine();
+        auto lineIndex = lineOffset(index.row());
         if (role != Qt::DisplayRole && role != Qt::ForegroundRole)
             return {};
         std::vector<std::string> line;
@@ -154,8 +220,11 @@ namespace gui {
         size_t columnIndex = index.column() - Regular;
         if (columnIndex < line.size())
             return QString::fromStdString(line[columnIndex]);
-        if (index.column() == (int)_columns.size() - 1)
-            return getRawLine();
+        if (index.column() == (int)_columns.size() - 1) {
+            std::string rawLine;
+            _parser->readLine(lineIndex, rawLine);
+            return QString::fromStdString(rawLine);
+        }
         return "";
     }
 

@@ -710,3 +710,55 @@ TEST_CASE("reload_from_complete_state_after_search") {
 
     REQUIRE( model->data(model->index(0, 4), Qt::DisplayRole).toString() == "alt 1" );
 }
+
+TEST_CASE("log_file_copy_raw_lines") {
+    qapp();
+
+    auto file = makeLogFile(simpleLog);
+    waitParsingAndIndexing(file);
+
+    file.setColumnFilter(2, {"INFO"});
+
+    auto model = file.logTableModel();
+
+    std::vector<std::string> expected {
+        "10 INFO CORE message 1",
+        "15 INFO SUB message 2",
+        "20 INFO SUB message 4",
+    };
+
+    std::vector<std::string> actual;
+
+    model->copyRawLines(0, 3, [&] (auto line) {
+        actual.push_back(line);
+    });
+
+    REQUIRE( actual == expected );
+}
+
+TEST_CASE("log_file_copy_lines") {
+    qapp();
+
+    auto file = makeLogFile(simpleLog);
+    waitParsingAndIndexing(file);
+
+    file.setColumnFilter(2, {"INFO"});
+
+    auto model = file.logTableModel();
+
+    std::vector<std::string> expected {
+        "#   Timestamp   Level   Component   Message  ",
+        "---------------------------------------------",
+        "1   10          INFO    CORE        message 1",
+        "2   15          INFO    SUB         message 2",
+        "4   20          INFO    SUB         message 4",
+    };
+
+    std::vector<std::string> actual;
+
+    model->copyLines(0, 3, [&] (auto line) {
+        actual.push_back(line);
+    });
+
+    REQUIRE( actual == expected );
+}

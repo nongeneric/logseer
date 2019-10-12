@@ -97,3 +97,34 @@ TEST_CASE("get_counts") {
     REQUIRE( model->data(model->index(2, 2), Qt::DisplayRole).toString() == "1" );
     REQUIRE( model->data(model->index(3, 2), Qt::DisplayRole).toString() == "7" );
 }
+
+TEST_CASE("invert_check") {
+    std::vector<seer::ColumnIndexInfo> values = {
+        {"124", true, 2}, {"abc", true, 10}, {"123", true, 1}, {"bc23", true, 7}};
+    auto model = new gui::FilterTableModel(values);
+    model->selectNone();
+
+    model->invertSelection({0, 1});
+    REQUIRE( model->data(model->index(0, 0), Qt::CheckStateRole) == Qt::Checked );
+    REQUIRE( model->data(model->index(1, 0), Qt::CheckStateRole) == Qt::Checked );
+    REQUIRE( model->data(model->index(2, 0), Qt::CheckStateRole) == Qt::Unchecked );
+    REQUIRE( model->data(model->index(3, 0), Qt::CheckStateRole) == Qt::Unchecked );
+
+    model->invertSelection({0, 1, 2, 3});
+    REQUIRE( model->data(model->index(0, 0), Qt::CheckStateRole) == Qt::Checked );
+    REQUIRE( model->data(model->index(1, 0), Qt::CheckStateRole) == Qt::Checked );
+    REQUIRE( model->data(model->index(2, 0), Qt::CheckStateRole) == Qt::Checked );
+    REQUIRE( model->data(model->index(3, 0), Qt::CheckStateRole) == Qt::Checked );
+
+    model->invertSelection({0, 1, 2, 3});
+    REQUIRE( model->data(model->index(0, 0), Qt::CheckStateRole) == Qt::Unchecked );
+    REQUIRE( model->data(model->index(1, 0), Qt::CheckStateRole) == Qt::Unchecked );
+    REQUIRE( model->data(model->index(2, 0), Qt::CheckStateRole) == Qt::Unchecked );
+    REQUIRE( model->data(model->index(3, 0), Qt::CheckStateRole) == Qt::Unchecked );
+
+    model->invertSelection({0, 1, 2, 3});
+    REQUIRE( model->data(model->index(0, 0), Qt::CheckStateRole) == Qt::Checked );
+    REQUIRE( model->data(model->index(1, 0), Qt::CheckStateRole) == Qt::Checked );
+    REQUIRE( model->data(model->index(2, 0), Qt::CheckStateRole) == Qt::Checked );
+    REQUIRE( model->data(model->index(3, 0), Qt::CheckStateRole) == Qt::Checked );
+}

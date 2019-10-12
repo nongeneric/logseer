@@ -398,6 +398,7 @@ namespace gui {
                 });
                 _filterDialog = new FilterDialog(filterModel, this);
                 _filterDialog->setSizeGripEnabled(true);
+                _filterDialog->resize(450, 450);
                 _filterDialog->exec();
             });
 

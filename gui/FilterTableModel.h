@@ -23,6 +23,7 @@ namespace gui {
         void selectNone();
         void selectFound();
         void search(std::string key);
+        void invertSelection(std::vector<int> rows);
         int rowCount(const QModelIndex &parent) const override;
         int columnCount(const QModelIndex &parent) const override;
         QVariant data(const QModelIndex &index, int role) const override;

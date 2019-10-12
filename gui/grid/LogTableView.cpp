@@ -9,6 +9,7 @@
 #include <QGuiApplication>
 #include <QApplication>
 #include <QClipboard>
+#include <QMenu>
 #include <cmath>
 
 namespace gui::grid {
@@ -95,7 +96,7 @@ namespace gui::grid {
         return y / _rowHeight + _firstRow;
     }
 
-    void LogTableView::copyToClipboard() {
+    void LogTableView::copyToClipboard(bool raw) {
         auto model = _table->model();
         if (!model)
             return;
@@ -104,13 +105,17 @@ namespace gui::grid {
             return;
         seer::log_infof("copying to clipboard lines [%d; %d)", first, last);
         QString text;
-        for (auto i = first; i != last; ++i) {
-            auto index = model->index(i, 0);
-            text += model->data(index, (int)CellDataRole::RawLine).toString();
-            if (i != last - 1) {
-                text += "\n";
-            }
+        auto append =  [&] (auto& line) {
+            text += QString::fromStdString(line);
+            text += "\n";
+        };
+        if (raw) {
+            model->copyRawLines(first, last, append);
+        } else {
+            model->copyLines(first, last, append);
         }
+        assert(text.size());
+        text.resize(text.size() - 1);
         QGuiApplication::clipboard()->setText(text);
     }
 
@@ -122,11 +127,25 @@ namespace gui::grid {
         _charWidth = fm.width(' ');
         setMouseTracking(true);
 
-        auto copyAction = new QAction(_table->scrollArea());
-        copyAction->setShortcuts(QKeySequence::Copy);
+        auto copyAction = new QAction("Copy selected lines", _table->scrollArea());
+        copyAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_C));
         copyAction->setShortcutContext(Qt::WidgetWithChildrenShortcut);
-        connect(copyAction, &QAction::triggered, this, &LogTableView::copyToClipboard);
+        connect(copyAction, &QAction::triggered, [=] { LogTableView::copyToClipboard(true); });
         addAction(copyAction);
+
+        auto copyFormattedAction = new QAction("Copy selected lines (formatted)", _table->scrollArea());
+        copyFormattedAction->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_C));
+        copyFormattedAction->setShortcutContext(Qt::WidgetWithChildrenShortcut);
+        connect(copyFormattedAction, &QAction::triggered, [=] { LogTableView::copyToClipboard(false); });
+        addAction(copyFormattedAction);
+
+        setContextMenuPolicy(Qt::CustomContextMenu);
+        connect(this, &QWidget::customContextMenuRequested, [=] (const QPoint& pos) {
+            QMenu menu(this);
+            menu.addAction(copyAction);
+            menu.addAction(copyFormattedAction);
+            menu.exec(mapToGlobal(pos));
+        });
     }
 
     void LogTableView::paintEvent(QPaintEvent* event) {

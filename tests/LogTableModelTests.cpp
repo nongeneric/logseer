@@ -145,3 +145,106 @@ TEST_CASE("model_selection_extending_without_previous_selection") {
     REQUIRE( last == 6 );
     REQUIRE( changed == 2 );
 }
+
+TEST_CASE("copy_raw_lines") {
+    std::stringstream ss(simpleLog);
+    auto lineParser = createTestParser();
+    FileParser fileParser(&ss, lineParser.get());
+    fileParser.index();
+
+    Index index;
+    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+    LogTableModel model(&fileParser);
+
+    std::vector<std::string> expected {
+        "15 INFO SUB message 2",
+        "17 WARN CORE message 3"
+    };
+
+    std::vector<std::string> actual;
+
+    model.copyRawLines(1, 3, [&] (auto line) {
+        actual.push_back(line);
+    });
+
+    REQUIRE( actual == expected );
+}
+
+TEST_CASE("copy_lines") {
+    std::stringstream ss(simpleLog);
+    auto lineParser = createTestParser();
+    FileParser fileParser(&ss, lineParser.get());
+    fileParser.index();
+
+    Index index;
+    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+    LogTableModel model(&fileParser);
+
+    std::vector<std::string> expected {
+        "#   Timestamp   Level   Component   Message  ",
+        "---------------------------------------------",
+        "2   15          INFO    SUB         message 2",
+        "3   17          WARN    CORE        message 3"
+    };
+
+    std::vector<std::string> actual;
+
+    model.copyLines(1, 3, [&] (auto line) {
+        actual.push_back(line);
+    });
+
+    REQUIRE( actual == expected );
+}
+
+TEST_CASE("copy_lines_multiline") {
+    std::stringstream ss(multilineLog);
+    auto lineParser = createTestParser();
+    FileParser fileParser(&ss, lineParser.get());
+    fileParser.index();
+
+    Index index;
+    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+    LogTableModel model(&fileParser);
+
+    std::vector<std::string> expected {
+        "#   Timestamp   Level   Component   Message    ",
+        "-----------------------------------------------",
+        "1   10          INFO    CORE        message 1  ",
+        "                                    message 1 a",
+        "                                    message 1 b",
+        "4   15          INFO    SUB         message 2  ",
+    };
+
+    std::vector<std::string> actual;
+
+    model.copyLines(0, 4, [&] (auto line) {
+        actual.push_back(line);
+    });
+
+    REQUIRE( actual == expected );
+}
+
+TEST_CASE("copy_lines_line_number_spacing") {
+    std::stringstream ss(simpleLog + simpleLog + simpleLog);
+    auto lineParser = createTestParser();
+    FileParser fileParser(&ss, lineParser.get());
+    fileParser.index();
+
+    Index index;
+    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+    LogTableModel model(&fileParser);
+
+    std::vector<std::string> expected {
+        "#    Timestamp   Level   Component   Message  ",
+        "----------------------------------------------",
+        "11   30          ERR     CORE        message 5",
+    };
+
+    std::vector<std::string> actual;
+
+    model.copyLines(10, 11, [&] (auto line) {
+        actual.push_back(line);
+    });
+
+    REQUIRE( actual == expected );
+}
