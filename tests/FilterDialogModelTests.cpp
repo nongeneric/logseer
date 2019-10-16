@@ -128,3 +128,15 @@ TEST_CASE("invert_check") {
     REQUIRE( model->data(model->index(2, 0), Qt::CheckStateRole) == Qt::Checked );
     REQUIRE( model->data(model->index(3, 0), Qt::CheckStateRole) == Qt::Checked );
 }
+
+TEST_CASE("invert_check_filtered") {
+    std::vector<seer::ColumnIndexInfo> values = {
+        {"ERROR", true, 2}, {"INFO", true, 10}};
+    auto model = new gui::FilterTableModel(values);
+    model->selectNone();
+    model->search("info");
+    model->selectNone();
+
+    model->invertSelection({0});
+    REQUIRE( model->checkedValues() == std::set<std::string>{"INFO"} );
+}

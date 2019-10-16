@@ -59,6 +59,9 @@ namespace gui {
     }
 
     void FilterTableModel::invertSelection(std::vector<int> rows) {
+        for (auto& row : rows) {
+            row = _visibleVec.at(row);
+        }
         auto unchecked = [=] (int r) { return !_infos.at(r).checked; };
         auto setAll = [&] (bool value) {
             for (auto row : rows) {
