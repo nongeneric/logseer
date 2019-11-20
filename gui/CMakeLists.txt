@@ -14,8 +14,6 @@ endif()
 add_library(gui STATIC
     MainWindow.h
     MainWindow.cpp
-    MainWindowViewModel.h
-    MainWindowViewModel.cpp
     LogTableModel.h
     LogTableModel.cpp
     FilterDialog.h

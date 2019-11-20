@@ -59,7 +59,7 @@ namespace gui::grid {
                 int currentIndex = 0;
                 for (;;) {
                     auto [first, len] = _searcher->search(text, currentIndex);
-                    if (first == -1)
+                    if (first == -1 || len == 0)
                         break;
                     QRect r;
                     left += textWidth(text.mid(currentIndex, first - currentIndex));

@@ -256,6 +256,7 @@ namespace gui {
     MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
         _tabWidget = new QTabWidget(this);
         _tabWidget->setTabsClosable(true);
+        _tabWidget->setMovable(true);
         _updateMenu = []{};
 
         connect(_tabWidget,
@@ -267,6 +268,10 @@ namespace gui {
                 &QTabWidget::currentChanged,
                 this,
                 [=] { _updateMenu(); });
+
+        connect(_tabWidget->tabBar(), &QTabBar::tabMoved, this, [=](int from, int to) {
+            std::swap(_logs[from], _logs[to]);
+        });
 
         _dragAndDropTip = new QLabel("Drag & Drop Files Here to Open");
         _dragAndDropTip->setAlignment(Qt::AlignCenter);
@@ -410,6 +415,9 @@ namespace gui {
         _logs.push_back({path, std::move(file)});
 
         auto fileName = boost::filesystem::path(path).stem().string();
+        if (fileName.empty()) {
+            fileName = boost::filesystem::path(path).filename().string();
+        }
         auto index = _tabWidget->addTab(splitter, QString::fromStdString(fileName));
         auto toolTip = bformat("%s\nparser type: %s", path.c_str(), lineParser->name());
         _tabWidget->setTabToolTip(index, QString::fromStdString(toolTip));
