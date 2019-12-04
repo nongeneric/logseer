@@ -17,6 +17,8 @@
 
 namespace seer {
 
+    inline constexpr int g_tabWidth = 4;
+
     using ewah_bitset = EWAHBoolArray<uint64_t>;
 
     struct ColumnIndexInfo {

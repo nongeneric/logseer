@@ -14,6 +14,11 @@
 
 namespace seer {
 
+    int lineLength(const std::string& line) {
+        return line.size() +
+               (g_tabWidth - 1) * ranges::count_if(line, [](auto& ch) { return ch == '\t'; });
+    }
+
     class Indexer {
         using Result = std::vector<ColumnInfo>;
         using QueueItem = std::optional<std::tuple<std::string, int>>;
@@ -92,7 +97,7 @@ namespace seer {
                 auto& index = _results[id];
                 if (_lineParser->parseLine(line, columns)) {
                     for (auto i = 0u; i < columns.size(); ++i) {
-                        index[i].maxWidth = std::max(index[i].maxWidth, (int)columns[i].size());
+                        index[i].maxWidth = std::max(index[i].maxWidth, lineLength(columns[i]));
                         if (index[i].indexed) {
                             index[i].index[columns[i]].set(lineIndex);
                         }
@@ -100,7 +105,7 @@ namespace seer {
                 } else {
                     _failures[id].set(lineIndex);
                     auto& info = index[lastColumn];
-                    info.maxWidth = std::max(info.maxWidth, (int)line.size());
+                    info.maxWidth = std::max(info.maxWidth, lineLength(line));
                 }
             }
         }

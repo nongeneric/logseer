@@ -16,7 +16,6 @@ namespace gui::grid {
         int _firstRow = 0;
         std::unique_ptr<seer::ISearcher> _searcher;
         float _charWidth;
-        int _tabWidth = 4;
         bool _messageOnlyHighlight = false;
 
         void paintRow(QPainter* painter, int row, int y);

@@ -1,6 +1,7 @@
 #include "LogTableView.h"
 #include "LogTable.h"
 #include "seer/Log.h"
+#include "seer/Index.h"
 #include <QFontMetricsF>
 #include <QPaintEvent>
 #include <QPainter>
@@ -47,7 +48,7 @@ namespace gui::grid {
                 for (int i = 0; i < split.size(); ++i) {
                     index += std::round(fm.width(split[i]) / _charWidth);
                     if (i != split.size() - 1) {
-                        index += _tabWidth - (index % _tabWidth);
+                        index += seer::g_tabWidth - (index % seer::g_tabWidth);
                     }
                 }
                 return index * _charWidth;
@@ -82,7 +83,7 @@ namespace gui::grid {
             rect.setTop(y);
             rect.setBottom(y + _rowHeight);
             QTextOption option;
-            option.setTabStopDistance(_charWidth * _tabWidth);
+            option.setTabStopDistance(_charWidth * seer::g_tabWidth);
             option.setWrapMode(QTextOption::WrapAnywhere);
             painter->drawText(rect, text, option);
         }

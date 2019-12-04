@@ -592,6 +592,19 @@ TEST_CASE("multiline_index_column_width") {
     REQUIRE( index.maxWidth(3) == 11 );
 }
 
+TEST_CASE("index_column_width_tabs") {
+    std::stringstream ss("a\tb\tc");
+    LineParserRepository repository;
+    auto lineParser = repository.resolve(ss);
+    FileParser fileParser(&ss, lineParser.get());
+    fileParser.index();
+
+    Index index;
+    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+
+    REQUIRE( index.maxWidth(0) == 3 + g_tabWidth * 2 );
+}
+
 TEST_CASE("search_hist_simple") {
     std::stringstream ss(simpleLog);
     auto lineParser = createTestParser();
