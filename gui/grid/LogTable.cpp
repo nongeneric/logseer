@@ -140,7 +140,14 @@ namespace gui::grid {
     }
 
     void LogTable::keyPressEvent(QKeyEvent* event) {
-        QWidget::keyPressEvent(event);
+        if (event->key() == Qt::Key_Home) {
+            _scrollArea->ensureVisible(0);
+        } else if (event->key() == Qt::Key_End) {
+            auto max = std::max(0, _model->rowCount({}) - 1);
+            _scrollArea->ensureVisible(max);
+        } else {
+            QWidget::keyPressEvent(event);
+        }
     }
 
     void LogTable::paintEvent(QPaintEvent* event) {
