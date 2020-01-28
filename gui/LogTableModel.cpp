@@ -1,6 +1,7 @@
 #include "LogTableModel.h"
 
 #include <QColor>
+#include <QTextBoundaryFinder>
 #include <seer/bformat.h>
 #include <boost/range/irange.hpp>
 #include <numeric>
@@ -81,6 +82,14 @@ namespace gui {
         }
     }
 
+    size_t graphemeLength(const std::string& str) {
+        QTextBoundaryFinder finder(QTextBoundaryFinder::Grapheme, QString::fromStdString(str));
+        size_t length = 0;
+        while (finder.toNextBoundary() != -1)
+            length++;
+        return length;
+    }
+
     void LogTableModel::copyLines(uint64_t begin, uint64_t end, LogTableModel::LineHandler accept) {
         std::vector<size_t> widths;
         widths.push_back(bformat("%d", lineOffset(end) + 1).size());
@@ -92,10 +101,10 @@ namespace gui {
             if (_parser->lineParser()->parseLine(line, columns)) {
                 for (auto i = 0u; i < columns.size(); ++i) {
                     auto& width = widths.at(i + 1);
-                    width = std::max(width, columns[i].size());
+                    width = std::max(width, graphemeLength(columns[i]));
                 }
             } else {
-                widths.back() = std::max(widths.back(), line.size());
+                widths.back() = std::max(widths.back(), graphemeLength(line));
             }
         });
 
@@ -109,10 +118,13 @@ namespace gui {
 
         const auto spacing = 3;
         auto append = [&](const auto& column, auto index) {
-            auto actualSpacing = static_cast<size_t>(index) == _columns.size() - 1 ? 0u : spacing;
+            auto isMessage = static_cast<size_t>(index) == _columns.size() - 1;
+            auto actualSpacing = isMessage ? 0u : spacing;
             auto width = widths.at(index) + actualSpacing;
             formatted += column;
-            appendSpaces(width - column.size());
+            if (!isMessage) {
+                appendSpaces(width - graphemeLength(column));
+            }
         };
 
         for (auto i = 0u; i < _columns.size(); ++i) {

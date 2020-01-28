@@ -181,7 +181,7 @@ TEST_CASE("copy_lines") {
     LogTableModel model(&fileParser);
 
     std::vector<std::string> expected {
-        "#   Timestamp   Level   Component   Message  ",
+        "#   Timestamp   Level   Component   Message",
         "---------------------------------------------",
         "2   15          INFO    SUB         message 2",
         "3   17          WARN    CORE        message 3"
@@ -207,12 +207,12 @@ TEST_CASE("copy_lines_multiline") {
     LogTableModel model(&fileParser);
 
     std::vector<std::string> expected {
-        "#   Timestamp   Level   Component   Message    ",
+        "#   Timestamp   Level   Component   Message",
         "-----------------------------------------------",
-        "1   10          INFO    CORE        message 1  ",
+        "1   10          INFO    CORE        message 1",
         "                                    message 1 a",
         "                                    message 1 b",
-        "4   15          INFO    SUB         message 2  ",
+        "4   15          INFO    SUB         message 2",
     };
 
     std::vector<std::string> actual;
@@ -235,7 +235,7 @@ TEST_CASE("copy_lines_line_number_spacing") {
     LogTableModel model(&fileParser);
 
     std::vector<std::string> expected {
-        "#    Timestamp   Level   Component   Message  ",
+        "#    Timestamp   Level   Component   Message",
         "----------------------------------------------",
         "11   30          ERR     CORE        message 5",
     };

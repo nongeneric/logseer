@@ -747,7 +747,7 @@ TEST_CASE("log_file_copy_lines") {
     auto model = file.logTableModel();
 
     std::vector<std::string> expected {
-        "#   Timestamp   Level   Component   Message  ",
+        "#   Timestamp   Level   Component   Message",
         "---------------------------------------------",
         "1   10          INFO    CORE        message 1",
         "2   15          INFO    SUB         message 2",
@@ -757,6 +757,29 @@ TEST_CASE("log_file_copy_lines") {
     std::vector<std::string> actual;
 
     model->copyLines(0, 3, [&] (auto line) {
+        actual.push_back(line);
+    });
+
+    REQUIRE( actual == expected );
+}
+
+TEST_CASE("log_file_copy_lines_unicode") {
+    qapp();
+
+    auto file = makeLogFile(u8"10 ИНФО CORE юникод\n");
+    waitParsingAndIndexing(file);
+
+    auto model = file.logTableModel();
+
+    std::vector<std::string> expected {
+        "#   Timestamp   Level   Component   Message",
+        "-------------------------------------------",
+        "1   10          ИНФО    CORE        юникод",
+    };
+
+    std::vector<std::string> actual;
+
+    model->copyLines(0, 1, [&] (auto line) {
         actual.push_back(line);
     });
 
