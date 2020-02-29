@@ -2,6 +2,7 @@
 
 #include "gui/Config.h"
 #include "seer/bformat.h"
+#include "seer/RegexLineParser.h"
 #include <map>
 
 using namespace boost::filesystem;
@@ -187,4 +188,73 @@ TEST_CASE("config_parse_recent_files") {
     session = config2.sessionConfig();
     REQUIRE( session.recentFiles.size() == g_maxRecentFiles );
     REQUIRE( session.recentFiles[0] == "file 0.txt" );
+}
+
+TEST_CASE("report_regex_parser_error") {
+    auto json = "";
+    REQUIRE_THROWS_AS(seer::RegexLineParser("").load(json), seer::JsonParserException);
+
+    json =
+        R"_(
+            {
+                "description": "test description",
+                "regex": "(\\d+) )()((.*?) (.*?) (.*)",
+                "columns": [
+                    {
+                        "name": "Timestamp",
+                        "group": 1,
+                        "indexed": false,
+                        "autosize": true
+                    },
+                    {
+                        "name": "Level",
+                        "group": 2,
+                        "indexed": true
+                    },
+                    {
+                        "name": "Component",
+                        "group": 3,
+                        "indexed": true
+                    },
+                    {
+                        "name": "Message",
+                        "group": 4,
+                        "indexed": false
+                    }
+                ]
+            }
+        )_";
+    REQUIRE_THROWS_AS(seer::RegexLineParser("").load(json), seer::RegexpSyntaxException);
+
+    json =
+        R"_(
+            {
+                "description": "test description",
+                "regex": "(\\d+) (.*?) (.*?) (.*)",
+                "columns": [
+                    {
+                        "name": "Timestamp",
+                        "group": 1,
+                        "indexed": false,
+                        "autosize": true
+                    },
+                    {
+                        "name": "Level",
+                        "group": 2,
+                        "indexed": true
+                    },
+                    {
+                        "name": "Component",
+                        "group": 3,
+                        "indexed": true
+                    },
+                    {
+                        "name": "Message",
+                        "group": 5,
+                        "indexed": false
+                    }
+                ]
+            }
+        )_";
+    REQUIRE_THROWS_AS(seer::RegexLineParser("").load(json), seer::RegexpOutOfBoundGroupReferenceException);
 }

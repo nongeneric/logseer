@@ -2,6 +2,7 @@
 
 #include <nlohmann/json.hpp>
 #include <boost/algorithm/string.hpp>
+#include <seer/bformat.h>
 #include <sstream>
 
 #include <range/v3/algorithm.hpp>
@@ -15,14 +16,54 @@ namespace seer {
 
 RegexLineParser::RegexLineParser(std::string name) : _name(name) {}
 
-void RegexLineParser::load(std::string config) {
-    std::stringstream ss{config};
-    json j;
-    ss >> j;
-    auto description = j["description"].get<std::string>();
-    auto rePattern = j["regex"].get<std::string>();
+std::string reErrorToString(int code) {
+    std::string error(1<<10, 0);
+    pcre2_get_error_message(code, (PCRE2_UCHAR*)&error[0], error.size());
+    return error;
+}
 
-    int reError;
+void RegexLineParser::load(std::string config) {
+    std::string rePattern;
+
+    try {
+        std::stringstream ss{config};
+        json j;
+        ss >> j;
+        auto description = j["description"].get<std::string>();
+        rePattern = j["regex"].get<std::string>();
+
+        auto& columns = j["columns"];
+        auto magic = j["magic"];
+        if (!magic.is_null()) {
+            _magic = magic.get<std::string>();
+        }
+
+        for (auto it = begin(columns); it != end(columns); ++it) {
+            auto name = (*it)["name"].get<std::string>();
+            auto group = (*it)["group"].get<int>();
+            auto indexed = it->value("indexed", false);
+            auto autosize = it->value("autosize", false);
+            _formats.push_back({name, group, indexed, autosize});
+        }
+
+        auto colors = j["colors"];
+        if (!colors.is_null()) {
+            for (auto it = begin(colors); it != end(colors); ++it) {
+                auto columnName = (*it)["column"].get<std::string>();
+                auto value = (*it)["value"].get<std::string>();
+                auto color = std::stoi((*it)["color"].get<std::string>(), 0, 16);
+                auto column = ranges::find(_formats, columnName, &RegexColumnFormat::name);
+                if (column == end(_formats))
+                    continue;
+                auto columnIndex = static_cast<int>(std::distance(begin(_formats), column));
+                _colors.push_back({columnIndex, value, static_cast<uint32_t>(color)});
+            }
+        }
+    } catch (json::exception& e) {
+        throw JsonParserException(e.what());
+    }
+
+    int reError = 0;
     PCRE2_SIZE errorOffset;
     _re.reset(pcre2_compile((PCRE2_SPTR8)rePattern.c_str(),
                             PCRE2_ZERO_TERMINATED,
@@ -32,35 +73,26 @@ void RegexLineParser::load(std::string config) {
                             nullptr),
               pcre2_code_free_8);
 
-    assert(_re);
+    if (!_re)
+        throw RegexpSyntaxException(reErrorToString(reError));
+
     reError = pcre2_jit_compile(_re.get(), PCRE2_JIT_COMPLETE);
-    assert(reError == 0);
 
-    auto& columns = j["columns"];
-    auto magic = j["magic"];
-    if (!magic.is_null()) {
-        _magic = magic.get<std::string>();
-    }
-    for (auto it = begin(columns); it != end(columns); ++it) {
-        auto name = (*it)["name"].get<std::string>();
-        auto group = (*it)["group"].get<int>();
-        auto indexed = it->value("indexed", false);
-        auto autosize = it->value("autosize", false);
-        _formats.push_back({name, group, indexed, autosize});
-    }
+    if (reError)
+        throw RegexpSyntaxException(reErrorToString(reError));
 
-    auto colors = j["colors"];
-    if (!colors.is_null()) {
-        for (auto it = begin(colors); it != end(colors); ++it) {
-            auto columnName = (*it)["column"].get<std::string>();
-            auto value = (*it)["value"].get<std::string>();
-            auto color = std::stoi((*it)["color"].get<std::string>(), 0, 16);
-            auto column = ranges::find(_formats, columnName, &RegexColumnFormat::name);
-            if (column == end(_formats))
-                continue;
-            auto columnIndex = static_cast<int>(std::distance(begin(_formats), column));
-            _colors.push_back({columnIndex, value, static_cast<uint32_t>(color)});
-        }
+    auto matchData = std::shared_ptr<pcre2_match_data>(
+        pcre2_match_data_create_from_pattern(_re.get(), nullptr),
+        pcre2_match_data_free);
+
+    int groupCount = pcre2_get_ovector_count(matchData.get());
+    for (auto& format : _formats) {
+        if (format.group < 0 || format.group >= groupCount)
+            throw RegexpOutOfBoundGroupReferenceException(bformat(
+                "Column \"%s\" references a nonexistent group \"%d\" (there are only %d groups in the regex).",
+                format.name,
+                format.group,
+                groupCount));
     }
 }
 

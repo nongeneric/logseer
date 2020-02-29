@@ -2,6 +2,7 @@
 
 #include "ILineParserRepository.h"
 #include <map>
+#include <optional>
 
 namespace seer {
 
@@ -10,7 +11,7 @@ namespace seer {
 
     public:
         LineParserRepository(bool initializeDefaultParser = true);
-        void addRegexParser(std::string name, int priority, std::string json);
+        std::optional<std::string> addRegexParser(std::string name, int priority, std::string json);
         std::shared_ptr<ILineParser> resolve(std::istream &stream) override;
         const ParserMap& parsers() const;
     };

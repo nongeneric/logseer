@@ -289,7 +289,12 @@ namespace gui {
         updateTabWidgetVisibility();
 
         for (auto& config : g_Config.regexConfigs()) {
-            _repository.addRegexParser(config.name, config.priority, config.json);
+            auto error = _repository.addRegexParser(config.name, config.priority, config.json);
+            if (error) {
+                auto title = bformat("Error loading regex config: %s", config.name);
+                QMessageBox::warning(
+                    this, QString::fromStdString(title), QString::fromStdString(*error));
+            }
         }
 
         createMenu();

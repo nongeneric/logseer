@@ -23,6 +23,19 @@ namespace seer {
         bool autosize;
     };
 
+    class JsonParserException : public std::runtime_error {
+        using std::runtime_error::runtime_error;
+    };
+
+    class RegexpSyntaxException : public std::runtime_error {
+        using std::runtime_error::runtime_error;
+    };
+
+    class RegexpOutOfBoundGroupReferenceException : public std::runtime_error {
+        using std::runtime_error::runtime_error;
+    };
+
+
     class RegexLineParser : public ILineParser {
         std::vector<RegexColumnFormat> _formats;
         std::vector<RegexColumnColor> _colors;

@@ -37,13 +37,17 @@ namespace seer {
         }
     }
 
-    void LineParserRepository::addRegexParser(std::string name, int priority, std::string json) {
+    std::optional<std::string> LineParserRepository::addRegexParser(std::string name,
+                                                                    int priority,
+                                                                    std::string json) {
         auto parser = std::make_shared<RegexLineParser>(name);
         try {
             parser->load(json);
             _parsers[priority] = parser;
+            return {};
         } catch (std::exception& e) {
-            log_infof("parser config [%s] can't be loaded: [%s]", name, e.what());
+            log_info(e.what());
+            return e.what();
         }
     }
 
