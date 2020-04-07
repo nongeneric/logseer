@@ -60,9 +60,10 @@ void LogTableView::paintRow(QPainter* painter, int row, int y) {
         } else if (columnSelection && columnSelection->row == row &&
                    columnSelection->column == column) {
             assert(columnSelection->first >= 0);
-            auto first = columnSelection->first;
-            auto last = std::min(columnSelection->last, text.size() - 1);
+            auto first = std::min(columnSelection->first, gmap.graphemeSize() - 1);
+            auto last = std::min(columnSelection->last, gmap.graphemeSize() - 1);
             auto it = begin(graphemes);
+            assert(first <= last);
             std::tie(first, last) = gmap.toVisibleRange(
                 first, last, _selectWords ? VisibleRangeType::Word : VisibleRangeType::Grapheme);
             ranges::fill(it + first, it + last + 1, selectedGrapheme);
@@ -281,10 +282,12 @@ void LogTableView::mouseMoveEvent(QMouseEvent* event) {
 }
 
 void LogTableView::mouseDoubleClickEvent(QMouseEvent* event) {
-    if (!_table->model())
-        return;
     auto model = _table->model();
+    if (!model)
+        return;
     auto row = getRow(event->y());
+    if (row >= model->rowCount({}))
+        return;
     auto [column, index] = getColumn(event->x());
     if (!model->data(model->index(row, column), Qt::DisplayRole).toString().size())
         return;

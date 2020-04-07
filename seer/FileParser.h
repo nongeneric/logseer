@@ -10,6 +10,8 @@
 
 namespace seer {
 
+enum class FileType { Utf8, Utf16le, Utf16be, Utf32le, Utf32be };
+
 class FileParser {
     OffsetIndex _lineOffsets;
     std::istream* _stream;
@@ -18,6 +20,13 @@ class FileParser {
     size_t _currentIndex = -1;
     std::mutex _mutex;
     int64_t _lastLineSize = -1;
+    std::function<void(std::string&)> _convert;
+    int _bomSize = 0;
+    int _eolLeftPadding = 0;
+    int _eolRightPadding = 0;
+    int _handleZeros = true;
+
+    void initConverter();
 
 public:
     FileParser(std::istream* stream, ILineParser* lineParser);

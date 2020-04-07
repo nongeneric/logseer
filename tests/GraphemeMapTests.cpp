@@ -79,3 +79,14 @@ TEST_CASE("grapheme_map_empty_line") {
     REQUIRE( gmap.toVisibleRange(-1, -1, VisibleRangeType::Word) == std::tuple(-1, -1) );
     REQUIRE( gmap.graphemeSize() == 0 );
 }
+
+TEST_CASE("grapheme_map_unicode_and_tab") {
+    QString line{u8"\tfürfür"};
+    // graph: ____fürfür
+    //        0123456789
+    GraphemeMap gmap(line);
+    REQUIRE( gmap.graphemeSize() == 10 );
+    REQUIRE( gmap.toVisibleRange(2, 7) == std::tuple(0, 7) );
+    REQUIRE( gmap.toVisibleRange(2, 100) == std::tuple(0, 9) );
+    REQUIRE( gmap.toVisibleRange(8, 9) == std::tuple(8, 9) );
+}

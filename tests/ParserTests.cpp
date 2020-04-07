@@ -794,3 +794,130 @@ TEST_CASE("parse_autosize_attribute") {
     REQUIRE( columns[3].autosize == false );
     REQUIRE( columns[4].autosize == false );
 }
+
+TEST_CASE("file_parser_utf16le") {
+    std::string utf16log{"\xff\xfe\x31\0\x32\0\n\0\x33\0", 10};
+
+    std::stringstream ss(utf16log);
+    auto lineParser = createTestParser();
+    FileParser fileParser(&ss, lineParser.get());
+    fileParser.index();
+
+    REQUIRE( fileParser.lineCount() == 2 );
+
+    std::string line1, line2;
+    fileParser.readLine(0, line1);
+    fileParser.readLine(1, line2);
+
+    REQUIRE( line1 == "12" );
+    REQUIRE( line2 == "3" );
+}
+
+TEST_CASE("file_parser_utf16le_empty_lines") {
+    std::string utf16log{"\xff\xfe\x31\0\x32\0\n\0\n\0\x33\0", 12};
+
+    std::stringstream ss(utf16log);
+    auto lineParser = createTestParser();
+    FileParser fileParser(&ss, lineParser.get());
+    fileParser.index();
+
+    REQUIRE( fileParser.lineCount() == 3 );
+
+    std::string line1, line2, line3;
+    fileParser.readLine(0, line1);
+    fileParser.readLine(1, line2);
+    fileParser.readLine(2, line3);
+
+    REQUIRE( line1 == "12" );
+    REQUIRE( line2 == "" );
+    REQUIRE( line3 == "3" );
+}
+
+TEST_CASE("file_parser_utf16le_singleline") {
+    std::string utf16log{"\xff\xfe\x66\x00\xfc\x00\x72\x00\x66\x00\xfc\x00\x72\x00\x0a\x00", 16};
+
+    std::stringstream ss(utf16log);
+    auto lineParser = createTestParser();
+    FileParser fileParser(&ss, lineParser.get());
+    fileParser.index();
+
+    REQUIRE( fileParser.lineCount() == 1 );
+
+    std::string line;
+    fileParser.readLine(0, line); // cache last line
+    fileParser.readLine(0, line); // read last line
+
+    REQUIRE( line == u8"fürfür" );
+}
+
+TEST_CASE("file_parser_utf16be") {
+    std::string utf16log{"\xfe\xff\0\x31\0\x32\0\n\0\x33", 10};
+
+    std::stringstream ss(utf16log);
+    auto lineParser = createTestParser();
+    FileParser fileParser(&ss, lineParser.get());
+    fileParser.index();
+
+    REQUIRE( fileParser.lineCount() == 2 );
+
+    std::string line1, line2;
+    fileParser.readLine(0, line1);
+    fileParser.readLine(1, line2);
+
+    REQUIRE( line1 == "12" );
+    REQUIRE( line2 == "3" );
+}
+
+TEST_CASE("file_parser_utf8bom") {
+    std::string utf8log{"\xEF\xBB\xBF" "abc\n123"};
+
+    std::stringstream ss(utf8log);
+    auto lineParser = createTestParser();
+    FileParser fileParser(&ss, lineParser.get());
+    fileParser.index();
+
+    REQUIRE( fileParser.lineCount() == 2 );
+
+    std::string line1, line2;
+    fileParser.readLine(0, line1);
+    fileParser.readLine(1, line2);
+
+    REQUIRE( line1 == "abc" );
+    REQUIRE( line2 == "123" );
+}
+
+TEST_CASE("file_parser_utf32le") {
+    std::string utf32log{"\xFE\xFF\0\0\x31\0\0\0\n\0\0\0\x32\0\0\0", 16};
+
+    std::stringstream ss(utf32log);
+    auto lineParser = createTestParser();
+    FileParser fileParser(&ss, lineParser.get());
+    fileParser.index();
+
+    REQUIRE( fileParser.lineCount() == 2 );
+
+    std::string line1, line2;
+    fileParser.readLine(0, line1);
+    fileParser.readLine(1, line2);
+
+    REQUIRE( line1 == "1" );
+    REQUIRE( line2 == "2" );
+}
+
+TEST_CASE("file_parser_utf32be") {
+    std::string utf32log{"\0\0\xFE\xFF\0\0\0\x31\0\0\0\n\0\0\0\x32", 16};
+
+    std::stringstream ss(utf32log);
+    auto lineParser = createTestParser();
+    FileParser fileParser(&ss, lineParser.get());
+    fileParser.index();
+
+    REQUIRE( fileParser.lineCount() == 2 );
+
+    std::string line1, line2;
+    fileParser.readLine(0, line1);
+    fileParser.readLine(1, line2);
+
+    REQUIRE( line1 == "1" );
+    REQUIRE( line2 == "2" );
+}
