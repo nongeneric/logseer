@@ -72,3 +72,10 @@ TEST_CASE("grapheme_map_visible_range_words_simple") {
     REQUIRE( gmap.toVisibleRange(2, 7, VisibleRangeType::Word) == std::tuple(0, 9) );
     REQUIRE( gmap.toVisibleRange(2, 12, VisibleRangeType::Word) == std::tuple(0, 14) );
 }
+
+TEST_CASE("grapheme_map_empty_line") {
+    QString line{""};
+    GraphemeMap gmap(line);
+    REQUIRE( gmap.toVisibleRange(-1, -1, VisibleRangeType::Word) == std::tuple(-1, -1) );
+    REQUIRE( gmap.graphemeSize() == 0 );
+}

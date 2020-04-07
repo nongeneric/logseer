@@ -59,6 +59,8 @@ std::tuple<int, int> extendRange(const std::vector<int>& source, int left, int r
 }
 
 std::tuple<int, int> gui::GraphemeMap::toVisibleRange(int left, int right, VisibleRangeType type) {
+    if (left == -1 || right == -1)
+        return {-1, -1};
     left = std::min(left, (int)_graphemeToIndex.size() - 1); // TODO: ssize
     right = std::min(right, (int)_graphemeToIndex.size() - 1); // TODO: ssize
     std::tie(left, right) = extendRange(_graphemeToIndex, left, right);

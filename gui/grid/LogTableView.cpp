@@ -46,6 +46,10 @@ void LogTableView::paintRow(QPainter* painter, int row, int y) {
         assert(index.isValid());
 
         auto text = model->data(index, Qt::DisplayRole).toString();
+
+        if (!text.size())
+            continue;
+
         GraphemeMap gmap(text);
 
         graphemes.clear();
@@ -276,8 +280,13 @@ void LogTableView::mouseMoveEvent(QMouseEvent* event) {
     update();
 }
 
-void LogTableView::mouseDoubleClickEvent(QMouseEvent*) {
+void LogTableView::mouseDoubleClickEvent(QMouseEvent* event) {
     if (!_table->model())
+        return;
+    auto model = _table->model();
+    auto row = getRow(event->y());
+    auto [column, index] = getColumn(event->x());
+    if (!model->data(model->index(row, column), Qt::DisplayRole).toString().size())
         return;
     _table->model()->forceColumnSelection();
     _selectWords = true;

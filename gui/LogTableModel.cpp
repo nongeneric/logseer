@@ -1,8 +1,8 @@
 #include "LogTableModel.h"
 
 #include <QColor>
-#include <QTextBoundaryFinder>
 #include <seer/bformat.h>
+#include <gui/GraphemeMap.h>
 #include <boost/range/irange.hpp>
 #include <numeric>
 
@@ -98,11 +98,8 @@ void LogTableModel::copyRawLines(uint64_t begin, uint64_t end, LogTableModel::Li
 }
 
 size_t graphemeLength(const std::string& str) {
-    QTextBoundaryFinder finder(QTextBoundaryFinder::Grapheme, QString::fromStdString(str));
-    size_t length = 0;
-    while (finder.toNextBoundary() != -1)
-        length++;
-    return length;
+    GraphemeMap gmap(QString::fromStdString(str));
+    return gmap.graphemeSize();
 }
 
 void LogTableModel::copyLines(uint64_t begin, uint64_t end, LogTableModel::LineHandler accept) {
