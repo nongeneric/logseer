@@ -4,19 +4,19 @@
 
 namespace seer {
 
-    class FileParser;
+class FileParser;
 
-    namespace task {
+namespace task {
 
-        class ParsingTask : public Task {
-            FileParser* _fileParser;
+    class ParsingTask : public Task {
+        FileParser* _fileParser;
 
-        public:
-            ParsingTask(FileParser* fileParser);
+    public:
+        ParsingTask(FileParser* fileParser);
 
-        protected:
-            void body() override;
-        };
-    } // namespace task
+    protected:
+        void body() override;
+    };
+} // namespace task
 
 } // namespace seer

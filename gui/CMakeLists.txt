@@ -40,6 +40,8 @@ add_library(gui STATIC
     ThreadDispatcher.cpp
     Config.h
     Config.cpp
+    GraphemeMap.h
+    GraphemeMap.cpp
 )
 
 target_link_libraries(gui

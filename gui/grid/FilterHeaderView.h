@@ -5,14 +5,14 @@
 
 namespace gui::grid {
 
-    class LogTable;
+class LogTable;
 
-    class FilterHeaderView : public QHeaderView {
-        LogTable* _table;
+class FilterHeaderView : public QHeaderView {
+    LogTable* _table;
 
-    public:
-        FilterHeaderView(LogTable* table);
-        LogTable* logTable() const;
-    };
+public:
+    FilterHeaderView(LogTable* table);
+    LogTable* logTable() const;
+};
 
 } // namespace gui

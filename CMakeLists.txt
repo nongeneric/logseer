@@ -32,6 +32,8 @@ endif()
 
 add_compile_options(-Werror -Werror=return-type -Wall -Wextra -Wno-implicit-fallthrough)
 if(CMAKE_BUILD_TYPE MATCHES Debug)
+    add_compile_options(-Wno-error=unused-parameter)
+    add_compile_options(-Wno-error=unused-variable)
     add_compile_options(-O0 -ggdb)
 else()
     add_compile_options(-O3)

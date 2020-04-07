@@ -369,11 +369,10 @@ TEST_CASE("log_file_search_basic") {
     REQUIRE( hist->get(4, 6) == 0 );
     REQUIRE( hist->get(5, 6) == 1 );
 
-    searchModel->setSelection(0);
-    REQUIRE( model->isSelected(3) );
+    searchModel->setSelection(0, 0, 0);
 
     file.setColumnFilter(2, {"INFO"});
-    auto [first, last] = model->getSelection();
+    auto [first, last] = model->getRowSelection();
     REQUIRE( first == -1 );
     REQUIRE( last == -1 );
 
@@ -381,12 +380,11 @@ TEST_CASE("log_file_search_basic") {
     // 15 INFO SUB message 2
     // 20 INFO SUB message 4
 
-    searchModel->setSelection(0);
-    REQUIRE( model->isSelected(2) );
+    searchModel->setSelection(0, 0, 0);
 
     file.setColumnFilter(2, {});
-    searchModel->setSelection(0);
-    std::tie(first, last) = model->getSelection();
+    searchModel->setSelection(0, 0, 0);
+    std::tie(first, last) = model->getRowSelection();
     REQUIRE( first == -1 );
     REQUIRE( last == -1 );
 }

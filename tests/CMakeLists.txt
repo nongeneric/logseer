@@ -22,6 +22,8 @@ add_executable(tests
     LineColorTests.cpp
     SearcherTests.cpp
     ConfigTests.cpp
+    GraphemeMapTests.cpp
+    ForeachRangeTests.cpp
 )
 
 target_link_libraries(tests gui)

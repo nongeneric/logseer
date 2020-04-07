@@ -4,25 +4,25 @@
 
 namespace seer {
 
-    class Index;
-    class FileParser;
-    class ILineParser;
+class Index;
+class FileParser;
+class ILineParser;
 
-    namespace task {
+namespace task {
 
-        class IndexingTask : public Task {
-            Index* _index;
-            FileParser* _fileParser;
-            ILineParser* _lineParser;
+class IndexingTask : public Task {
+    Index* _index;
+    FileParser* _fileParser;
+    ILineParser* _lineParser;
 
-        public:
-            IndexingTask(Index* index,
-                         FileParser* fileParser,
-                         ILineParser* lineParser);
+public:
+    IndexingTask(Index* index,
+                 FileParser* fileParser,
+                 ILineParser* lineParser);
 
-        protected:
-            void body() override;
-        };
+protected:
+    void body() override;
+};
 
-    } // namespace task
+} // namespace task
 } // namespace seer

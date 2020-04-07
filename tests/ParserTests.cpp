@@ -750,7 +750,7 @@ TEST_CASE("default_line_parser_columns") {
     REQUIRE( columns.size() == 1 );
     REQUIRE( columns[0] == "message1" );
 
-    REQUIRE( index.maxWidth(0) == std::string("message1").size() );
+    REQUIRE( index.maxWidth(0) == (int)size(std::string("message1")) ); // TODO: ssize
 }
 
 TEST_CASE("parse_zeroes") {
@@ -775,7 +775,7 @@ TEST_CASE("parse_zeroes") {
     REQUIRE( columns.size() == 1 );
     REQUIRE( columns[0] == "message1" );
 
-    REQUIRE( index.maxWidth(0) == std::string("message1").size() );
+    REQUIRE( index.maxWidth(0) == (int)size(std::string("message1")) ); // TODO: ssize
 
     // cached last line size
     line = "abc";

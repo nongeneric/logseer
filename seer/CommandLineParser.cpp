@@ -8,76 +8,76 @@ namespace po = boost::program_options;
 
 namespace seer {
 
-    bool CommandLineParser::parse(int argc, const char* const argv[]) {
-        po::options_description console_desc("Allowed options");
-        try {
-            auto logName = "log";
+bool CommandLineParser::parse(int argc, const char* const argv[]) {
+    po::options_description console_desc("Allowed options");
+    try {
+        auto logName = "log";
 
-            po::positional_options_description pd;
-            pd.add(logName, -1);
+        po::positional_options_description pd;
+        pd.add(logName, -1);
 
-            console_desc.add_options()
-                ("help", "produce help message")
-                (logName, po::value(&_paths), "log file path")
-                ("version,v", "print version")
-                ("verbose", "enable logging")
-                ;
+        console_desc.add_options()
+            ("help", "produce help message")
+            (logName, po::value(&_paths), "log file path")
+            ("version,v", "print version")
+            ("verbose", "enable logging")
+            ;
 
-            po::variables_map console_vm;
+        po::variables_map console_vm;
 
-            auto parsed = po::command_line_parser(argc, argv)
-                        .options(console_desc)
-                        .positional(pd)
-                        .run();
+        auto parsed = po::command_line_parser(argc, argv)
+                    .options(console_desc)
+                    .positional(pd)
+                    .run();
 
-            po::store(parsed, console_vm);
+        po::store(parsed, console_vm);
 
-            auto help = [&] {
-                std::stringstream ss;
-                ss << console_desc;
-                return ss.str();
-            };
+        auto help = [&] {
+            std::stringstream ss;
+            ss << console_desc;
+            return ss.str();
+        };
 
-            if (console_vm.count("help")) {
-                _help = help();
-                return true;
-            }
-
-            if (console_vm.count("version")) {
-                _version = bformat("logseer %s", g_version);
-                return true;
-            }
-
-            _verbose = console_vm.count("verbose");
-
-            po::notify(console_vm);
-        } catch(std::exception& e) {
-            _error = bformat(
-                "can't parse program options:\n%s\n\n%s", e.what(), help());
-            return false;
+        if (console_vm.count("help")) {
+            _help = help();
+            return true;
         }
 
-        return true;
+        if (console_vm.count("version")) {
+            _version = bformat("logseer %s", g_version);
+            return true;
+        }
+
+        _verbose = console_vm.count("verbose");
+
+        po::notify(console_vm);
+    } catch(std::exception& e) {
+        _error = bformat(
+            "can't parse program options:\n%s\n\n%s", e.what(), help());
+        return false;
     }
 
-    std::string CommandLineParser::help() const {
-        return _help;
-    }
+    return true;
+}
 
-    std::string CommandLineParser::error() const {
-        return _error;
-    }
+std::string CommandLineParser::help() const {
+    return _help;
+}
 
-    std::string CommandLineParser::version() const {
-        return _version;
-    }
+std::string CommandLineParser::error() const {
+    return _error;
+}
 
-    std::vector<std::string> CommandLineParser::paths() const {
-        return _paths;
-    }
+std::string CommandLineParser::version() const {
+    return _version;
+}
 
-    bool CommandLineParser::verbose() const {
-        return _verbose;
-    }
+std::vector<std::string> CommandLineParser::paths() const {
+    return _paths;
+}
+
+bool CommandLineParser::verbose() const {
+    return _verbose;
+}
 
 } // namespace seer

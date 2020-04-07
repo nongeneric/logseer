@@ -8,30 +8,30 @@
 
 namespace gui {
 
-    class SearchLine : public QWidget {
-        Q_OBJECT
+class SearchLine : public QWidget {
+    Q_OBJECT
 
-        QLabel* _status;
-        QProgressBar* _progress;
-        QPushButton* _button;
+    QLabel* _status;
+    QProgressBar* _progress;
+    QPushButton* _button;
 
-    public:
-        explicit SearchLine(bool regexInitial,
-                            bool caseSensitiveInitial,
-                            bool messageOnlyInitial,
-                            QWidget* parent = nullptr);
-        void setStatus(std::string status);
-        void setProgress(int progress);
-        void setSearchEnabled(bool enabled);
+public:
+    explicit SearchLine(bool regexInitial,
+                        bool caseSensitiveInitial,
+                        bool messageOnlyInitial,
+                        QWidget* parent = nullptr);
+    void setStatus(std::string status);
+    void setProgress(int progress);
+    void setSearchEnabled(bool enabled);
 
-    signals:
-        void searchRequested(std::string string,
-                             bool regex,
-                             bool caseSensitive,
-                             bool messageOnly);
-        void regexChanged(bool regex);
-        void caseSensitiveChanged(bool caseSensitive);
-        void messageOnlyChanged(bool messageOnly);
-    };
+signals:
+    void searchRequested(std::string string,
+                         bool regex,
+                         bool caseSensitive,
+                         bool messageOnly);
+    void regexChanged(bool regex);
+    void caseSensitiveChanged(bool caseSensitive);
+    void messageOnlyChanged(bool messageOnly);
+};
 
 } // namespace gui

@@ -5,17 +5,17 @@
 
 namespace gui {
 
-    class HistMap : public QWidget {
-        Q_OBJECT
+class HistMap : public QWidget {
+    Q_OBJECT
 
-        const seer::Hist* _hist = nullptr;
+    const seer::Hist* _hist = nullptr;
 
-    public:
-        HistMap(QWidget* parent = nullptr);
-        void setHist(const seer::Hist *hist);
+public:
+    HistMap(QWidget* parent = nullptr);
+    void setHist(const seer::Hist *hist);
 
-    protected:
-        void paintEvent(QPaintEvent *event) override;
-    };
+protected:
+    void paintEvent(QPaintEvent *event) override;
+};
 
 } // namespace gui
