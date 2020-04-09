@@ -131,6 +131,9 @@ public:
     const seer::Hist* searchHist();
     seer::ILineParser* lineParser();
     void clearFilters();
+    void clearFilter(int column);
+    void excludeValue(int column, const std::string& value);
+    void includeOnlyValue(int column, const std::string& value);
 
     template <class S>
     inline bool isState(S state) {

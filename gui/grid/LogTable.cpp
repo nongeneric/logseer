@@ -36,7 +36,9 @@ void LogTable::setColumnWidth(int column, int width) {
     _header->resizeSection(column, pxWidth);
 }
 
-LogTable::LogTable(QFont font, QWidget* parent) : QWidget(parent) {
+LogTable::LogTable(gui::LogFile* logFile, QFont font, QWidget* parent)
+    : QWidget(parent), _logFile(logFile)
+{
     _header = new FilterHeaderView(this);
     _view = new LogTableView(font, this);
     _scrollArea = new LogScrollArea(this);
@@ -122,6 +124,10 @@ LogScrollArea* LogTable::scrollArea() const {
 
 HistMap *LogTable::histMap() const {
     return _histMap;
+}
+
+LogFile* LogTable::logFile() const {
+    return _logFile;
 }
 
 void LogTable::showHistMap() {

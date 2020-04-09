@@ -131,7 +131,10 @@ int LogTableView::getRow(int y) {
     if (!model)
         return -1;
     y = y + _table->scrollArea()->y() - _table->header()->height();
-    return y / _rowHeight + _firstRow;
+    auto row = y / _rowHeight + _firstRow;
+    if (row >= model->rowCount({}))
+        return -1;
+    return row;
 }
 
 std::tuple<int, int> LogTableView::getColumn(int x) {
@@ -188,6 +191,58 @@ void LogTableView::copyToClipboard(bool raw) {
     }
 }
 
+void LogTableView::addColumnExcludeActions(int column, int row, QMenu& menu) {
+    auto logFile = _table->logFile();
+    if (!logFile)
+        return;
+
+    auto model = _table->model();
+    auto isIndexed = model->headerData(column, Qt::Horizontal, (int)HeaderDataRole::IsIndexed).toBool();
+    if (!isIndexed)
+        return;
+
+    auto columnName = model->headerData(column, Qt::Horizontal, Qt::DisplayRole).toString();
+    auto columnValue = model->data(model->index(row, column), Qt::DisplayRole).toString();
+
+    auto excludeCaption = QString("Exclude: %0").arg(columnValue);
+    auto includeCaption = QString("Include only: %0").arg(columnValue);
+    auto clearFilterCaption = QString("Clear filter: %0").arg(columnName);
+
+    auto excludeAction = new QAction(excludeCaption);
+    connect(excludeAction, &QAction::triggered, [=] {
+        logFile->excludeValue(column, columnValue.toStdString());
+    });
+
+    auto includeAction = new QAction(includeCaption);
+    connect(includeAction, &QAction::triggered, [=] {
+        logFile->includeOnlyValue(column, columnValue.toStdString());
+    });
+
+    auto clearFilterAction = new QAction(clearFilterCaption);
+    connect(clearFilterAction, &QAction::triggered, [=] {
+        logFile->clearFilter(column);
+    });
+
+    menu.addSeparator();
+    menu.addAction(excludeAction);
+    menu.addAction(includeAction);
+    menu.addAction(clearFilterAction);
+}
+
+void LogTableView::addClearAllFiltersAction(QMenu& menu) {
+    auto logFile = _table->logFile();
+    if (!logFile)
+        return;
+
+    auto clearFiltersAction = new QAction("Clear all filters");
+    connect(clearFiltersAction, &QAction::triggered, [=] {
+        logFile->clearFilters();
+    });
+
+    menu.addSeparator();
+    menu.addAction(clearFiltersAction);
+}
+
 LogTableView::LogTableView(QFont font, LogTable* parent) : QWidget(parent), _table(parent) {
     setFocusPolicy(Qt::ClickFocus);
     setFont(font);
@@ -210,21 +265,35 @@ LogTableView::LogTableView(QFont font, LogTable* parent) : QWidget(parent), _tab
 
     setContextMenuPolicy(Qt::CustomContextMenu);
     connect(this, &QWidget::customContextMenuRequested, [=] (const QPoint& pos) {
-        if (!_table->model())
+        auto model = _table->model();
+        if (!model)
             return;
-
-        auto selection = _table->model()->getSelection();
-        if (std::holds_alternative<std::monostate>(selection))
-            return;
-
-        auto rowSelection = std::get_if<RowSelection>(&selection);
 
         QMenu menu(this);
-        menu.addAction(copyAction);
-        if (rowSelection) {
-            menu.addAction(copyFormattedAction);
+
+        auto row = getRow(pos.y());
+        auto [column, _] = getColumn(pos.x());
+        auto columnCount = model->columnCount({});
+        if (row != -1 && 1 <= column && column < columnCount - 1) {
+            addColumnExcludeActions(column, row, menu);
         }
-        menu.exec(mapToGlobal(pos));
+
+        menu.addSeparator();
+
+        auto selection = model->getSelection();
+        if (!std::holds_alternative<std::monostate>(selection)) {
+            auto rowSelection = std::get_if<RowSelection>(&selection);
+            menu.addAction(copyAction);
+            if (rowSelection) {
+                menu.addAction(copyFormattedAction);
+            }
+        }
+
+        addClearAllFiltersAction(menu);
+
+        if (!menu.actions().empty()) {
+            menu.exec(mapToGlobal(pos));
+        }
     });
 }
 
@@ -286,7 +355,7 @@ void LogTableView::mouseDoubleClickEvent(QMouseEvent* event) {
     if (!model)
         return;
     auto row = getRow(event->y());
-    if (row >= model->rowCount({}))
+    if (row == -1)
         return;
     auto [column, index] = getColumn(event->x());
     if (!model->data(model->index(row, column), Qt::DisplayRole).toString().size())

@@ -231,6 +231,35 @@ void LogFile::clearFilters() {
     applyFilter();
 }
 
+void LogFile::clearFilter(int column) {
+    _columnFilters.erase(column - 1);
+    applyFilter();
+}
+
+void LogFile::excludeValue(int column, const std::string& value) {
+    column--;
+
+    auto it = _columnFilters.find(column);
+    if (it != end(_columnFilters)) {
+        it->second.erase(value);
+    } else {
+        std::set<std::string> filter;
+        for (const auto& info : _index->getValues(column)) {
+            if (info.value != value) {
+                filter.insert(info.value);
+            }
+        }
+        _columnFilters[column] = filter;
+    }
+
+    applyFilter();
+}
+
+void LogFile::includeOnlyValue(int column, const std::string& value) {
+    _columnFilters[column - 1] = {value};
+    applyFilter();
+}
+
 void LogFile::requestFilter(int column) {
     if (column == 0 || !_indexingComplete)
         return;

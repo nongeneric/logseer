@@ -4,6 +4,8 @@
 #include <QRect>
 #include "seer/Searcher.h"
 
+class QMenu;
+
 namespace gui::grid {
 
 class LogTable;
@@ -23,6 +25,8 @@ class LogTableView : public QWidget {
     int getRow(int y);
     std::tuple<int, int> getColumn(int x);
     void copyToClipboard(bool raw);
+    void addColumnExcludeActions(int column, int row, QMenu& menu);
+    void addClearAllFiltersAction(QMenu& menu);
 
 public:
     explicit LogTableView(QFont font, LogTable* parent);

@@ -783,3 +783,51 @@ TEST_CASE("log_file_copy_lines_unicode") {
 
     REQUIRE( actual == expected );
 }
+
+TEST_CASE("log_file_filter_exclude_include_clear") {
+    qapp();
+
+    auto file = makeLogFile(simpleLog);
+    waitParsingAndIndexing(file);
+
+    auto model = file.logTableModel();
+    auto getRows = [&] {
+        std::vector<std::string> rows;
+        auto count = model->rowCount({});
+        for (int i = 0; i < count; ++i) {
+            auto value = model->data(model->index(i, 1), Qt::DisplayRole).toString();
+            rows.push_back(value.toStdString());
+        }
+        return rows;
+    };
+
+    SECTION("clear column without filter") {
+        file.clearFilter(2);
+        REQUIRE(model->rowCount({}) == 6);
+    }
+
+    SECTION("exclude from single column") {
+        file.excludeValue(2, "INFO");
+        REQUIRE( getRows() == std::vector<std::string>{"17", "30", "40"} );
+
+        SECTION("exclude column with existing filter") {
+            file.excludeValue(2, "WARN");
+            REQUIRE( getRows() == std::vector<std::string>{"30"} );
+        }
+
+        SECTION("exclude second column") {
+            file.excludeValue(3, "CORE");
+            REQUIRE( getRows() == std::vector<std::string>{"40"} );
+
+            SECTION("clear one column out of two") {
+                file.clearFilter(2);
+                REQUIRE( getRows() == std::vector<std::string>{"15", "20", "40"} );
+            }
+        }
+    }
+
+    SECTION("include only value") {
+        file.includeOnlyValue(2, "INFO");
+        REQUIRE( getRows() == std::vector<std::string>{"10", "15", "20"} );
+    }
+}

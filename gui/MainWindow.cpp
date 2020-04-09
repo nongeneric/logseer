@@ -320,7 +320,7 @@ void MainWindow::openLog(std::string path, std::string parser) {
     auto file = std::make_unique<LogFile>(std::move(stream), lineParser);
 
     auto font = loadFont();
-    auto table = new grid::LogTable(font);
+    auto table = new grid::LogTable(file.get(), font);
     table->showHistMap();
 
     auto mainTableAndSearch = new QWidget();
@@ -331,7 +331,7 @@ void MainWindow::openLog(std::string path, std::string parser) {
                                      searchConfig.messageOnly);
     mainTableAndSearch->setLayout(vbox);
 
-    auto searchTable = new grid::LogTable(font);
+    auto searchTable = new grid::LogTable(nullptr, font);
 
     connect(file.get(), &LogFile::stateChanged, this, [=, file = file.get()] {
         handleStateChanged(file, table, searchTable, searchLine, _updateMenu, [=] {
