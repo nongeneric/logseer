@@ -35,8 +35,8 @@ class LogFile : public QObject, sm::IStateHandler {
     std::unique_ptr<LogTableModel> _searchLogTableModel;
     std::map<int, std::set<std::string>> _columnFilters;
     std::shared_ptr<std::istream> _stream;
-    std::unique_ptr<seer::task::Task> _parsingTask;
-    std::unique_ptr<seer::task::Task> _indexingTask;
+    std::shared_ptr<seer::task::Task> _parsingTask;
+    std::shared_ptr<seer::task::Task> _indexingTask;
     std::unique_ptr<seer::task::SearchingTask> _searchingTask;
     std::shared_ptr<seer::Hist> _searchHist;
     sm::Logger _smLogger;
@@ -73,17 +73,17 @@ class LogFile : public QObject, sm::IStateHandler {
         _sm.process_event(sm::FailEvent{});
     }
 
-    void subscribeToSelectionChanged(LogTableModel* oldModel, LogTableModel* newModel);
+    void subscribeToSelectionChanged(LogTableModel* model);
     void applyFilter();
     void adaptFilter();
 
 protected:
-    virtual seer::task::Task* createIndexingTask(
+    virtual std::shared_ptr<seer::task::Task> createIndexingTask(
         seer::Index* index,
         seer::FileParser* fileParser,
         seer::ILineParser* lineParser);
 
-    virtual seer::task::Task* createParsingTask(seer::FileParser* fileParser);
+    virtual std::shared_ptr<seer::task::Task> createParsingTask(seer::FileParser* fileParser);
 
 public:
     LogFile(std::unique_ptr<std::istream>&& stream,
@@ -141,7 +141,7 @@ public:
     }
 
 signals:
-    void filterRequested(FilterTableModel* model, int column);
+    void filterRequested(std::shared_ptr<FilterTableModel> model, int column);
     void stateChanged();
     void progressChanged(int progress);
 };

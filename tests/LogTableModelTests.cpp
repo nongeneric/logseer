@@ -54,29 +54,27 @@ TEST_CASE("model_row_selection") {
 
     REQUIRE( model.rowCount({}) == 6 );
 
-    auto [first, last] = model.getRowSelection();
-    REQUIRE( first == -1 );
-    REQUIRE( last == -1 );
+    REQUIRE( !model.getRowSelection().has_value() );
 
     model.setSelection(1, 0, 0);
-    std::tie(first, last) = model.getRowSelection();
-    REQUIRE( first == 1 );
-    REQUIRE( last == 1 );
+    auto selection = *model.getRowSelection();
+    REQUIRE( selection.first == 1 );
+    REQUIRE( selection.last == 1 );
 
     model.extendSelection(3, 0, 0);
-    std::tie(first, last) = model.getRowSelection();
-    REQUIRE( first == 1 );
-    REQUIRE( last == 3 );
+    selection = *model.getRowSelection();
+    REQUIRE( selection.first == 1 );
+    REQUIRE( selection.last == 3 );
 
     model.setSelection(3, 0, 0);
-    std::tie(first, last) = model.getRowSelection();
-    REQUIRE( first == 3 );
-    REQUIRE( last == 3 );
+    selection = *model.getRowSelection();
+    REQUIRE( selection.first == 3 );
+    REQUIRE( selection.last == 3 );
 
     model.extendSelection(1, 0, 0);
-    std::tie(first, last) = model.getRowSelection();
-    REQUIRE( first == 1 );
-    REQUIRE( last == 3 );
+    selection = *model.getRowSelection();
+    REQUIRE( selection.first == 1 );
+    REQUIRE( selection.last == 3 );
 }
 
 TEST_CASE("model_row_selection_extending_past_last_line") {
@@ -93,15 +91,15 @@ TEST_CASE("model_row_selection_extending_past_last_line") {
 
     model.setSelection(1, 0, 0);
     model.extendSelection(100, 0, 0);
-    auto [first, last] = model.getRowSelection();
-    REQUIRE( first == 1 );
-    REQUIRE( last == 5 );
+    auto selection = *model.getRowSelection();
+    REQUIRE( selection.first == 1 );
+    REQUIRE( selection.last == 5 );
 
     model.setSelection(3, 0, 0);
     model.extendSelection(-50, 0, 0);
-    std::tie(first, last) = model.getRowSelection();
-    REQUIRE( first == 0 );
-    REQUIRE( last == 3 );
+    selection = *model.getRowSelection();
+    REQUIRE( selection.first == 0 );
+    REQUIRE( selection.last == 3 );
 }
 
 TEST_CASE("model_row_selection_extending_without_previous_selection") {
@@ -122,18 +120,16 @@ TEST_CASE("model_row_selection_extending_without_previous_selection") {
     });
 
     model.extendSelection(100, 0, 0);
-    auto [first, last] = model.getRowSelection();
-    REQUIRE( first == -1 );
-    REQUIRE( last == -1 );
+    REQUIRE( !model.getRowSelection().has_value() );
     REQUIRE( changed == 0 );
 
     model.setSelection(1, 0, 0);
     REQUIRE( changed == 1 );
 
     model.extendSelection(100, 0, 0);
-    std::tie(first, last) = model.getRowSelection();
-    REQUIRE( first == 1 );
-    REQUIRE( last == 5 );
+    auto selection = *model.getRowSelection();
+    REQUIRE( selection.first == 1 );
+    REQUIRE( selection.last == 5 );
     REQUIRE( changed == 2 );
 }
 

@@ -19,10 +19,10 @@ class FilterDialog : public QDialog {
     QPushButton* _selectNone;
     QPushButton* _selectFound;
     QTableView* _table;
-    std::unique_ptr<FilterTableModel> _model;
+    std::shared_ptr<FilterTableModel> _model;
 
 public:
-    explicit FilterDialog(FilterTableModel* model, QWidget* parent = nullptr);
+    explicit FilterDialog(std::shared_ptr<FilterTableModel> model, QWidget* parent = nullptr);
 
 protected:
     bool event(QEvent* event) override;

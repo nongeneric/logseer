@@ -107,7 +107,7 @@ public:
     void setSelection(int row, int column, int index);
     void forceColumnSelection();
     void extendSelection(int row, int column, int index);
-    std::tuple<int, int> getRowSelection() const;
+    std::optional<RowSelection> getRowSelection() const;
     LogTableSelection getSelection() const;
 
 signals:

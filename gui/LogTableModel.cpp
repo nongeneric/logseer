@@ -49,8 +49,10 @@ void LogTableModel::extendSelection(int row, int column, int index) {
     emit selectionChanged();
 }
 
-std::tuple<int, int> LogTableModel::getRowSelection() const {
-    return {_selectedRow.left(), _selectedRow.right()};
+std::optional<RowSelection> LogTableModel::getRowSelection() const {
+    if (_selectedRow.left() == -1)
+        return {};
+    return RowSelection{_selectedRow.left(), _selectedRow.right()};
 }
 
 LogTableSelection LogTableModel::getSelection() const {

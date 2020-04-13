@@ -82,10 +82,11 @@ void LogTable::setModel(LogTableModel* model) {
     });
 
     connect(_model, &LogTableModel::selectionChanged, this, [this] {
-        auto [first, last] = _model->getRowSelection();
-        if (!_scrollArea->isVisible(first) &&
-            !_scrollArea->isVisible(last)) {
-            _scrollArea->ensureVisible(first);
+        if (auto selection = _model->getRowSelection()) {
+            if (!_scrollArea->isVisible(selection->first) &&
+                !_scrollArea->isVisible(selection->last)) {
+                _scrollArea->ensureVisible(selection->first);
+            }
         }
         _view->update();
     });

@@ -15,7 +15,7 @@ SearchingTask::SearchingTask(FileParser* fileParser,
       _regex(regex),
       _caseSensitive(caseSensitive),
       _messageOnly(messageOnly),
-      _index(new Index(*index)) {}
+      _index(std::make_shared<Index>(*index)) {}
 
 std::shared_ptr<Index> SearchingTask::index() {
     return _index;

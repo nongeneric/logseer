@@ -16,8 +16,8 @@ LogFile::LogFile(std::unique_ptr<std::istream>&& stream,
 
 void LogFile::enterParsing() {
     emit stateChanged();
-    _fileParser.reset(new seer::FileParser(_stream.get(), _lineParser.get()));
-    _parsingTask.reset(createParsingTask(_fileParser.get()));
+    _fileParser = std::make_unique<seer::FileParser>(_stream.get(), _lineParser.get());
+    _parsingTask = createParsingTask(_fileParser.get());
     _parsingTask->setStateChanged([=](auto state) {
         assert(state != TaskState::Failed);
         if (state == TaskState::Finished) {
@@ -37,9 +37,8 @@ void LogFile::interruptParsing() {
 
 void LogFile::enterIndexing() {
     emit stateChanged();
-    _index.reset(new seer::Index(_fileParser->lineCount()));
-    _indexingTask.reset(
-        createIndexingTask(_index.get(), _fileParser.get(), _lineParser.get()));
+    _index = std::make_unique<seer::Index>(_fileParser->lineCount());
+    _indexingTask = createIndexingTask(_index.get(), _fileParser.get(), _lineParser.get());
     _indexingTask->setStateChanged([this](auto state) {
         assert(state != TaskState::Failed);
         if (state == TaskState::Finished) {
@@ -82,19 +81,19 @@ void LogFile::resumeIndexing() {
 
 void LogFile::searchFromComplete(sm::SearchEvent event) {
     emit stateChanged();
-    _searchingTask.reset(new SearchingTask(_fileParser.get(),
-                                           _index.get(),
-                                           event.text,
-                                           event.regex,
-                                           event.caseSensitive,
-                                           event.messageOnly));
+    _searchingTask = std::make_unique<SearchingTask>(_fileParser.get(),
+                                                     _index.get(),
+                                                     event.text,
+                                                     event.regex,
+                                                     event.caseSensitive,
+                                                     event.messageOnly);
     _searchingTask->setStateChanged([this](auto state) {
         assert(state != TaskState::Failed);
         if (state == TaskState::Finished) {
             _dispatcher.postToUIThread([=] {
-                auto newSearchTableModel = new LogTableModel(_fileParser.get());
-                subscribeToSelectionChanged(_searchLogTableModel.get(), newSearchTableModel);
-                _searchLogTableModel.reset(newSearchTableModel);
+                auto newSearchTableModel = std::make_unique<LogTableModel>(_fileParser.get());
+                subscribeToSelectionChanged(newSearchTableModel.get());
+                _searchLogTableModel = std::move(newSearchTableModel);
                 _searchHist = _searchingTask->hist();
                 _searchIndex = _searchingTask->index();
                 _searchLogTableModel->setIndex(_searchIndex.get());
@@ -160,15 +159,13 @@ void LogFile::reloadFromParsing(sm::ReloadEvent) {
 void LogFile::reloadFromIndexing(sm::ReloadEvent) {
 }
 
-void LogFile::subscribeToSelectionChanged(LogTableModel* oldModel, LogTableModel* newModel) {
-    if (oldModel) {
-        disconnect(oldModel);
-    }
-    connect(newModel, &LogTableModel::selectionChanged, this, [=] {
-        auto [first, last] = newModel->getRowSelection();
-        auto lineOffset = newModel->lineOffset(first);
-        auto row = _logTableModel->findRow(lineOffset);
-        _logTableModel->setSelection(row, 0, 0);
+void LogFile::subscribeToSelectionChanged(LogTableModel* model) {
+    connect(model, &LogTableModel::selectionChanged, this, [=] {
+        if (auto selection = model->getRowSelection()) {
+            auto lineOffset = model->lineOffset(selection->first);
+            auto row = _logTableModel->findRow(lineOffset);
+            _logTableModel->setSelection(row, 0, 0);
+        }
     });
 }
 
@@ -197,19 +194,19 @@ void LogFile::adaptFilter() {
     }
 }
 
-seer::task::Task* LogFile::createIndexingTask(seer::Index* index,
-                                              seer::FileParser* fileParser,
-                                              seer::ILineParser* lineParser) {
-    return new IndexingTask(index, fileParser, lineParser);
+std::shared_ptr<seer::task::Task> LogFile::createIndexingTask(seer::Index* index,
+                                                              seer::FileParser* fileParser,
+                                                              seer::ILineParser* lineParser) {
+    return std::make_shared<IndexingTask>(index, fileParser, lineParser);
 }
 
-seer::task::Task* LogFile::createParsingTask(seer::FileParser* fileParser) {
-    return new ParsingTask(fileParser);
+std::shared_ptr<seer::task::Task> LogFile::createParsingTask(seer::FileParser* fileParser) {
+    return std::make_shared<ParsingTask>(fileParser);
 }
 
 LogTableModel* LogFile::logTableModel() {
     if (!_logTableModel) {
-        _logTableModel.reset(new LogTableModel(_fileParser.get()));
+        _logTableModel = std::make_unique<LogTableModel>(_fileParser.get());
     }
     return _logTableModel.get();
 }
@@ -265,7 +262,7 @@ void LogFile::requestFilter(int column) {
         return;
     if (!_lineParser->getColumnFormats().at(column - 1).indexed)
         return;
-    auto filterModel = new FilterTableModel(_index->getValues(column - 1));
+    auto filterModel = std::make_shared<FilterTableModel>(_index->getValues(column - 1));
     emit filterRequested(filterModel, column);
 }
 

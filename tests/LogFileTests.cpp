@@ -18,91 +18,91 @@ using namespace gui;
 
 namespace {
 
-    QApplication* qapp() {
-        static int count = 0;
-        static auto app = std::make_unique<QApplication>(count, nullptr);
-        return app.get();
+QApplication* qapp() {
+    static int count = 0;
+    static auto app = std::make_unique<QApplication>(count, nullptr);
+    return app.get();
+}
+
+class TestTask : public task::Task {
+    std::mutex _m;
+    std::condition_variable _cv;
+    bool _proceed = false;
+
+protected:
+    void body() override {
+        auto lock = std::unique_lock(_m);
+        auto ms = std::chrono::milliseconds(1);
+        while (!_cv.wait_for(lock, ms, [=] { return _proceed; })) {
+            if (isStopRequested())
+                return;
+            reportProgress(0);
+        }
+        testBody();
     }
 
-    class TestTask : public task::Task {
-        std::mutex _m;
-        std::condition_variable _cv;
-        bool _proceed = false;
+    virtual void testBody() = 0;
 
-    protected:
-        void body() override {
-            auto lock = std::unique_lock(_m);
-            auto ms = std::chrono::milliseconds(1);
-            while (!_cv.wait_for(lock, ms, [=] { return _proceed; })) {
-                if (isStopRequested())
-                    return;
-                reportProgress(0);
-            }
-            testBody();
-        }
+public:
+    TestTask() {
+        setStateChanged([=] (auto state) {
+            this->state = state;
+        });
+    }
 
-        virtual void testBody() = 0;
+    void proceed() {
+        auto lock = std::unique_lock(_m);
+        _proceed = true;
+        _cv.notify_one();
+    }
 
-    public:
-        TestTask() {
-            setStateChanged([=] (auto state) {
-                this->state = state;
-            });
-        }
+    std::atomic<task::TaskState> state = task::TaskState::Idle;
+};
 
-        void proceed() {
-            auto lock = std::unique_lock(_m);
-            _proceed = true;
-            _cv.notify_one();
-        }
+class TestParsingTask : public TestTask {
+    FileParser* _fileParser;
 
-        std::atomic<task::TaskState> state = task::TaskState::Idle;
-    };
+protected:
+    void testBody() override {
+        _fileParser->index();
+    }
 
-    class TestParsingTask : public TestTask {
-        FileParser* _fileParser;
+public:
+    TestParsingTask(FileParser* fileParser) : _fileParser(fileParser) {}
+};
 
-    protected:
-        void testBody() override {
-            _fileParser->index();
-        }
+class TestIndexingTask : public TestTask {
+    Index* _index;
+    FileParser* _fileParser;
+    ILineParser* _lineParser;
 
-    public:
-        TestParsingTask(FileParser* fileParser) : _fileParser(fileParser) {}
-    };
+protected:
+    void testBody() override {
+        _index->index(_fileParser, _lineParser, [] { return false; });
+    }
 
-    class TestIndexingTask : public TestTask {
-        Index* _index;
-        FileParser* _fileParser;
-        ILineParser* _lineParser;
+public:
+    TestIndexingTask(Index* index, FileParser* fileParser, ILineParser* lineParser)
+        : _index(index), _fileParser(fileParser), _lineParser(lineParser) {}
+};
 
-    protected:
-        void testBody() override {
-            _index->index(_fileParser, _lineParser, [] { return false; });
-        }
+class TestLogFile : public LogFile {
 
-    public:
-        TestIndexingTask(Index* index, FileParser* fileParser, ILineParser* lineParser)
-            : _index(index), _fileParser(fileParser), _lineParser(lineParser) {}
-    };
+protected:
+    std::shared_ptr<task::Task> createIndexingTask(Index *index, FileParser *fileParser, ILineParser *lineParser) override {
+        return indexingTask = std::make_shared<TestIndexingTask>(index, fileParser, lineParser);
+    }
 
-    class TestLogFile : public LogFile {
+    std::shared_ptr<task::Task> createParsingTask(FileParser* fileParser) override {
+        return parsingTask = std::make_shared<TestParsingTask>(fileParser);
+    }
 
-    protected:
-        task::Task *createIndexingTask(Index *index, FileParser *fileParser, ILineParser *lineParser) override {
-            return indexingTask = new TestIndexingTask(index, fileParser, lineParser);
-        }
+public:
+    using LogFile::LogFile;
 
-        task::Task *createParsingTask(FileParser* fileParser) override {
-            return parsingTask = new TestParsingTask(fileParser);
-        }
-
-    public:
-        using LogFile::LogFile;
-
-        TestParsingTask* parsingTask = nullptr;
-        TestIndexingTask* indexingTask = nullptr;
-    };
+    std::shared_ptr<TestParsingTask> parsingTask = nullptr;
+    std::shared_ptr<TestIndexingTask> indexingTask = nullptr;
+};
 
 } // namespace
 
@@ -372,9 +372,7 @@ TEST_CASE("log_file_search_basic") {
     searchModel->setSelection(0, 0, 0);
 
     file.setColumnFilter(2, {"INFO"});
-    auto [first, last] = model->getRowSelection();
-    REQUIRE( first == -1 );
-    REQUIRE( last == -1 );
+    REQUIRE( !model->getRowSelection().has_value() );
 
     // 10 INFO CORE message 1
     // 15 INFO SUB message 2
@@ -384,9 +382,7 @@ TEST_CASE("log_file_search_basic") {
 
     file.setColumnFilter(2, {});
     searchModel->setSelection(0, 0, 0);
-    std::tie(first, last) = model->getRowSelection();
-    REQUIRE( first == -1 );
-    REQUIRE( last == -1 );
+    REQUIRE( !model->getRowSelection().has_value() );
 }
 
 TEST_CASE("log_file_search_case") {

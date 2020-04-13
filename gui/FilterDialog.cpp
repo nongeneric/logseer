@@ -7,7 +7,7 @@
 
 namespace gui {
 
-FilterDialog::FilterDialog(FilterTableModel* model, QWidget* parent)
+FilterDialog::FilterDialog(std::shared_ptr<FilterTableModel> model, QWidget* parent)
     : QDialog(parent), _model(model)
 {
     auto vbox = new QVBoxLayout(this);
@@ -18,7 +18,7 @@ FilterDialog::FilterDialog(FilterTableModel* model, QWidget* parent)
     _selectFound = new QPushButton(this);
     _table = new QTableView(this);
 
-    _table->setModel(model);
+    _table->setModel(model.get());
     _table->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     _table->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
     _table->setSelectionBehavior(QAbstractItemView::SelectRows);

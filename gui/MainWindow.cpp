@@ -403,7 +403,7 @@ void MainWindow::openLog(std::string path, std::string parser) {
         &LogFile::filterRequested,
         this,
         [file = file.get(), this](auto filterModel, int column) {
-            connect(filterModel, &FilterTableModel::checkedChanged, this, [=] {
+            connect(filterModel.get(), &FilterTableModel::checkedChanged, this, [=] {
                 file->setColumnFilter(column, filterModel->checkedValues());
             });
             _filterDialog = new FilterDialog(filterModel, this);

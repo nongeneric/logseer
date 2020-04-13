@@ -288,9 +288,9 @@ void Index::filter(const std::vector<ColumnFilter>& filters) {
 
     log_info("filtering complete");
 
-    auto iewah = new IndexedEwah(1024);
+    auto iewah = std::make_shared<IndexedEwah>(1024);
     iewah->init(_filter);
-    _lineMap.reset(iewah);
+    _lineMap = std::move(iewah);
 
     log_info("building lineMap complete");
 }
@@ -306,7 +306,7 @@ void Index::search(FileParser* fileParser,
 {
     std::string line;
     auto searcher = createSearcher(QString::fromStdString(text), regex, caseSensitive);
-    auto lineMap = new RandomBitArray(1024);
+    auto lineMap = std::make_shared<RandomBitArray>(1024);
     std::vector<std::string> columns;
     auto add = [&] (auto index, auto histIndex, auto histSize) {
         fileParser->readLine(index, line);
@@ -326,7 +326,7 @@ void Index::search(FileParser* fileParser,
 
     std::shared_ptr<int> guard(nullptr, [&](auto) {
         hist.freeze();
-        _lineMap.reset(lineMap);
+        _lineMap = lineMap;
     });
 
     if (_filtered) {
