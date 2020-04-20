@@ -6,6 +6,12 @@
 
 class QMenu;
 
+namespace gui {
+
+class ColumnSelection;
+
+}
+
 namespace gui::grid {
 
 class LogTable;
@@ -37,15 +43,16 @@ public:
                             bool regex,
                             bool caseSensitive,
                             bool messageOnly);
+    QString getSelectionText(const ColumnSelection& columnSelection);
 
 signals:
 
 public slots:
 
 protected:
-    void paintEvent(QPaintEvent *event) override;
-    void mousePressEvent(QMouseEvent *event) override;
-    void mouseMoveEvent(QMouseEvent *event) override;
+    void paintEvent(QPaintEvent* event) override;
+    void mousePressEvent(QMouseEvent* event) override;
+    void mouseMoveEvent(QMouseEvent* event) override;
     void mouseDoubleClickEvent(QMouseEvent* event) override;
 };
 

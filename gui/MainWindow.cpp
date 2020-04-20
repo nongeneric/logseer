@@ -284,7 +284,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
 
     setCentralWidget(centralWidget);
     setAcceptDrops(true);
-    setWindowTitle(QString("logseer %0%1").arg(g_version).arg(g_debug ? " [DEBUG]" : ""));
+    setWindowTitle(QString("logseer%0").arg(g_debug ? " [DEBUG]" : ""));
     resize(800, 600);
     updateTabWidgetVisibility();
 

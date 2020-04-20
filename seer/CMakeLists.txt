@@ -3,9 +3,6 @@ project(seer)
 find_package(Qt5Core)
 find_library(PCRE2 pcre2-8)
 find_library(PCRE2_16 pcre2-16)
-find_library(FMT fmt)
-
-add_definitions(-DSPDLOG_FMT_EXTERNAL)
 
 add_library(${PROJECT_NAME} STATIC
     ILineParser.h
@@ -41,12 +38,18 @@ add_library(${PROJECT_NAME} STATIC
     task/SearchingTask.cpp
 )
 
-target_link_libraries(${PROJECT_NAME}
-    PUBLIC
+set(LIBS PUBLIC
     Qt5::Core
     ${PCRE2}
     ${PCRE2_16}
-    ${FMT}
     pthread
     ${Boost_LIBRARIES}
 )
+
+if(NOT WIN32)
+    find_library(FMT fmt)
+    add_definitions(-DSPDLOG_FMT_EXTERNAL)
+    list (APPEND LIBS ${FMT})
+endif()
+
+target_link_libraries(${PROJECT_NAME} ${LIBS})

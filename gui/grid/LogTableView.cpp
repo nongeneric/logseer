@@ -32,6 +32,12 @@ void LogTableView::paintRow(QPainter* painter, int row, int y) {
         painter->fillRect(r, b);
     }
 
+    std::unique_ptr<seer::ISearcher> selectionSearcher;
+    if (columnSelection) {
+        auto text = getSelectionText(*columnSelection);
+        selectionSearcher = seer::createSearcher(text, false, false);
+    }
+
     const int regularGrapheme = 0;
     const int selectedGrapheme = 1;
     const int highlightedGrapheme = 2;
@@ -70,17 +76,22 @@ void LogTableView::paintRow(QPainter* painter, int row, int y) {
         }
 
         auto isMessageColumn = column == columns - 1;
-        if (_searcher && (isMessageColumn || !_messageOnlyHighlight)) {
+        bool shouldApplySearcher =
+            (_searcher && (isMessageColumn || !_messageOnlyHighlight)) || selectionSearcher;
+        if (shouldApplySearcher) {
+            auto searcher = selectionSearcher ? selectionSearcher.get() : _searcher.get();
             int currentIndex = 0;
             for (;;) {
-                auto [first, len] = _searcher->search(text, currentIndex);
+                auto [first, len] = searcher->search(text, currentIndex);
                 if (first == -1 || len == 0)
                     break;
 
                 for (int i = first; i < first + len; ++i) {
                     auto [left, right] = gmap.indexToGraphemeRange(i);
                     while (left <= right) {
-                        graphemes.at(left) |= highlightedGrapheme;
+                        if (rowSelection || !(graphemes.at(left) & selectedGrapheme)) {
+                            graphemes.at(left) |= highlightedGrapheme;
+                        }
                         ++left;
                     }
                 }
@@ -178,16 +189,8 @@ void LogTableView::copyToClipboard(bool raw) {
         text.resize(text.size() - 1);
         QGuiApplication::clipboard()->setText(text);
     } else if (columnSelection) {
-        auto index = model->index(columnSelection->row, columnSelection->column);
-        auto text = model->data(index, Qt::DisplayRole).toString();
-        GraphemeMap gmap(text);
-        auto [left, right] =
-            gmap.toVisibleRange(columnSelection->first,
-                                columnSelection->last,
-                                _selectWords ? VisibleRangeType::Word : VisibleRangeType::Grapheme);
-        auto ileft = std::get<0>(gmap.graphemeToIndexRange(left));
-        auto iright = std::get<1>(gmap.graphemeToIndexRange(right));
-        QGuiApplication::clipboard()->setText(text.mid(ileft, iright - ileft + 1));
+        auto text = getSelectionText(*columnSelection);
+        QGuiApplication::clipboard()->setText(text);
     }
 }
 
@@ -385,6 +388,20 @@ void LogTableView::setSearchHighlight(std::string text,
     auto qText = QString::fromStdString(text);
     _searcher = seer::createSearcher(qText, regex, caseSensitive);
     update();
+}
+
+QString LogTableView::getSelectionText(const ColumnSelection& columnSelection) {
+    auto model = _table->model();
+    auto index = model->index(columnSelection.row, columnSelection.column);
+    auto text = model->data(index, Qt::DisplayRole).toString();
+    GraphemeMap gmap(text);
+    auto [left, right] =
+        gmap.toVisibleRange(columnSelection.first,
+                            columnSelection.last,
+                            _selectWords ? VisibleRangeType::Word : VisibleRangeType::Grapheme);
+    auto ileft = std::get<0>(gmap.graphemeToIndexRange(left));
+    auto iright = std::get<1>(gmap.graphemeToIndexRange(right));
+    return text.mid(ileft, iright - ileft + 1);
 }
 
 } // namespace gui::grid
