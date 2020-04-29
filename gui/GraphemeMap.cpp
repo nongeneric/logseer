@@ -1,4 +1,5 @@
 #include "GraphemeMap.h"
+
 #include <cmath>
 
 #include <QTextBoundaryFinder>
@@ -92,13 +93,13 @@ int GraphemeMap::findGrapheme(float position) const {
     if (_graphemePositions.empty())
         return -1;
 
-    for (int i = 0; i < (int)_graphemePositions.size() - 1; ++i) {
-        auto left = _graphemePositions[i];
-        auto right = _graphemePositions[i + 1];
-        if (left <= position && position < right)
-            return i;
-    }
-    return _graphemePositions.back();
+    auto it = std::lower_bound(begin(_graphemePositions), end(_graphemePositions), position);
+    if (it == begin(_graphemePositions))
+        return 0;
+    if (it == end(_graphemePositions))
+        return _graphemePositions.size() - 1;
+
+    return std::distance(begin(_graphemePositions), it) - 1;
 }
 
 int GraphemeMap::graphemeSize() const {

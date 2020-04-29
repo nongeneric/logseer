@@ -57,6 +57,10 @@ public:
         }
         return false;
     }
+
+    void setCapacity(int capacity) {
+        _capacity = capacity;
+    }
 };
 
 }

@@ -50,7 +50,7 @@ class LogTableView : public QWidget {
     LruCache<std::tuple<int, int>, CacheEntry, TupleHash> _gmapCache;
 
     void paintRow(QPainter* painter, int row, int y);
-    LogicalPosition getLogicalPosition(int x, int y) const;
+    LogicalPosition getLogicalPosition(int x, int y);
     void copyToClipboard(bool raw);
     void addColumnExcludeActions(int column, int row, QMenu& menu);
     void addClearAllFiltersAction(QMenu& menu);

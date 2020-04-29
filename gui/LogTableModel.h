@@ -52,8 +52,11 @@ public:
         _last = index;
     }
 
-    void extend(int index) {
+    bool extend(int index) {
+        if (_last == index)
+            return false;
         _last = index;
+        return true;
     }
 
     int left() const {

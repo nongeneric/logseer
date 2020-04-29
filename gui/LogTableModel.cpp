@@ -33,7 +33,8 @@ bool LogTableModel::extendSelection(int row, int column, int index) {
     auto sameColumn = _selectedColumn == column;
     auto sameChar = _selectedChar.left() == index && _selectedChar.right() == index;
 
-    _selectedRow.extend(row);
+    auto rowChanged = _selectedRow.extend(row);
+    bool charChanged = false;
 
     if (_selectedRow.size() == 1 && _selectedRow.original() == row) {
         if (sameColumn && sameChar)
@@ -43,9 +44,13 @@ bool LogTableModel::extendSelection(int row, int column, int index) {
         } else if (column > _selectedColumn) {
             index = data(this->index(row, _selectedColumn), Qt::DisplayRole).toString().size() - 1;
         }
-        _selectedChar.extend(index);
+        charChanged = _selectedChar.extend(index);
     }
     _selectionExtended = true;
+
+    if (!rowChanged && !charChanged)
+        return false;
+
     emit selectionChanged();
     return true;
 }
