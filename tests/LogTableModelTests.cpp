@@ -172,6 +172,16 @@ TEST_CASE("model_selection") {
     }
 
     SECTION("extending past the end of column") {
+        model.extendSelection(1, 2, 100); // 15 INFO SUB * message 2
+
+        auto columnSelection = std::get<ColumnSelection>(model.getSelection());
+        REQUIRE( columnSelection.row == 1 );
+        REQUIRE( columnSelection.column == 2 );
+        REQUIRE( columnSelection.first == 1 );
+        REQUIRE( columnSelection.last == 100 );
+    }
+
+    SECTION("extending to the next column") {
         model.extendSelection(1, 3, 2); // 15 INFO SU*B message 2
 
         auto columnSelection = std::get<ColumnSelection>(model.getSelection());

@@ -18,7 +18,7 @@ public:
 };
 
 inline std::shared_ptr<ILineParser> resolveByName(ILineParserRepository* repository, std::string name) {
-    for (auto& parser : repository->parsers() | ranges::view::values) {
+    for (auto& parser : repository->parsers() | ranges::views::values) {
         if (parser->name() == name)
             return parser;
     }

@@ -135,7 +135,7 @@ void MainWindow::createMenu() {
         auto action = new QAction(QString::fromStdString(parser->name()), this);
         action->setCheckable(true);
         //action->setToolTip(QString::fromStdString(parser->description()));
-        connect(action, &QAction::triggered, this, [=] {
+        connect(action, &QAction::triggered, this, [=, parser = parser] {
             auto index = _tabWidget->currentIndex();
             auto& log = _logs[index];
             auto stream = std::make_shared<std::ifstream>(log.path, std::ios_base::binary);

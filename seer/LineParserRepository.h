@@ -13,7 +13,7 @@ public:
     LineParserRepository(bool initializeDefaultParser = true);
     std::optional<std::string> addRegexParser(std::string name, int priority, std::string json);
     std::shared_ptr<ILineParser> resolve(std::istream &stream) override;
-    const ParserMap& parsers() const;
+    const ParserMap& parsers() const override;
 };
 
 } // namespace seer

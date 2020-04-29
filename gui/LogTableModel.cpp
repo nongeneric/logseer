@@ -25,9 +25,9 @@ void LogTableModel::forceColumnSelection() {
     _selectionExtended = true;
 }
 
-void LogTableModel::extendSelection(int row, int column, int index) {
+bool LogTableModel::extendSelection(int row, int column, int index) {
     if (_selectedRow.left() == -1)
-        return;
+        return false;
 
     row = std::clamp(row, 0, rowCount({}) - 1);
     auto sameColumn = _selectedColumn == column;
@@ -37,7 +37,7 @@ void LogTableModel::extendSelection(int row, int column, int index) {
 
     if (_selectedRow.size() == 1 && _selectedRow.original() == row) {
         if (sameColumn && sameChar)
-            return;
+            return false;
         if (column < _selectedColumn) {
             index = 0;
         } else if (column > _selectedColumn) {
@@ -47,6 +47,7 @@ void LogTableModel::extendSelection(int row, int column, int index) {
     }
     _selectionExtended = true;
     emit selectionChanged();
+    return true;
 }
 
 std::optional<RowSelection> LogTableModel::getRowSelection() const {
@@ -100,7 +101,7 @@ void LogTableModel::copyRawLines(uint64_t begin, uint64_t end, LogTableModel::Li
 }
 
 size_t graphemeLength(const std::string& str) {
-    GraphemeMap gmap(QString::fromStdString(str));
+    GraphemeMap gmap(QString::fromStdString(str), nullptr);
     return gmap.graphemeSize();
 }
 

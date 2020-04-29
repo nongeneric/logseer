@@ -7,24 +7,27 @@
 
 namespace gui {
 
-enum class VisibleRangeType {
-    Grapheme,
-    Word
+struct IFontMetrics {
+    virtual ~IFontMetrics() = default;
+    virtual float width(const QString& str) = 0;
 };
 
 class GraphemeMap {
     std::vector<int> _indexToGrapheme;
     std::vector<int> _graphemeToIndex;
     std::vector<int> _graphemeWords;
+    std::vector<float> _graphemePositions;
     QString _line;
 
 public:
-    GraphemeMap(QString line);
-    std::tuple<int, int> toVisibleRange(int left, int right, VisibleRangeType type = VisibleRangeType::Grapheme);
+    GraphemeMap(QString line, IFontMetrics* metrics);
+    std::tuple<int, int> extendToWordBoundary(int left, int right) const;
+    float getPosition(int grapheme) const;
+    int findGrapheme(float position) const;
     int graphemeSize() const;
-    std::tuple<int, int> indexToGraphemeRange(int index) const;
+    int indexToGrapheme(int index) const;
     std::tuple<int, int> graphemeToIndexRange(int grapheme) const;
-    QString graphemeRangeToString(int left, int right) const;
+    const QString& line() const;
 };
 
 } // namespace gui

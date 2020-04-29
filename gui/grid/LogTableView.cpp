@@ -17,6 +17,27 @@
 
 namespace gui::grid {
 
+class GmapFontMetrics : public IFontMetrics {
+    QFontMetricsF _fm;
+    std::unordered_map<std::string, float> _cache;
+
+public:
+    GmapFontMetrics(QFontMetricsF fm) : _fm(fm) {}
+
+    float width(const QString& str) override {
+        // rely on short string optimization
+        auto byteLen = str.size() * sizeof(QChar);
+        auto ptr = reinterpret_cast<const char*>(str.data());
+        std::string s(ptr, ptr + byteLen);
+
+        auto it = _cache.find(s);
+        if (it == end(_cache)) {
+            it = _cache.emplace(s, _fm.horizontalAdvance(str)).first;
+        }
+        return it->second;
+    }
+};
+
 void LogTableView::paintRow(QPainter* painter, int row, int y) {
     auto model = _table->model();
     auto columns = _table->header()->count();
@@ -44,6 +65,9 @@ void LogTableView::paintRow(QPainter* painter, int row, int y) {
 
     std::vector<int> graphemes;
 
+    auto region = visibleRegion();
+    QString segment;
+
     for (auto column = 0; column < columns; ++column) {
         auto x = _table->header()->sectionPosition(column);
         assert(row < model->rowCount({}));
@@ -51,27 +75,27 @@ void LogTableView::paintRow(QPainter* painter, int row, int y) {
         auto index = model->index(row, column);
         assert(index.isValid());
 
-        auto text = model->data(index, Qt::DisplayRole).toString();
+        auto gmap = getGraphemeMap(row, column);
+        if (!gmap->graphemeSize())
+            return;
 
-        if (!text.size())
-            continue;
-
-        GraphemeMap gmap(text);
+        const auto& text = gmap->line();
 
         graphemes.clear();
-        graphemes.resize(gmap.graphemeSize());
+        graphemes.resize(gmap->graphemeSize());
 
         if (isRowSelected) {
             ranges::fill(graphemes, selectedGrapheme);
         } else if (columnSelection && columnSelection->row == row &&
                    columnSelection->column == column) {
             assert(columnSelection->first >= 0);
-            auto first = std::min(columnSelection->first, gmap.graphemeSize() - 1);
-            auto last = std::min(columnSelection->last, gmap.graphemeSize() - 1);
+            auto first = std::min(columnSelection->first, gmap->graphemeSize() - 1);
+            auto last = std::min(columnSelection->last, gmap->graphemeSize() - 1);
             auto it = begin(graphemes);
             assert(first <= last);
-            std::tie(first, last) = gmap.toVisibleRange(
-                first, last, _selectWords ? VisibleRangeType::Word : VisibleRangeType::Grapheme);
+            if (_selectWords) {
+                std::tie(first, last) = gmap->extendToWordBoundary(first, last);
+            }
             ranges::fill(it + first, it + last + 1, selectedGrapheme);
         }
 
@@ -87,24 +111,23 @@ void LogTableView::paintRow(QPainter* painter, int row, int y) {
                     break;
 
                 for (int i = first; i < first + len; ++i) {
-                    auto [left, right] = gmap.indexToGraphemeRange(i);
-                    while (left <= right) {
-                        if (rowSelection || !(graphemes.at(left) & selectedGrapheme)) {
-                            graphemes.at(left) |= highlightedGrapheme;
-                        }
-                        ++left;
+                    auto grapheme = gmap->indexToGrapheme(i);
+                    if (rowSelection || !(graphemes.at(grapheme) & selectedGrapheme)) {
+                        graphemes.at(grapheme) |= highlightedGrapheme;
                     }
                 }
                 currentIndex = first + len;
             }
         }
 
-        foreachRange(graphemes, [&] (int start, int len) {
+        auto defaultForeground = _gmapCache.lookup({row, column})->foreground;
+
+        foreachRange(graphemes, [&](int start, int len) {
             QColor foreground;
             QBrush background;
             switch (graphemes[start]) {
             case regularGrapheme:
-                foreground = palette().color(QPalette::Text);
+                foreground = defaultForeground;
                 background = palette().color(QPalette::Base);
                 break;
             case selectedGrapheme:
@@ -122,8 +145,8 @@ void LogTableView::paintRow(QPainter* painter, int row, int y) {
             }
 
             QRectF r;
-            r.setLeft(x + start * _charWidth);
-            r.setRight(x + (start + len) * _charWidth);
+            r.setLeft(x + gmap->getPosition(start));
+            r.setRight(x + gmap->getPosition(start + len));
             r.setTop(y);
             r.setBottom(y + _rowHeight);
             painter->fillRect(r, background);
@@ -131,35 +154,52 @@ void LogTableView::paintRow(QPainter* painter, int row, int y) {
             QTextOption option;
             option.setWrapMode(QTextOption::NoWrap);
             painter->setPen(foreground);
-            auto textWithoutTabs = gmap.graphemeRangeToString(start, start + len - 1);
-            painter->drawText(r, textWithoutTabs, option);
+
+            for (int i = start; i < start + len; ++i) {
+                r.setLeft(x + gmap->getPosition(i));
+                r.setRight(x + gmap->getPosition(i + 1));
+
+                if (!region.contains(r.toRect()))
+                    continue;
+
+                auto [ileft, iright] = gmap->graphemeToIndexRange(i);
+                auto segmentLen = iright - ileft + 1;
+                segment.resize(segmentLen);
+                std::copy(text.begin() + ileft, text.begin() + iright + 1, segment.begin());
+                painter->drawText(r, segment, option);
+            }
         });
     }
 }
 
-int LogTableView::getRow(int y) {
+LogicalPosition LogTableView::getLogicalPosition(int x, int y) const {
     auto model = _table->model();
     if (!model)
-        return -1;
+        return {};
+
+    LogicalPosition position;
     y = y + _table->scrollArea()->y() - _table->header()->height();
     auto row = y / _rowHeight + _firstRow;
     if (row >= model->rowCount({}))
-        return -1;
-    return row;
-}
+        return position;
 
-std::tuple<int, int> LogTableView::getColumn(int x) {
+    position.row = row;
+
     auto columns = _table->header()->count();
     for (int c = 0; c < columns; ++c) {
         auto left = _table->header()->sectionPosition(c);
         auto right = c == columns - 1 ? std::numeric_limits<int>::max()
                                       : _table->header()->sectionPosition(c + 1);
         if (left <= x && x < right) {
-            return {c, (x - left) / _charWidth};
+            auto text = model->data(model->index(row, c), Qt::DisplayRole).toString();
+            GraphemeMap gmap(text, _gmapFontMetrics.get());
+            position.column = c;
+            position.grapheme = gmap.findGrapheme(x - left);
+            return position;
         }
     }
-    assert(false);
-    return {0,0};
+
+    return position;
 }
 
 void LogTableView::copyToClipboard(bool raw) {
@@ -246,13 +286,30 @@ void LogTableView::addClearAllFiltersAction(QMenu& menu) {
     menu.addAction(clearFiltersAction);
 }
 
-LogTableView::LogTableView(QFont font, LogTable* parent) : QWidget(parent), _table(parent) {
+std::shared_ptr<GraphemeMap> LogTableView::getGraphemeMap(int row, int column) {
+    auto model = _table->model();
+    assert(model);
+    auto index = model->index(row, column);
+    assert(index.isValid());
+    if (auto entry = _gmapCache.lookup({row, column}))
+        return entry->gmap;
+    auto text = model->data(index, Qt::DisplayRole).toString();
+    auto foreground = model->data(index, Qt::ForegroundRole).value<QColor>();
+    auto gmap = std::make_shared<GraphemeMap>(text, _gmapFontMetrics.get());
+    _gmapCache.insert({row, column}, {gmap, foreground});
+    return gmap;
+}
+
+LogTableView::LogTableView(QFont font, LogTable* parent)
+    : QWidget(parent), _table(parent), _gmapCache(200)
+{
     setFocusPolicy(Qt::ClickFocus);
     setFont(font);
     QFontMetricsF fm(font);
     _rowHeight = fm.height();
-    _charWidth = fm.width(' ');
     setMouseTracking(true);
+
+    _gmapFontMetrics = std::make_unique<GmapFontMetrics>(fm);
 
     auto copyAction = new QAction("Copy selected", _table->scrollArea());
     copyAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_C));
@@ -274,11 +331,10 @@ LogTableView::LogTableView(QFont font, LogTable* parent) : QWidget(parent), _tab
 
         QMenu menu(this);
 
-        auto row = getRow(pos.y());
-        auto [column, _] = getColumn(pos.x());
+        auto position = getLogicalPosition(pos.x(), pos.y());
         auto columnCount = model->columnCount({});
-        if (row != -1 && 1 <= column && column < columnCount - 1) {
-            addColumnExcludeActions(column, row, menu);
+        if (position.row != -1 && 1 <= position.column && position.column < columnCount - 1) {
+            addColumnExcludeActions(position.column, position.row, menu);
         }
 
         menu.addSeparator();
@@ -325,15 +381,12 @@ void LogTableView::paintEvent(QPaintEvent* event) {
 void LogTableView::mousePressEvent(QMouseEvent *event) {
     if (event->button() != Qt::LeftButton)
         return;
-    auto row = getRow(event->y());
-    if (row == -1)
-        return;
-    auto [column, index] = getColumn(event->x());
-    if (row < _table->model()->rowCount({})) {
+    auto position = getLogicalPosition(event->x(), event->y());
+    if (position.row != -1 && position.row < _table->model()->rowCount({})) {
         if (QApplication::keyboardModifiers() & Qt::ShiftModifier) {
-            _table->model()->extendSelection(row, column, index);
+            _table->model()->extendSelection(position.row, position.column, position.grapheme);
         } else {
-            _table->model()->setSelection(row, column, index);
+            _table->model()->setSelection(position.row, position.column, position.grapheme);
             _selectWords = false;
         }
     }
@@ -342,28 +395,23 @@ void LogTableView::mousePressEvent(QMouseEvent *event) {
 void LogTableView::mouseMoveEvent(QMouseEvent* event) {
     if (!(event->buttons() & Qt::LeftButton))
         return;
-    auto row = getRow(event->y());
-    if (row == -1)
+    auto position = getLogicalPosition(event->x(), event->y());
+    if (position.column == -1)
         return;
-    auto x = event->x();
-    if (x < 0)
-        return;
-    auto [column, index] = getColumn(x);
-    _table->model()->extendSelection(row, column, index);
-    update();
+    if (_table->model()->extendSelection(position.row, position.column, position.grapheme)) {
+        update();
+    }
 }
 
 void LogTableView::mouseDoubleClickEvent(QMouseEvent* event) {
+    auto p = getLogicalPosition(event->x(), event->y());
+    if (p.row == -1)
+        return;
     auto model = _table->model();
-    if (!model)
+    assert(model);
+    if (!model->data(model->index(p.row, p.column), Qt::DisplayRole).toString().size())
         return;
-    auto row = getRow(event->y());
-    if (row == -1)
-        return;
-    auto [column, index] = getColumn(event->x());
-    if (!model->data(model->index(row, column), Qt::DisplayRole).toString().size())
-        return;
-    _table->model()->forceColumnSelection();
+    model->forceColumnSelection();
     _selectWords = true;
     update();
 }
@@ -377,7 +425,8 @@ int LogTableView::visibleRows() {
 }
 
 float LogTableView::charWidth() const {
-    return _charWidth;
+    QFontMetrics fm(font());
+    return fm.horizontalAdvance(" ");
 }
 
 void LogTableView::setSearchHighlight(std::string text,
@@ -391,17 +440,24 @@ void LogTableView::setSearchHighlight(std::string text,
 }
 
 QString LogTableView::getSelectionText(const ColumnSelection& columnSelection) {
-    auto model = _table->model();
-    auto index = model->index(columnSelection.row, columnSelection.column);
-    auto text = model->data(index, Qt::DisplayRole).toString();
-    GraphemeMap gmap(text);
-    auto [left, right] =
-        gmap.toVisibleRange(columnSelection.first,
-                            columnSelection.last,
-                            _selectWords ? VisibleRangeType::Word : VisibleRangeType::Grapheme);
-    auto ileft = std::get<0>(gmap.graphemeToIndexRange(left));
-    auto iright = std::get<1>(gmap.graphemeToIndexRange(right));
-    return text.mid(ileft, iright - ileft + 1);
+    auto gmap = getGraphemeMap(columnSelection.row, columnSelection.column);
+
+    auto left = columnSelection.first;
+    auto right = columnSelection.last;
+
+    if (_selectWords) {
+        std::tie(left, right) = gmap->extendToWordBoundary(left, right);
+    }
+
+    if (left == -1 || right == -1)
+        return "";
+
+    left = std::min(left, gmap->graphemeSize() - 1);
+    right = std::min(right, gmap->graphemeSize() - 1);
+
+    auto ileft = std::get<0>(gmap->graphemeToIndexRange(left));
+    auto iright = std::get<1>(gmap->graphemeToIndexRange(right));
+    return gmap->line().mid(ileft, iright - ileft + 1);
 }
 
 } // namespace gui::grid

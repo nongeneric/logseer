@@ -30,9 +30,8 @@ void LogTable::setColumnWidth(int column, int width) {
     if (isIndexed) {
         headerWidth += _header->style()->pixelMetric(QStyle::PM_SmallIconSize);
     }
-    auto pxWidth = static_cast<int>(_view->charWidth() * width);
-    pxWidth = std::max(static_cast<int>(headerWidth), pxWidth);
-    pxWidth = std::min(pxWidth, _header->maximumSectionSize());
+    auto pxWidth = static_cast<int>(_view->charWidth() * width); // TODO:!
+    pxWidth = std::clamp<int>(pxWidth, headerWidth, _header->maximumSectionSize());
     _header->resizeSection(column, pxWidth);
 }
 
