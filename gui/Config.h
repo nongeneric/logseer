@@ -60,7 +60,6 @@ class Config {
     SessionConfig _sessionConfig;
     std::shared_ptr<IFileSystem> _fileSystem;
 
-    boost::filesystem::path getConfigDirectory();
     boost::filesystem::path getHomeDirectory();
     boost::filesystem::path getConfigJsonPath();
     void initRegexConfigs();
@@ -75,6 +74,7 @@ public:
     void save(FontConfig const& config);
     void save(SearchConfig const& config);
     void save(SessionConfig const& config);
+    boost::filesystem::path getConfigDirectory();
 };
 
 extern Config g_Config;

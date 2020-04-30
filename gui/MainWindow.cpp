@@ -251,10 +251,16 @@ void MainWindow::clearFilters() {
 void MainWindow::showAbout() {
     auto debugBuild = g_debug ? bformat(" [DEBUG]") : "";
     auto title = bformat("About %s", g_name);
-    auto text = bformat("<b>%s %s%s</b><p>"
-                        "Home Page: <a href=\"https://rcebits.com/logseer/\">https://rcebits.com/logseer/</a><p>"
-                        "GitHub: <a href=\"https://github.com/nongeneric/logseer\">https://github.com/nongeneric/logseer</a>",
-                        g_name, g_version, debugBuild);
+    auto text = bformat("<b>%1% %2%%3%</b><p>"
+                        "Config: <a href='file://%4%'>%4%</a><p>"
+                        "Home Page: <a href='%5%'>%5%</a><p>"
+                        "GitHub: <a href='%6%'>%6%</a>",
+                        g_name,
+                        g_version,
+                        debugBuild,
+                        g_Config.getConfigDirectory().string(),
+                        "https://rcebits.com/logseer/",
+                        "https://github.com/nongeneric/logseer");
     QMessageBox::about(this, QString::fromStdString(title), QString::fromStdString(text));
 }
 
