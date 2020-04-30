@@ -224,6 +224,11 @@ void MainWindow::openFile() {
     QFileDialog dialog(this);
     dialog.setWindowTitle("Open Log");
     dialog.setFileMode(QFileDialog::ExistingFiles);
+    auto index = _tabWidget->currentIndex();
+    if (index != -1) {
+        auto directory = boost::filesystem::path(_logs[index].path).parent_path().string();
+        dialog.setDirectory(QString::fromStdString(directory));
+    }
     if (dialog.exec()) {
         for (auto path : dialog.selectedFiles()) {
             openLog(path.toStdString());
