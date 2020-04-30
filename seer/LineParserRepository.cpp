@@ -1,5 +1,6 @@
 #include "LineParserRepository.h"
 #include "RegexLineParser.h"
+#include "FileParser.h"
 
 #include "Log.h"
 #include <boost/filesystem.hpp>
@@ -9,6 +10,8 @@
 using namespace boost::filesystem;
 
 namespace seer {
+
+constexpr int g_sampleBytes = 1000;
 
 class DefaultLineParser : public ILineParser {
 public:
@@ -52,11 +55,18 @@ std::optional<std::string> LineParserRepository::addRegexParser(std::string name
 }
 
 std::shared_ptr<ILineParser> LineParserRepository::resolve(std::istream& stream) {
+    std::string line(g_sampleBytes, '\0');
+    stream.read(&line[0], line.size());
+    std::stringstream ss(line);
+
+    FileParser fp(&ss, nullptr);
+    fp.index();
     std::vector<std::string> sample;
-    std::string line;
-    while (sample.size() < 10 && std::getline(stream, line)) {
+    for (auto i = 0u; i < fp.lineCount(); ++i) {
+        fp.readLine(i, line);
         sample.push_back(line);
     }
+
     for (auto& [_, parser] : _parsers) {
         log_infof("trying parser [%s]", parser->name());
         if (parser->isMatch(sample, "") || parser == (--end(_parsers))->second) {
