@@ -19,6 +19,7 @@ namespace gui::grid {
 
 static constexpr int g_searchRangeExtraGraphemes = 150;
 static constexpr int g_gmapCacheSize = 1000;
+static constexpr int g_sectionPadding = 5;
 
 struct GraphemeRange {
     int first = -1;
@@ -91,7 +92,7 @@ void LogTableView::paintRow(QPainter* painter, int row, int y) {
 
     for (auto column = 0; column < columns; ++column) {
         auto x = _table->header()->sectionPosition(column);
-        auto sectionSize = _table->header()->sectionSize(column);
+        auto sectionSize = _table->header()->sectionSize(column) - g_sectionPadding;
         assert(row < model->rowCount({}));
         assert(column < model->columnCount({}));
         assert(model->index(row, column).isValid());
