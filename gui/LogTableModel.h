@@ -31,6 +31,10 @@ struct RowSelection {
     bool isSelected(int row) const {
         return first <= row && row <= last;
     }
+
+    int size() const {
+        return last - first + 1;
+    }
 };
 
 struct ColumnSelection {
@@ -38,6 +42,10 @@ struct ColumnSelection {
     int column = -1;
     int first = -1;
     int last = -1;
+
+    int size() const {
+        return last - first + 1;
+    }
 };
 
 using LogTableSelection = std::variant<std::monostate, RowSelection, ColumnSelection>;

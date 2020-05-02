@@ -348,13 +348,13 @@ LogTableView::LogTableView(QFont font, LogTable* parent)
 
     _gmapFontMetrics = std::make_unique<GmapFontMetrics>(fm);
 
-    auto copyAction = new QAction("Copy selected", _table->scrollArea());
+    auto copyAction = new QAction(_table->scrollArea());
     copyAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_C));
     copyAction->setShortcutContext(Qt::WidgetWithChildrenShortcut);
     connect(copyAction, &QAction::triggered, [this] { LogTableView::copyToClipboard(true); });
     addAction(copyAction);
 
-    auto copyFormattedAction = new QAction("Copy selected (formatted)", _table->scrollArea());
+    auto copyFormattedAction = new QAction(_table->scrollArea());
     copyFormattedAction->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_C));
     copyFormattedAction->setShortcutContext(Qt::WidgetWithChildrenShortcut);
     connect(copyFormattedAction, &QAction::triggered, [this] { LogTableView::copyToClipboard(false); });
@@ -379,8 +379,19 @@ LogTableView::LogTableView(QFont font, LogTable* parent)
         auto selection = model->getSelection();
         if (!std::holds_alternative<std::monostate>(selection)) {
             auto rowSelection = std::get_if<RowSelection>(&selection);
+            auto columnSelection = std::get_if<ColumnSelection>(&selection);
+            if (columnSelection && _selectWords) {
+                auto gmap = getGraphemeMap(columnSelection->row, columnSelection->column);
+                std::tie(columnSelection->first, columnSelection->last) =
+                    gmap->extendToWordBoundary(columnSelection->first, columnSelection->last);
+            }
+            auto number = rowSelection ? bformat("%d lines", rowSelection->size())
+                                       : bformat("%d characters", columnSelection->size());
+            copyAction->setText(QString::fromStdString(bformat("Copy %s", number)));
             menu.addAction(copyAction);
             if (rowSelection) {
+                copyFormattedAction->setText(
+                    QString::fromStdString(bformat("Copy %s (formatted)", number)));
                 menu.addAction(copyFormattedAction);
             }
         }
