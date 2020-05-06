@@ -475,7 +475,7 @@ int LogTableView::visibleRows() {
 }
 
 float LogTableView::charWidth() const {
-    QFontMetrics fm(font());
+    QFontMetricsF fm(font());
     return fm.horizontalAdvance(" ");
 }
 
