@@ -61,6 +61,11 @@ public:
     void setCapacity(int capacity) {
         _capacity = capacity;
     }
+
+    void clear() {
+        _lru.clear();
+        _map.clear();
+    }
 };
 
 }

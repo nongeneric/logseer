@@ -510,4 +510,8 @@ QString LogTableView::getSelectionText(const ColumnSelection& columnSelection) {
     return gmap->line().mid(ileft, iright - ileft + 1);
 }
 
+void LogTableView::invalidateCache() {
+    _gmapCache.clear();
+}
+
 } // namespace gui::grid

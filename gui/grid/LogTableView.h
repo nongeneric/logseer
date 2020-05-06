@@ -66,6 +66,7 @@ public:
                             bool caseSensitive,
                             bool messageOnly);
     QString getSelectionText(const ColumnSelection& columnSelection);
+    void invalidateCache();
 
 signals:
 

@@ -71,6 +71,7 @@ void LogTable::setModel(LogTableModel* model) {
     }
     _header->setSectionResizeMode(count - 1, QHeaderView::ResizeMode::Fixed);
     setColumnWidth(count - 1, g_defaultMessageColumnSize);
+    _view->invalidateCache();
     _view->update();
     _header->updateGeometry();
     _scrollArea->setRowCount(_model->rowCount({}));
