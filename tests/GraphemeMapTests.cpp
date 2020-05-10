@@ -80,6 +80,7 @@ TEST_CASE("grapheme_map_empty_line") {
     REQUIRE( gmap.extendToWordBoundary(2, 3) == std::tuple(-1, -1) );
     REQUIRE( gmap.graphemeSize() == 0 );
     REQUIRE( gmap.findGrapheme(0.f) == -1 );
+    REQUIRE( gmap.pixelWidth() == 0 );
 }
 
 TEST_CASE("grapheme_map_unicode_and_tab") {
@@ -92,4 +93,5 @@ TEST_CASE("grapheme_map_unicode_and_tab") {
     REQUIRE( gmap.getPosition(0) == 0.f );
     REQUIRE( gmap.getPosition(1) == 4.f );
     REQUIRE( gmap.getPosition(2) == 5.f );
+    REQUIRE( gmap.pixelWidth() == 10 );
 }

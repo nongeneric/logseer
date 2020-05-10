@@ -117,9 +117,9 @@ void LogFile::enterComplete() {
     applyFilter();
 
     if (!_indexingComplete) {
-        std::vector<int> widths;
+        std::vector<seer::ColumnWidth> widths;
         auto columnCount = logTableModel()->columnCount({});
-        widths.push_back(bformat("%d", logTableModel()->rowCount({}) + 1).size());
+        widths.push_back({logTableModel()->rowCount({}) - 1, 0});
         for (auto i = 0; i < columnCount - 1; ++i) {
             widths.push_back(_index->maxWidth(i));
         }

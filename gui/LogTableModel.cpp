@@ -71,6 +71,16 @@ LogTableSelection LogTableModel::getSelection() const {
     return RowSelection{_selectedRow.left(), _selectedRow.right()};
 }
 
+std::vector<std::string> LogTableModel::values(int column) const {
+    if (!_index)
+        return {};
+    std::vector<std::string> values;
+    for (const auto& info : _index->getValues(column - 1)) {
+        values.push_back(info.value);;
+    }
+    return values;
+}
+
 LogTableModel::LogTableModel(seer::FileParser* parser)
     : _parser(parser) {
     _columns.push_back({"#", false, true});
@@ -192,11 +202,7 @@ int LogTableModel::findRow(uint64_t lineOffset) {
     return it == rows.end() ? -1 : *it;
 }
 
-int LogTableModel::maxColumnWidth(int column) {
-    return _columns[column].maxWidth;
-}
-
-void LogTableModel::setColumnWidths(std::vector<int> widths) {
+void LogTableModel::setColumnWidths(std::vector<seer::ColumnWidth> widths) {
     assert(widths.size() == _columns.size());
     for (auto i = 0u; i < widths.size(); ++i) {
         _columns[i].maxWidth = widths[i];
@@ -218,8 +224,11 @@ QVariant LogTableModel::headerData(int section, Qt::Orientation orientation, int
             return {};
         return _columns[section].name;
     }
-    if (role == (int)HeaderDataRole::Autosize) {
-        return _columns[section].autosize ? _columns[section].maxWidth : -1;
+    if (role == (int)HeaderDataRole::IsAutosize) {
+        return _columns[section].autosize;
+    }
+    if (role == (int)HeaderDataRole::LongestColumnIndex) {
+        return rowCount({}) > 0 ? _columns[section].maxWidth.index : -1;
     }
     return QVariant();
 }

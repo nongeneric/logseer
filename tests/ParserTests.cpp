@@ -571,10 +571,10 @@ TEST_CASE("index_column_width") {
     Index index;
     index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
 
-    REQUIRE( index.maxWidth(0) == 2 );
-    REQUIRE( index.maxWidth(1) == 4 );
-    REQUIRE( index.maxWidth(2) == 4 );
-    REQUIRE( index.maxWidth(3) == 9 );
+    REQUIRE( index.maxWidth(0).width == 2 );
+    REQUIRE( index.maxWidth(1).width == 4 );
+    REQUIRE( index.maxWidth(2).width == 4 );
+    REQUIRE( index.maxWidth(3).width == 9 );
 }
 
 TEST_CASE("multiline_index_column_width") {
@@ -586,23 +586,10 @@ TEST_CASE("multiline_index_column_width") {
     Index index;
     index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
 
-    REQUIRE( index.maxWidth(0) == 2 );
-    REQUIRE( index.maxWidth(1) == 4 );
-    REQUIRE( index.maxWidth(2) == 4 );
-    REQUIRE( index.maxWidth(3) == 11 );
-}
-
-TEST_CASE("index_column_width_tabs") {
-    std::stringstream ss("a\tb\tc");
-    LineParserRepository repository;
-    auto lineParser = repository.resolve(ss);
-    FileParser fileParser(&ss, lineParser.get());
-    fileParser.index();
-
-    Index index;
-    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
-
-    REQUIRE( index.maxWidth(0) == 3 + g_tabWidth * 2 );
+    REQUIRE( index.maxWidth(0).width == 2 );
+    REQUIRE( index.maxWidth(1).width == 4 );
+    REQUIRE( index.maxWidth(2).width == 4 );
+    REQUIRE( index.maxWidth(3).width == 11 );
 }
 
 TEST_CASE("search_hist_simple") {
@@ -750,7 +737,7 @@ TEST_CASE("default_line_parser_columns") {
     REQUIRE( columns.size() == 1 );
     REQUIRE( columns[0] == "message1" );
 
-    REQUIRE( index.maxWidth(0) == (int)size(std::string("message1")) ); // TODO: ssize
+    REQUIRE( index.maxWidth(0).width == (int)size(std::string("message1")) ); // TODO: ssize
 }
 
 TEST_CASE("parse_zeroes") {
@@ -775,7 +762,7 @@ TEST_CASE("parse_zeroes") {
     REQUIRE( columns.size() == 1 );
     REQUIRE( columns[0] == "message1" );
 
-    REQUIRE( index.maxWidth(0) == (int)size(std::string("message1")) ); // TODO: ssize
+    REQUIRE( index.maxWidth(0).width == (int)size(std::string("message1")) ); // TODO: ssize
 
     // cached last line size
     line = "abc";

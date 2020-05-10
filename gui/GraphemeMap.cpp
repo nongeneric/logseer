@@ -124,4 +124,10 @@ const QString& GraphemeMap::line() const {
     return _line;
 }
 
+int GraphemeMap::pixelWidth() const {
+    if (_graphemePositions.empty())
+        return 0;
+    return _graphemePositions.back();
+}
+
 }

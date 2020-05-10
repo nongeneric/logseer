@@ -28,6 +28,7 @@ public:
     int indexToGrapheme(int index) const;
     std::tuple<int, int> graphemeToIndexRange(int grapheme) const;
     const QString& line() const;
+    int pixelWidth() const;
 };
 
 } // namespace gui

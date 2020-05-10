@@ -32,10 +32,19 @@ struct ColumnFilter {
     std::set<std::string> selected;
 };
 
+struct ColumnWidth {
+    int index = 0;
+    int width = 0;
+
+    bool operator<(const ColumnWidth& other) const noexcept {
+        return width < other.width;
+    }
+};
+
 struct ColumnInfo {
     std::unordered_map<std::string, ewah_bitset> index;
     bool indexed = false;
-    int maxWidth = 0;
+    ColumnWidth maxWidth;
     ewah_bitset combinedIndex;
 };
 
@@ -67,7 +76,7 @@ public:
                std::function<bool()> stopRequested,
                std::function<void(uint64_t, uint64_t)> progress = {});
     std::vector<ColumnIndexInfo> getValues(int column);
-    int maxWidth(int column);
+    ColumnWidth maxWidth(int column);
 };
 
 } // namespace seer

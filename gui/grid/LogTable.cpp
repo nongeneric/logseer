@@ -10,7 +10,7 @@
 
 namespace gui::grid {
 
-constexpr inline int g_columnAutosizePadding = 3;
+constexpr inline int g_columnHeaderPadding = 20;
 constexpr inline int g_defaultMessageColumnSize = 1000;
 
 void emulateResize(QWidget* widget) {
@@ -21,18 +21,28 @@ void emulateResize(QWidget* widget) {
     widget->resize(size);
 }
 
-void LogTable::setColumnWidth(int column, int width) {
+void LogTable::setColumnWidth(int column, int longestColumnIndex) {
     QFontMetricsF fm(_header->font());
     auto isIndexed = _model->headerData(column, Qt::Horizontal, (int)HeaderDataRole::IsIndexed).toBool();
     auto headerText = _model->headerData(column, Qt::Horizontal, Qt::DisplayRole).toString();
-    const auto padding = 20;
-    auto headerWidth = fm.width(headerText) + padding;
+    auto headerWidth = fm.width(headerText);
     if (isIndexed) {
         headerWidth += _header->style()->pixelMetric(QStyle::PM_SmallIconSize);
     }
-    auto pxWidth = static_cast<int>(_view->charWidth() * width); // TODO:!
+    float pxWidth = 0;
+    auto autosize = _model->headerData(column, Qt::Horizontal, (int)HeaderDataRole::IsAutosize).toBool();
+    if (autosize && longestColumnIndex != -1) {
+        if (isIndexed) {
+            for (const auto& value : _model->values(column)) {
+                pxWidth = std::max(pxWidth, _view->textWidth(QString::fromStdString(value)));
+            }
+        } else if (autosize) {
+            auto value = _model->data(_model->index(longestColumnIndex, column), Qt::DisplayRole).toString();
+            pxWidth = _view->textWidth(value);
+        }
+    }
     pxWidth = std::clamp<int>(pxWidth, headerWidth, _header->maximumSectionSize());
-    _header->resizeSection(column, pxWidth);
+    _header->resizeSection(column, pxWidth + g_columnHeaderPadding);
 }
 
 LogTable::LogTable(gui::LogFile* logFile, QFont font, QWidget* parent)
@@ -68,9 +78,11 @@ void LogTable::setModel(LogTableModel* model) {
     auto count = model->columnCount(QModelIndex());
     for (auto i = 0; i < count; ++i) {
         _header->setSectionResizeMode(i, QHeaderView::ResizeMode::Interactive);
+        setColumnWidth(i, -1);
     }
     _header->setSectionResizeMode(count - 1, QHeaderView::ResizeMode::Fixed);
-    setColumnWidth(count - 1, g_defaultMessageColumnSize);
+    setColumnWidth(0, model->rowCount({}) - 1);
+    _header->resizeSection(count - 1, g_defaultMessageColumnSize);
     _view->invalidateCache();
     _view->update();
     _header->updateGeometry();
@@ -93,13 +105,9 @@ void LogTable::setModel(LogTableModel* model) {
 
     connect(_model, &LogTableModel::columnWidthsChanged, this, [this] {
         for (auto column = 0; column < _model->columnCount({}); ++column) {
-            auto autosize = _model->headerData(column, Qt::Horizontal, (int)HeaderDataRole::Autosize).toInt();
-            if (autosize != -1) {
-                setColumnWidth(column, autosize + g_columnAutosizePadding);
-            }
+            auto longestIndex = _model->headerData(column, Qt::Horizontal, (int)HeaderDataRole::LongestColumnIndex).toInt();
+            setColumnWidth(column, longestIndex);
         }
-        auto lastColumn = _model->columnCount({}) - 1;
-        setColumnWidth(lastColumn, _model->maxColumnWidth(lastColumn) + g_columnAutosizePadding);
     });
 }
 
@@ -140,6 +148,14 @@ void LogTable::setSearchHighlight(std::string text,
                                   bool caseSensitive,
                                   bool messageOnly) {
     _view->setSearchHighlight(text, regex, caseSensitive, messageOnly);
+}
+
+void LogTable::updateMessageWidth(int width) {
+    width += g_columnHeaderPadding;
+    auto messageColumn = _model->columnCount({}) - 1;
+    if (_header->sectionSize(messageColumn) < width) {
+        _header->resizeSection(messageColumn, width);
+    }
 }
 
 void LogTable::mousePressEvent(QMouseEvent* event) {

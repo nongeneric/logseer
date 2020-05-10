@@ -22,7 +22,7 @@ class LogTable : public QWidget {
     bool _showHistMap = false;
     gui::LogFile* _logFile;
 
-    void setColumnWidth(int column, int width);
+    void setColumnWidth(int column, int longestColumnIndex);
 
 public:
     LogTable(gui::LogFile* logFile, QFont font, QWidget* parent = nullptr);
@@ -38,6 +38,7 @@ public:
                             bool regex,
                             bool caseSensitive,
                             bool messageOnly);
+    void updateMessageWidth(int width);
 
 signals:
     void requestFilter(int column);

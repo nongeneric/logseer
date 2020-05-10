@@ -60,7 +60,7 @@ public:
     explicit LogTableView(QFont font, LogTable* parent);
     void setFirstRow(int row);
     int visibleRows();
-    float charWidth() const;
+    float textWidth(const QString& text) const;
     void setSearchHighlight(std::string text,
                             bool regex,
                             bool caseSensitive,

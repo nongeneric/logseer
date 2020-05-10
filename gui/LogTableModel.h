@@ -10,18 +10,22 @@
 namespace gui {
 
 struct ColumnInfo {
+    ColumnInfo(QString name, bool indexed, bool autosize)
+        : name(name), indexed(indexed), autosize(autosize) {}
+
     QString name;
     bool indexed = false;
     bool autosize = false;
     bool filterActive = false;
-    int maxWidth = -1;
+    seer::ColumnWidth maxWidth;
 };
 
 enum class HeaderDataRole {
     IsIndexed = Qt::UserRole,
     IsFilterActive,
     FirstLine,
-    Autosize
+    IsAutosize,
+    LongestColumnIndex
 };
 
 struct RowSelection {
@@ -109,8 +113,7 @@ public:
     void copyLines(uint64_t begin, uint64_t end, LineHandler accept);
     uint64_t lineOffset(uint64_t row) const;
     int findRow(uint64_t lineOffset);
-    int maxColumnWidth(int column);
-    void setColumnWidths(std::vector<int> widths);
+    void setColumnWidths(std::vector<seer::ColumnWidth> widths);
     virtual int rowCount(const QModelIndex& parent) const override;
     virtual int columnCount(const QModelIndex& parent) const override;
     virtual QVariant data(const QModelIndex& index, int role) const override;
@@ -120,6 +123,7 @@ public:
     bool extendSelection(int row, int column, int index);
     std::optional<RowSelection> getRowSelection() const;
     LogTableSelection getSelection() const;
+    std::vector<std::string> values(int column) const;
 
 signals:
     void selectionChanged();

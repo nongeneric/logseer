@@ -486,12 +486,16 @@ TEST_CASE("column_max_width_should_be_set_after_file_has_been_indexed") {
     waitFor([&] { return file.isState(gui::sm::ParsingState); });
 
     auto model = file.logTableModel();
+    auto longestColumnIndex = [&] (int index) {
+        auto role = (int)HeaderDataRole::LongestColumnIndex;
+        return model->headerData(index, Qt::Horizontal, role).toInt();
+    };
 
-    REQUIRE( model->maxColumnWidth(0) == -1 );
-    REQUIRE( model->maxColumnWidth(1) == -1 );
-    REQUIRE( model->maxColumnWidth(2) == -1 );
-    REQUIRE( model->maxColumnWidth(3) == -1 );
-    REQUIRE( model->maxColumnWidth(4) == -1 );
+    REQUIRE( longestColumnIndex(0) == -1 );
+    REQUIRE( longestColumnIndex(1) == -1 );
+    REQUIRE( longestColumnIndex(2) == -1 );
+    REQUIRE( longestColumnIndex(3) == -1 );
+    REQUIRE( longestColumnIndex(4) == -1 );
 
     file.parsingTask->proceed();
 
@@ -501,11 +505,11 @@ TEST_CASE("column_max_width_should_be_set_after_file_has_been_indexed") {
 
     waitFor([&] { return file.isState(gui::sm::CompleteState); });
 
-    REQUIRE( model->maxColumnWidth(0) == 1 );
-    REQUIRE( model->maxColumnWidth(1) == 2 );
-    REQUIRE( model->maxColumnWidth(2) == 4 );
-    REQUIRE( model->maxColumnWidth(3) == 4 );
-    REQUIRE( model->maxColumnWidth(4) == 9 );
+    REQUIRE( longestColumnIndex(0) == 5 );
+    REQUIRE( longestColumnIndex(1) != -1 );
+    REQUIRE( longestColumnIndex(2) != -1 );
+    REQUIRE( longestColumnIndex(3) != -1 );
+    REQUIRE( longestColumnIndex(4) != -1 );
 
     file.interrupt();
 
@@ -549,13 +553,12 @@ TEST_CASE("log_file_get_autosize_attibute") {
     waitParsingAndIndexing(file);
     auto model = file.logTableModel();
 
-    REQUIRE(model->headerData(0, Qt::Horizontal, (int)HeaderDataRole::Autosize).toInt() == 1);
-    REQUIRE(model->headerData(1, Qt::Horizontal, (int)HeaderDataRole::Autosize).toInt() == 2);
-    REQUIRE(model->headerData(2, Qt::Horizontal, (int)HeaderDataRole::Autosize).toInt() == -1);
-    REQUIRE(model->headerData(3, Qt::Horizontal, (int)HeaderDataRole::Autosize).toInt() == -1);
-    REQUIRE(model->headerData(4, Qt::Horizontal, (int)HeaderDataRole::Autosize).toInt() == -1);
+    REQUIRE(model->headerData(0, Qt::Horizontal, (int)HeaderDataRole::IsAutosize).toBool());
+    REQUIRE(model->headerData(1, Qt::Horizontal, (int)HeaderDataRole::IsAutosize).toBool());
+    REQUIRE(!model->headerData(2, Qt::Horizontal, (int)HeaderDataRole::IsAutosize).toBool());
+    REQUIRE(!model->headerData(3, Qt::Horizontal, (int)HeaderDataRole::IsAutosize).toBool());
+    REQUIRE(!model->headerData(4, Qt::Horizontal, (int)HeaderDataRole::IsAutosize).toBool());
 }
-
 
 TEST_CASE("dump_statemachine", "[.]") {
     boost::sml::sm<gui::sm::StateMachine> sm;

@@ -101,6 +101,8 @@ void LogTableView::paintRow(QPainter* painter, int row, int y) {
         if (!gmap->graphemeSize())
             continue;
 
+        _table->updateMessageWidth(gmap->pixelWidth());
+
         const auto& text = gmap->line();
 
         graphemes.clear();
@@ -474,9 +476,8 @@ int LogTableView::visibleRows() {
     return height() / _rowHeight;
 }
 
-float LogTableView::charWidth() const {
-    QFontMetricsF fm(font());
-    return fm.horizontalAdvance(" ");
+float LogTableView::textWidth(const QString& text) const {
+    return _gmapFontMetrics->width(text);
 }
 
 void LogTableView::setSearchHighlight(std::string text,
