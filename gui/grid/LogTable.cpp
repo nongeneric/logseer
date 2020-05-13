@@ -91,6 +91,7 @@ void LogTable::setModel(LogTableModel* model) {
     connect(_model, &QAbstractTableModel::modelReset, this, [this] {
         _scrollArea->setRowCount(_model->rowCount({}));
         _scrollArea->update();
+        _view->invalidateCache();
     });
 
     connect(_model, &LogTableModel::selectionChanged, this, [this] {
