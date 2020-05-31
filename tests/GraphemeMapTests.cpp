@@ -95,3 +95,10 @@ TEST_CASE("grapheme_map_unicode_and_tab") {
     REQUIRE( gmap.getPosition(2) == 5.f );
     REQUIRE( gmap.pixelWidth() == 10 );
 }
+
+TEST_CASE("grapheme_map_negative_position") {
+    QString line{"123"};
+    GraphemeMap gmap(line, &g_singleSizeTestMetrics);
+    REQUIRE( gmap.graphemeSize() == 3 );
+    REQUIRE( gmap.findGrapheme(-100) == 0 );
+}

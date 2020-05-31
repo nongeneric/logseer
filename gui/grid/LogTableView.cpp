@@ -108,7 +108,7 @@ void LogTableView::paintRow(QPainter* painter, int row, int y) {
         graphemes.clear();
 
         auto rect = region.boundingRect();
-        rect.adjust(x, 0, x, 0);
+        rect.adjust(-x, 0, -x, 0);
         auto searchRange = getGraphemeRange(gmap.get(), rect, g_searchRangeExtraGraphemes);
         graphemes.resize(searchRange.size());
 
