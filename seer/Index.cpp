@@ -14,6 +14,8 @@
 
 namespace seer {
 
+constexpr float g_maxFailureRatio = .1f;
+
 int lineLength(const std::string& line) {
     return line.size();
 }
@@ -33,35 +35,6 @@ class Indexer {
     std::vector<std::thread> _threads;
     std::vector<ewah_bitset> _failures;
     ewah_bitset _combinedFailures;
-
-    void combine(const ewah_bitset& index, const ewah_bitset& failed, ewah_bitset& result) {
-        auto i = index.begin();
-        auto f = failed.begin();
-        auto ii = index.toArray();
-        while (i != index.end()) {
-            result.set(*i);
-            while (f != failed.end() && *f < *i) {
-                ++f;
-            }
-            if (f == failed.end()) {
-                ++i;
-                while (i != index.end()) {
-                    result.set(*i++);
-                }
-                break;
-            }
-            if (*i + 1 == *f) {
-                auto delta = 1;
-                while (f != failed.end() && delta == 1) {
-                    result.set(*f);
-                    auto pf = *f;
-                    ++f;
-                    delta = *f - pf;
-                }
-            }
-            ++i;
-        }
-    }
 
     void prepareThreads() {
         constexpr auto itemsPerThread = 256;
@@ -153,21 +126,66 @@ class Indexer {
         }
 
         _combinedFailures = fast_logicalor(failurePointers.size(), &failurePointers[0]);
-        std::vector<ewah_bitset*> allIndexes;
-        for (auto tid = 0u; tid < _threadCount; ++tid) {
-            auto& result = _results[tid];
-            for (auto& column : result) {
-                for (auto& [_, index] : column.index) {
-                    allIndexes.push_back(&index);
+
+        Result columnInfos;
+        for (auto format : _lineParser->getColumnFormats()) {
+            columnInfos.push_back({{}, format.indexed, {}, {}});
+        }
+        std::vector<std::string> columns;
+        auto failures = _combinedFailures.toArray();
+
+        auto failureRatio = failures.size() / static_cast<float>(_fileParser->lineCount());
+        auto readConsequently = failureRatio > g_maxFailureRatio;
+
+        size_t pos = -1;
+        std::string line;
+        auto readLine = [&] (auto index) {
+            if (!readConsequently) {
+                _fileParser->readLine(index, columns);
+                return;
+            }
+
+            if (pos == -1ull) {
+                pos = index;
+            }
+            while (pos != index) {
+                _fileParser->readLine(pos, line);
+                pos++;
+            }
+            [[maybe_unused]] auto result = _fileParser->readLine(index, columns);
+            assert(result);
+            pos++;
+        };
+
+        for (size_t i = 0; i < failures.size();) {
+            auto failureIndex = failures[i];
+            if (failureIndex == 0) {
+                columns.clear();
+                columns.resize(columnInfos.size());
+            } else {
+                readLine(failureIndex - 1);
+            }
+
+            auto firstFailure = i;
+            while (i < failures.size() && failures[i] + 1 == failures[i + 1]) {
+                i++;
+            }
+            i++;
+
+            assert(_columns->size() == columnInfos.size());
+            for (size_t c = 0; c < _columns->size(); ++c) {
+                if (!columnInfos[c].indexed)
+                    continue;
+                const auto& value = columns[c];
+                auto& bitmap = columnInfos[c].index[value];
+                for (auto j = firstFailure; j < i; ++j) {
+                    bitmap.set(failures[j]);
                 }
             }
         }
 
-        parallelFor(allIndexes, [this](auto index) {
-            ewah_bitset combined;
-            combine(*index, _combinedFailures, combined);
-            *index = combined;
-        });
+        _results.clear();
+        _results.push_back(columnInfos);
     }
 
     void reduceIndexes() {
@@ -186,26 +204,6 @@ class Indexer {
                         existingSet = existingSet | set;
                     }
                 }
-            }
-        }
-    }
-
-    void patchFailedStartingLines() {
-        ewah_bitset set;
-        auto i = 0u;
-        for (auto value : _combinedFailures) {
-            if (value != i)
-                break;
-            set.set(i);
-            ++i;
-        }
-
-        if (set.numberOfOnes() == 0)
-            return;
-
-        for (auto& column : *_columns) {
-            if (auto [it, inserted] = column.index.insert({"", set}); !inserted) {
-                it->second = it->second | set;
             }
         }
     }
@@ -236,14 +234,14 @@ public:
 
         stopThreads();
 
-        log_info("indexing multilines");
-
-        discoverMultilines();
-
         log_info("consolidating indexes");
 
         reduceIndexes();
-        patchFailedStartingLines();
+
+        log_info("indexing multilines");
+
+        discoverMultilines();
+        reduceIndexes();
 
         log_info("indexing complete");
 

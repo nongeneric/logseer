@@ -112,10 +112,10 @@ uint64_t FileParser::lineCount() {
     return _lineOffsets.size() - 1;
 }
 
-void FileParser::readLine(uint64_t index, std::vector<std::string>& line) {
+bool FileParser::readLine(uint64_t index, std::vector<std::string>& line) {
     std::string text;
     readLine(index, text);
-    _lineParser->parseLine(text, line);
+    return _lineParser->parseLine(text, line);
 }
 
 void FileParser::readLine(uint64_t index, std::string& line) {

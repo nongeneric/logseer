@@ -33,7 +33,7 @@ public:
     void index(std::function<void(uint64_t, uint64_t)> progress = {},
                std::function<bool()> stopRequested = []{ return false; });
     uint64_t lineCount();
-    void readLine(uint64_t index, std::vector<std::string>& line);
+    bool readLine(uint64_t index, std::vector<std::string>& line);
     void readLine(uint64_t index, std::string& line);
     ILineParser* lineParser() const;
 };
