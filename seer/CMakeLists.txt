@@ -28,6 +28,8 @@ add_library(${PROJECT_NAME} STATIC
     Hist.cpp
     Searcher.h
     Searcher.cpp
+    InstanceTracker.h
+    InstanceTracker.cpp
     task/Task.h
     task/Task.cpp
     task/ParsingTask.h

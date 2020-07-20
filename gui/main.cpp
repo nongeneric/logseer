@@ -7,8 +7,10 @@
 #include "Config.h"
 #include "seer/CommandLineParser.h"
 #include "seer/Log.h"
+#include "seer/InstanceTracker.h"
 
 int main(int argc, char *argv[]) {
+    seer::InstanceTracker tracker(gui::g_socketName);
     seer::CommandLineParser parser;
     if (parser.parse(argc, argv)) {
         seer::log_enable(parser.verbose());
@@ -24,10 +26,20 @@ int main(int argc, char *argv[]) {
             return 0;
         }
 
+        if (tracker.connected()) {
+            seer::log_infof("InstanceTracker connected to an existing instance");
+            for (auto& path : parser.paths()) {
+                seer::log_infof("Sending log path to active instance: %s", path);
+                tracker.send(path);
+            }
+            return 0;
+        }
+
         QApplication app(argc, argv);
         app.setStyle(QStyleFactory::create("Fusion"));
         gui::MainWindow w;
         w.show();
+        w.setInstanceTracker(&tracker);
 
         for (auto& [path, parser] : gui::g_Config.sessionConfig().openedFiles) {
             w.openLog(path, parser);

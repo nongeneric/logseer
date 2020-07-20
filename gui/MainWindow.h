@@ -2,7 +2,9 @@
 
 #include "FilterDialog.h"
 #include "LogFile.h"
+#include "ThreadDispatcher.h"
 #include "seer/LineParserRepository.h"
+#include "seer/InstanceTracker.h"
 #include <QMainWindow>
 #include <QTabWidget>
 #include <QTableView>
@@ -21,6 +23,7 @@ struct OpenedLogFile {
 class MainWindow : public QMainWindow {
     Q_OBJECT
 
+    ThreadDispatcher _dispatcher;
     QTabWidget* _tabWidget;
     FilterDialog* _filterDialog;
     std::vector<OpenedLogFile> _logs;
@@ -28,6 +31,8 @@ class MainWindow : public QMainWindow {
     QLabel* _dragAndDropTip;
     seer::LineParserRepository _repository;
     std::function<void()> _updateMenu;
+    seer::InstanceTracker* _tracker;
+    std::thread _trackerThread;
 
     void updateTabWidgetVisibility();
     void closeTab(int index);
@@ -43,7 +48,9 @@ class MainWindow : public QMainWindow {
 
 public:
     explicit MainWindow(QWidget* parent = nullptr);
+    ~MainWindow();
     void openLog(std::string path, std::string parser = "");
+    void setInstanceTracker(seer::InstanceTracker* tracker);
 
 protected:
     void dragEnterEvent(QDragEnterEvent* event) override;

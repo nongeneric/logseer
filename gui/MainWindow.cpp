@@ -264,7 +264,7 @@ void MainWindow::showAbout() {
     QMessageBox::about(this, QString::fromStdString(title), QString::fromStdString(text));
 }
 
-MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
+MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), _dispatcher(this) {
     _tabWidget = new QTabWidget(this);
     _tabWidget->setTabsClosable(true);
     _tabWidget->setMovable(true);
@@ -309,6 +309,12 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
     }
 
     createMenu();
+}
+
+MainWindow::~MainWindow() {
+    _tracker->stop();
+    if (_trackerThread.joinable())
+        _trackerThread.join();
 }
 
 void MainWindow::openLog(std::string path, std::string parser) {
@@ -441,6 +447,22 @@ void MainWindow::openLog(std::string path, std::string parser) {
 
     updateTabWidgetVisibility();
     saveOpenedFilesToConfig();
+}
+
+void MainWindow::setInstanceTracker(seer::InstanceTracker* tracker) {
+    seer::log_infof("%s called", __func__);
+    assert(tracker);
+    _tracker = tracker;
+    _trackerThread = std::thread([=] {
+        while (auto message = tracker->waitMessage()) {
+            seer::log_infof("posting file path to UI thread");
+            _dispatcher.postToUIThread([=] {
+                seer::log_infof("received file path through InstanceTracker: %s", *message);
+                openLog(*message);
+                activateWindow();
+            });
+        }
+    });
 }
 
 void MainWindow::dragEnterEvent(QDragEnterEvent* event) {

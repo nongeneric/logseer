@@ -27,7 +27,8 @@ void init() {
     if (g_logger)
         return;
     std::vector<spdlog::sink_ptr> sinks = {
-        std::make_shared<spdlog::sinks::basic_file_sink_mt>(getLogPath(), true)
+        std::make_shared<spdlog::sinks::basic_file_sink_mt>(getLogPath(), true),
+        std::make_shared<spdlog::sinks::stdout_sink_mt>()
     };
     g_logger = std::make_shared<spdlog::logger>("name", begin(sinks), end(sinks));
     spdlog::register_logger(g_logger);

@@ -8,6 +8,7 @@
 namespace gui {
 
 inline constexpr int g_maxRecentFiles = 15;
+inline constexpr const char* g_socketName = "logseer.socket";
 
 struct RegexConfig {
     std::string name;
