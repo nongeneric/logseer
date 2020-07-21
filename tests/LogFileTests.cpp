@@ -370,15 +370,15 @@ TEST_CASE("log_file_search_basic") {
     REQUIRE( hist->get(5, 6) == 1 );
 
     searchModel->setSelection(0, 0, 0);
+    REQUIRE( model->getRowSelection()->first == 3 );
 
     file.setColumnFilter(2, {"INFO"});
-    REQUIRE( !model->getRowSelection().has_value() );
+    auto selection = model->getRowSelection();
+    REQUIRE( selection->first == 2 );
 
     // 10 INFO CORE message 1
     // 15 INFO SUB message 2
     // 20 INFO SUB message 4
-
-    searchModel->setSelection(0, 0, 0);
 
     file.setColumnFilter(2, {});
     searchModel->setSelection(0, 0, 0);
@@ -828,5 +828,29 @@ TEST_CASE("log_file_filter_exclude_include_clear") {
     SECTION("include only value") {
         file.includeOnlyValue(2, "INFO");
         REQUIRE( getRows() == std::vector<std::string>{"10", "15", "20"} );
+    }
+
+    SECTION("restore selection after include") {
+        model->setSelection(3, 0, 0);
+        auto selection = *model->getRowSelection();
+        REQUIRE( selection.first == 3 );
+        REQUIRE( selection.last == 3 );
+
+        file.includeOnlyValue(2, "INFO");
+        selection = *model->getRowSelection();
+        REQUIRE( selection.first == 2 );
+        REQUIRE( selection.last == 2 );
+    }
+
+    SECTION("clear selection after exclude") {
+        model->setSelection(4, 0, 0);
+        file.excludeValue(2, "ERR");
+        REQUIRE( !model->getRowSelection().has_value() );
+    }
+
+    SECTION("clear selection after excluding last row") {
+        model->setSelection(5, 0, 0);
+        file.excludeValue(2, "WARN");
+        REQUIRE( !model->getRowSelection().has_value() );
     }
 }

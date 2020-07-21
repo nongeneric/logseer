@@ -199,7 +199,14 @@ int LogTableModel::findRow(uint64_t lineOffset) {
             auto rowOffset = _index->mapIndex(row);
             return rowOffset < offset;
         });
-    return it == rows.end() ? -1 : *it;
+
+    if (it == rows.end())
+        return -1;
+
+    if (_index->mapIndex(*it) != lineOffset)
+        return -1;
+
+    return *it;
 }
 
 void LogTableModel::setColumnWidths(std::vector<seer::ColumnWidth> widths) {

@@ -170,6 +170,11 @@ void LogFile::subscribeToSelectionChanged(LogTableModel* model) {
 }
 
 void LogFile::applyFilter() {
+    int selectedLineOffset = -1;
+    if (auto selection = _logTableModel->getRowSelection()) {
+        selectedLineOffset = _logTableModel->lineOffset(selection->first);
+    }
+
     std::vector<seer::ColumnFilter> filters;
     for (auto i = 0; i < _logTableModel->columnCount({}); ++i) {
         _logTableModel->setFilterActive(i, false);
@@ -180,7 +185,9 @@ void LogFile::applyFilter() {
     }
     _index->filter(filters);
     _logTableModel->setIndex(_index.get());
-    _logTableModel->setSelection(-1, 0, 0);
+
+    auto selectedRow = _logTableModel->findRow(selectedLineOffset);
+    _logTableModel->setSelection(selectedRow, 0, 0);
 }
 
 void LogFile::adaptFilter() {
