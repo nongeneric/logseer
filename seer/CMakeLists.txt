@@ -48,7 +48,9 @@ set(LIBS PUBLIC
     ${Boost_LIBRARIES}
 )
 
-if(NOT WIN32)
+if(WIN32)
+    list (APPEND LIBS ws2_32)
+else()
     find_library(FMT fmt)
     add_definitions(-DSPDLOG_FMT_EXTERNAL)
     list (APPEND LIBS ${FMT})

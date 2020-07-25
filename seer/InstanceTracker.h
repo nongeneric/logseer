@@ -1,6 +1,7 @@
 #pragma once
 
 #include <blockingconcurrentqueue.h>
+#include "sockets.h"
 
 #include <functional>
 #include <optional>
@@ -11,7 +12,7 @@ namespace seer {
 
 class InstanceTracker {
     std::thread _thread;
-    int _socket = -1;
+    LOGSEER_SOCKET_TYPE _socket = LOGSEER_INVALID_SOCKET;
     bool _connected = false;
     moodycamel::BlockingConcurrentQueue<std::optional<std::string>> _queue;
 

@@ -23,7 +23,7 @@ std::string getLogPath() {
     return (boost::filesystem::temp_directory_path() / ss.str()).string();
 }
 
-void init() {
+void log_init() {
     if (g_logger)
         return;
     std::vector<spdlog::sink_ptr> sinks = {
@@ -43,20 +43,28 @@ void init() {
 void seer::log_info(const char* message) {
     if (!g_enabled)
         return;
-    init();
     g_logger->info(message);
 }
 
 void seer::log_enable(bool value) {
+    log_init();
     g_enabled = value;
 }
 
 #else
+#include <windows.h>
 #include <iostream>
+#include <fstream>
 
 void seer::log_info(const char* message) {
     std::cout << message << std::endl;
 }
 
-void seer::log_enable(bool) { }
+void seer::log_enable(bool) {
+    if (AttachConsole(ATTACH_PARENT_PROCESS))
+    {
+        freopen("CON", "w", stdout);
+        freopen("CON", "w", stderr);
+    }
+}
 #endif

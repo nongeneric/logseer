@@ -3,18 +3,18 @@
 #include <QApplication>
 #include <QStyleFactory>
 #include <string>
-#include <iostream>
 #include "Config.h"
 #include "seer/CommandLineParser.h"
 #include "seer/Log.h"
 #include "seer/InstanceTracker.h"
 
 int main(int argc, char *argv[]) {
-    seer::InstanceTracker tracker(gui::g_socketName);
     seer::CommandLineParser parser;
     if (parser.parse(argc, argv)) {
         seer::log_enable(parser.verbose());
         gui::g_Config.init();
+
+        seer::InstanceTracker tracker(gui::g_socketName);
 
         if (!parser.help().empty()) {
             std::cout << parser.help() << std::endl;
@@ -39,6 +39,7 @@ int main(int argc, char *argv[]) {
         app.setStyle(QStyleFactory::create("Fusion"));
         gui::MainWindow w;
         w.show();
+
         w.setInstanceTracker(&tracker);
 
         for (auto& [path, parser] : gui::g_Config.sessionConfig().openedFiles) {
