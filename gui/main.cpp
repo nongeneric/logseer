@@ -36,7 +36,7 @@ int main(int argc, char *argv[]) {
         }
 
         QApplication app(argc, argv);
-        app.setStyle(QStyleFactory::create("Fusion"));
+        app.setStyle(QStyleFactory::create(gui::g_qtStyleName));
         gui::MainWindow w;
         w.show();
 

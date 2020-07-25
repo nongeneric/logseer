@@ -2,6 +2,7 @@
 
 #include "LogTable.h"
 #include "LogTableModel.h"
+#include "Config.h"
 #include <QMouseEvent>
 #include <QPainter>
 #include <QProxyStyle>
@@ -16,12 +17,12 @@ class MyStyle : public QProxyStyle {
     FilterHeaderView* _parent;
 
 public:
-    MyStyle(FilterHeaderView* parent) : _parent(parent) {}
+    MyStyle(FilterHeaderView* parent) : QProxyStyle(gui::g_qtStyleName), _parent(parent) {}
 
-    virtual void drawControl(ControlElement element,
-                             const QStyleOption* opt,
-                             QPainter* p,
-                             const QWidget* widget) const {
+    void drawControl(ControlElement element,
+                     const QStyleOption* opt,
+                     QPainter* p,
+                     const QWidget* widget) const override {
         if (element == QStyle::CE_HeaderLabel) {
             auto header = qstyleoption_cast<const QStyleOptionHeader*>(opt);
             QRect rect = header->rect;
