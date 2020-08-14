@@ -19,7 +19,7 @@ class InstanceTracker {
 public:
     InstanceTracker(std::string socketName);
     bool connected() const;
-    void send(std::string message);
+    void send(std::string path);
     void stop();
     std::optional<std::string> waitMessage();
 };

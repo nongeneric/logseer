@@ -393,7 +393,7 @@ LogTableView::LogTableView(QFont font, LogTable* parent)
             menu.addAction(copyAction);
             if (rowSelection) {
                 copyFormattedAction->setText(
-                    QString::fromStdString(bformat("Copy %s (formatted)", number)));
+                    QString::fromStdString(bformat("Copy %s (with headers)", number)));
                 menu.addAction(copyFormattedAction);
             }
         }

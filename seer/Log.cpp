@@ -46,9 +46,9 @@ void seer::log_info(const char* message) {
     g_logger->info(message);
 }
 
-void seer::log_enable(bool value) {
+void seer::log_enable() {
     log_init();
-    g_enabled = value;
+    g_enabled = true;
 }
 
 #else

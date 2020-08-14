@@ -85,9 +85,9 @@ bool InstanceTracker::connected() const {
     return _connected;
 }
 
-void InstanceTracker::send(std::string message) {
+void InstanceTracker::send(std::string path) {
     assert(connected());
-    message += '\n';
+    auto message = boost::filesystem::absolute(path).string() + '\n';
     auto ret = LOGSEER_SOCKET_WRITE(_socket, message.c_str(), message.size() + 1);
     if (ret == 0) {
         log_infof("%s: could not write to socket, error %d", __func__, LOGSEER_ERRNO);

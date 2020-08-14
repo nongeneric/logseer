@@ -1,17 +1,20 @@
 #include "MainWindow.h"
 
+#include "Config.h"
+#include "seer/CommandLineParser.h"
+#include "seer/InstanceTracker.h"
+#include "seer/Log.h"
+
 #include <QApplication>
 #include <QStyleFactory>
 #include <string>
-#include "Config.h"
-#include "seer/CommandLineParser.h"
-#include "seer/Log.h"
-#include "seer/InstanceTracker.h"
 
 int main(int argc, char *argv[]) {
     seer::CommandLineParser parser;
     if (parser.parse(argc, argv)) {
-        seer::log_enable(parser.verbose());
+        if (parser.verbose()) {
+            seer::log_enable();
+        }
         gui::g_Config.init();
 
         seer::InstanceTracker tracker(gui::g_socketName);
