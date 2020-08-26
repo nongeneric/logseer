@@ -3,7 +3,7 @@
 #include "gui/FilterTableModel.h"
 
 TEST_CASE("preserve_order") {
-    std::vector<seer::ColumnIndexInfo> values = {
+    std::vector<seer::ColumnIndexInfo> values {
         {"124", true, 2}, {"abc", true, 10}, {"123", true, 1}, {"bc23", true, 7}};
     auto model = new gui::FilterTableModel(values);
     REQUIRE( model->rowCount(QModelIndex()) == 4 );
@@ -11,6 +11,17 @@ TEST_CASE("preserve_order") {
     REQUIRE( model->data(model->index(1, 1), Qt::DisplayRole).toString() == "abc" );
     REQUIRE( model->data(model->index(2, 1), Qt::DisplayRole).toString() == "123" );
     REQUIRE( model->data(model->index(3, 1), Qt::DisplayRole).toString() == "bc23" );
+}
+
+TEST_CASE("put_values_with_zero_counts_last") {
+    std::vector<seer::ColumnIndexInfo> values {
+        {"124", true, 2}, {"abc", true, 0}, {"123", true, 0}, {"bc23", true, 7}};
+    auto model = new gui::FilterTableModel(values);
+    REQUIRE( model->rowCount(QModelIndex()) == 4 );
+    REQUIRE( model->data(model->index(0, 1), Qt::DisplayRole).toString() == "124" );
+    REQUIRE( model->data(model->index(1, 1), Qt::DisplayRole).toString() == "bc23" );
+    REQUIRE( model->data(model->index(2, 1), Qt::DisplayRole).toString() == "abc" );
+    REQUIRE( model->data(model->index(3, 1), Qt::DisplayRole).toString() == "123" );
 }
 
 TEST_CASE("filter") {

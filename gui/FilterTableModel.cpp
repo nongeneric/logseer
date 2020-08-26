@@ -16,8 +16,10 @@ void FilterTableModel::emitAllChanged() {
     emit checkedChanged();
 }
 
-FilterTableModel::FilterTableModel(std::vector<seer::ColumnIndexInfo> const& values) {
-    _infos = values;
+FilterTableModel::FilterTableModel(const std::vector<seer::ColumnIndexInfo>& values)
+    : _infos(values)
+{
+    std::stable_partition(begin(_infos), end(_infos), [&](auto& info) { return info.count > 0; });
     for (auto i = 0u; i < _infos.size(); ++i) {
         _visibleSet.insert(i);
     }
