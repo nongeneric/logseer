@@ -60,7 +60,7 @@ void seer::log_info(const char* message) {
     std::cout << message << std::endl;
 }
 
-void seer::log_enable(bool) {
+void seer::log_enable() {
     if (AttachConsole(ATTACH_PARENT_PROCESS))
     {
         freopen("CON", "w", stdout);

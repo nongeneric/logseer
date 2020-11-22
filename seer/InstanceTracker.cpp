@@ -53,7 +53,7 @@ InstanceTracker::InstanceTracker(std::string socketName) {
 
     log_infof("%s: listening on socket %s", __func__, socketName);
 
-    _thread = std::thread([=] {
+    _thread = std::thread([this] {
         for (;;) {
             auto data = accept(_socket, NULL, NULL);
             if (data == LOGSEER_INVALID_SOCKET) {

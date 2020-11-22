@@ -20,6 +20,10 @@ include_directories(SYSTEM thirdparty/concurrentqueue)
 include_directories(SYSTEM thirdparty/json/include)
 include_directories(SYSTEM thirdparty/range-v3/include)
 
+if(WIN32)
+    set(Boost_ARCHITECTURE "-x64")
+endif()
+
 set(Boost_USE_STATIC_LIBS       OFF)
 set(Boost_USE_MULTITHREADED      ON)
 set(Boost_USE_STATIC_RUNTIME    OFF)
