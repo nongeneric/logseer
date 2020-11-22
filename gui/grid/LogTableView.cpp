@@ -13,7 +13,6 @@
 #include <QPainter>
 #include <QScrollBar>
 #include <cmath>
-#include <range/v3/algorithm.hpp>
 
 namespace gui::grid {
 
@@ -113,7 +112,7 @@ void LogTableView::paintRow(QPainter* painter, int row, int y) {
         graphemes.resize(searchRange.size());
 
         if (isRowSelected) {
-            ranges::fill(graphemes, selectedGrapheme);
+            std::ranges::fill(graphemes, selectedGrapheme);
         } else if (columnSelection && columnSelection->row == row &&
                    columnSelection->column == column) {
             assert(columnSelection->first >= 0);
@@ -363,7 +362,7 @@ LogTableView::LogTableView(QFont font, LogTable* parent)
     addAction(copyFormattedAction);
 
     setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(this, &QWidget::customContextMenuRequested, [=] (const QPoint& pos) {
+    connect(this, &QWidget::customContextMenuRequested, [=, this] (const QPoint& pos) {
         auto model = _table->model();
         if (!model)
             return;

@@ -1,10 +1,8 @@
 #include "LogFile.h"
-#include <range/v3/view.hpp>
-#include <range/v3/action.hpp>
-#include <range/v3/algorithm.hpp>
+
+#include <algorithm>
 
 using namespace seer::task;
-using namespace ranges;
 
 namespace gui {
 
@@ -18,14 +16,14 @@ void LogFile::enterParsing() {
     emit stateChanged();
     _fileParser = std::make_unique<seer::FileParser>(_stream.get(), _lineParser.get());
     _parsingTask = createParsingTask(_fileParser.get());
-    _parsingTask->setStateChanged([=](auto state) {
+    _parsingTask->setStateChanged([this](auto state) {
         assert(state != TaskState::Failed);
         if (state == TaskState::Finished) {
             _dispatcher.postToUIThread([this] { index(); });
         }
     });
     _parsingTask->setProgressChanged([this](auto progress) {
-        _dispatcher.postToUIThread([=] { emit progressChanged(progress); });
+        _dispatcher.postToUIThread([=, this] { emit progressChanged(progress); });
     });
     _parsingTask->start();
 }
@@ -50,7 +48,7 @@ void LogFile::enterIndexing() {
         }
     });
     _indexingTask->setProgressChanged([this](auto progress) {
-        _dispatcher.postToUIThread([=] { emit progressChanged(progress); });
+        _dispatcher.postToUIThread([=, this] { emit progressChanged(progress); });
     });
     _indexingTask->start();
 }
@@ -90,7 +88,7 @@ void LogFile::searchFromComplete(sm::SearchEvent event) {
     _searchingTask->setStateChanged([this](auto state) {
         assert(state != TaskState::Failed);
         if (state == TaskState::Finished) {
-            _dispatcher.postToUIThread([=] {
+            _dispatcher.postToUIThread([=, this] {
                 auto newSearchTableModel = std::make_unique<LogTableModel>(_fileParser.get());
                 subscribeToSelectionChanged(newSearchTableModel.get());
                 _searchLogTableModel = std::move(newSearchTableModel);
@@ -102,7 +100,7 @@ void LogFile::searchFromComplete(sm::SearchEvent event) {
         }
     });
     _searchingTask->setProgressChanged([this](auto progress) {
-        _dispatcher.postToUIThread([=] { emit progressChanged(progress); });
+        _dispatcher.postToUIThread([=, this] { emit progressChanged(progress); });
     });
     _searchingTask->start();
 }
@@ -160,7 +158,7 @@ void LogFile::reloadFromIndexing(sm::ReloadEvent) {
 }
 
 void LogFile::subscribeToSelectionChanged(LogTableModel* model) {
-    connect(model, &LogTableModel::selectionChanged, this, [=] {
+    connect(model, &LogTableModel::selectionChanged, this, [=, this] {
         if (auto selection = model->getRowSelection()) {
             auto lineOffset = model->lineOffset(selection->first);
             auto row = _logTableModel->findRow(lineOffset);
@@ -192,12 +190,16 @@ void LogFile::applyFilter() {
 
 void LogFile::adaptFilter() {
     for (auto& [c, filters] : _columnFilters) {
-        const auto& columnInfos = _index->getValues(c);
-        auto values = columnInfos |
-            views::transform(&seer::ColumnIndexInfo::value) |
-            to<std::vector<std::string>>() |
-            actions::sort;
-        filters = views::set_intersection(values, filters) | to<std::set<std::string>>;
+        std::vector<std::string> values;
+        std::ranges::transform(_index->getValues(c), std::back_inserter(values), &seer::ColumnIndexInfo::value);
+
+        std::set<std::string> intersection;
+        std::set_intersection(begin(values),
+                              end(values),
+                              begin(filters),
+                              end(filters),
+                              std::inserter(intersection, begin(intersection)));
+        filters = intersection;
     }
 }
 

@@ -4,6 +4,7 @@
 #include "seer/ILineParserRepository.h"
 #include "seer/LineParserRepository.h"
 #include "seer/RegexLineParser.h"
+#include "seer/StriingLiterals.h"
 #include <sstream>
 
 inline std::string unstructuredLog = "message1\n"
@@ -32,7 +33,7 @@ inline std::string unicodeLog = u8"10 ИНФО CORE message 1\n"
                                 u8"17 WARN CORE message 3\n"
                                 u8"20 ИНФО SUB GRÜẞEN 4\n"
                                 u8"30 ERR CORE GRÜSSEN 5\n"
-                                u8"40 WARN SUB grüßen 6\n";
+                                u8"40 WARN SUB grüßen 6\n"_as_char;
 
 inline std::string multilineLog = "10 INFO CORE message 1\n"
                                   "message 1 a\n"

@@ -1,7 +1,5 @@
 #include "FilterTableModel.h"
 
-#include <range/v3/algorithm.hpp>
-
 namespace gui {
 
 void FilterTableModel::updateVisibleVec() {
@@ -64,13 +62,13 @@ void FilterTableModel::invertSelection(std::vector<int> rows) {
     for (auto& row : rows) {
         row = _visibleVec.at(row);
     }
-    auto unchecked = [=] (int r) { return !_infos.at(r).checked; };
+    auto unchecked = [this] (int r) { return !_infos.at(r).checked; };
     auto setAll = [&] (bool value) {
         for (auto row : rows) {
             _infos.at(row).checked = value;
         }
     };
-    if (ranges::any_of(rows, unchecked)) {
+    if (std::ranges::any_of(rows, unchecked)) {
         setAll(true);
     } else {
         setAll(false);

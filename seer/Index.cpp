@@ -8,9 +8,8 @@
 #include <optional>
 #include <thread>
 #include <tuple>
+#include <algorithm>
 #include <QString>
-
-#include <range/v3/algorithm.hpp>
 
 namespace seer {
 
@@ -376,7 +375,7 @@ std::vector<ColumnIndexInfo> Index::getValues(int column) {
     std::vector<ColumnIndexInfo> values;
     for (auto& [value, index] : _columns[column].index) {
         auto checked = true;
-        auto filter = ranges::find(_filters, column, &ColumnFilter::column);
+        auto filter = std::ranges::find(_filters, column, &ColumnFilter::column);
         if (filter != end(_filters)) {
             auto& selected = filter->selected;
             checked = selected.find(value) != end(selected);
@@ -402,7 +401,7 @@ std::vector<ColumnIndexInfo> Index::getValues(int column) {
         values.push_back({value, checked, count});
     }
 
-    ranges::sort(values, std::less<>(), &ColumnIndexInfo::value);
+    std::ranges::sort(values, std::less<>(), &ColumnIndexInfo::value);
 
     return values;
 }

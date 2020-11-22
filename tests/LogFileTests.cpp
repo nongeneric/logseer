@@ -7,6 +7,7 @@
 #include "seer/ILineParser.h"
 #include "seer/Index.h"
 #include "seer/task/Task.h"
+#include "seer/StriingLiterals.h"
 #include <QApplication>
 #include <condition_variable>
 #include <mutex>
@@ -33,7 +34,7 @@ protected:
     void body() override {
         auto lock = std::unique_lock(_m);
         auto ms = std::chrono::milliseconds(1);
-        while (!_cv.wait_for(lock, ms, [=] { return _proceed; })) {
+        while (!_cv.wait_for(lock, ms, [this] { return _proceed; })) {
             if (isStopRequested())
                 return;
             reportProgress(0);
@@ -45,7 +46,7 @@ protected:
 
 public:
     TestTask() {
-        setStateChanged([=] (auto state) {
+        setStateChanged([this] (auto state) {
             this->state = state;
         });
     }
@@ -763,7 +764,7 @@ TEST_CASE("log_file_copy_lines") {
 TEST_CASE("log_file_copy_lines_unicode") {
     qapp();
 
-    auto file = makeLogFile(u8"10 ИНФО CORE юникод\n");
+    auto file = makeLogFile(u8"10 ИНФО CORE юникод\n"_as_char);
     waitParsingAndIndexing(file);
 
     auto model = file.logTableModel();

@@ -64,7 +64,7 @@ SearchLine::SearchLine(bool regexInitial,
         edit->setFocus();
     });
 
-    auto search = [=] {
+    auto search = [=, this] {
         emit searchRequested(edit->text().toStdString(),
                              regex->isChecked(),
                              caseSensitive->isChecked(),

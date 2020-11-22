@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 3.14)
 
 project(logseer VERSION 0.0.4 LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -31,7 +31,7 @@ find_package(Boost 1.56 COMPONENTS system program_options filesystem REQUIRED)
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Debug)
+    set(CMAKE_BUILD_TYPE Release)
 endif()
 
 add_compile_options(-Werror -Werror=return-type -Wall -Wextra -Wno-implicit-fallthrough)

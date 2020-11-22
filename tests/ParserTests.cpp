@@ -5,9 +5,9 @@
 #include "seer/FileParser.h"
 #include "seer/Index.h"
 #include "seer/LineParserRepository.h"
+#include "seer/StriingLiterals.h"
 #include <sstream>
-
-#include <range/v3/algorithm.hpp>
+#include <algorithm>
 
 using namespace seer;
 
@@ -347,7 +347,7 @@ TEST_CASE("filter_multilines") {
         if (!formats[i].indexed)
             continue;
         auto values = index.getValues(i);
-        auto it = ranges::find(values, "", &ColumnIndexInfo::value);
+        auto it = std::ranges::find(values, "", &ColumnIndexInfo::value);
         REQUIRE( it != end(values) );
         REQUIRE( it->count == 3 );
     }
@@ -667,7 +667,7 @@ TEST_CASE("search_unicode") {
 
     auto indexCopy = index;
     std::vector<ColumnFilter> filters;
-    filters = {{1, {u8"ИНФО"}}};
+    filters = {{1, {u8"ИНФО"_as_char}}};
     indexCopy.filter(filters);
     REQUIRE( indexCopy.getLineCount() == 3 );
     REQUIRE( indexCopy.mapIndex(0) == 0 );
@@ -677,33 +677,33 @@ TEST_CASE("search_unicode") {
     seer::Hist hist(1);
 
     indexCopy = index;
-    indexCopy.search(&fileParser, u8"grüßen", false, true, false, hist);
+    indexCopy.search(&fileParser, u8"grüßen"_as_char, false, true, false, hist);
     REQUIRE( indexCopy.getLineCount() == 1 );
     REQUIRE( indexCopy.mapIndex(0) == 5 );
 
     indexCopy = index;
-    indexCopy.search(&fileParser, u8"grüßen", false, false, false, hist);
+    indexCopy.search(&fileParser, u8"grüßen"_as_char, false, false, false, hist);
     REQUIRE( indexCopy.getLineCount() == 2 );
     REQUIRE( indexCopy.mapIndex(0) == 3 );
     REQUIRE( indexCopy.mapIndex(1) == 5 );
 
     indexCopy = index;
-    indexCopy.search(&fileParser, u8"GRÜSSEN", false, true, false, hist);
+    indexCopy.search(&fileParser, u8"GRÜSSEN"_as_char, false, true, false, hist);
     REQUIRE( indexCopy.getLineCount() == 1 );
     REQUIRE( indexCopy.mapIndex(0) == 4 );
 
     indexCopy = index;
-    indexCopy.search(&fileParser, u8"GRÜSSEN", false, false, false, hist);
+    indexCopy.search(&fileParser, u8"GRÜSSEN"_as_char, false, false, false, hist);
     REQUIRE( indexCopy.getLineCount() == 1 );
     REQUIRE( indexCopy.mapIndex(0) == 4 );
 
     indexCopy = index;
-    indexCopy.search(&fileParser, u8"GRÜẞEN", false, true, false, hist);
+    indexCopy.search(&fileParser, u8"GRÜẞEN"_as_char, false, true, false, hist);
     REQUIRE( indexCopy.getLineCount() == 1 );
     REQUIRE( indexCopy.mapIndex(0) == 3 );
 
     indexCopy = index;
-    indexCopy.search(&fileParser, u8"GRÜẞEN", false, false, false, hist);
+    indexCopy.search(&fileParser, u8"GRÜẞEN"_as_char, false, false, false, hist);
     REQUIRE( indexCopy.getLineCount() == 2 );
     REQUIRE( indexCopy.mapIndex(0) == 3 );
     REQUIRE( indexCopy.mapIndex(1) == 5 );
@@ -834,7 +834,7 @@ TEST_CASE("file_parser_utf16le_singleline") {
     fileParser.readLine(0, line); // cache last line
     fileParser.readLine(0, line); // read last line
 
-    REQUIRE( line == u8"fürfür" );
+    REQUIRE( line == u8"fürfür"_as_char );
 }
 
 TEST_CASE("file_parser_utf16be") {

@@ -22,8 +22,8 @@
 #include <QShortcut>
 #include <boost/filesystem.hpp>
 #include <fstream>
+#include <algorithm>
 #include "seer/bformat.h"
-#include <range/v3/algorithm.hpp>
 
 namespace gui {
 
@@ -100,9 +100,11 @@ void MainWindow::saveOpenedFilesToConfig() {
 
 void MainWindow::addRecentFileToConfig(std::string path) {
     auto config = g_Config.sessionConfig();
-    config.recentFiles.erase(ranges::remove_if(config.recentFiles, [&](auto& p) {
-        return p == path || !boost::filesystem::exists(p);
-    }), end(config.recentFiles));
+    config.recentFiles.erase(
+        std::remove_if(begin(config.recentFiles),
+                       end(config.recentFiles),
+                       [&](auto& p) { return p == path || !boost::filesystem::exists(p); }),
+        end(config.recentFiles));
     config.recentFiles.insert(begin(config.recentFiles), path);
     g_Config.save(config);
 }
@@ -112,7 +114,7 @@ void MainWindow::createMenu() {
     auto editMenu = menuBar()->addMenu("&Edit");
     auto reloadAction = new QAction("&Reload", this);
     reloadAction->setShortcut(QKeySequence::Refresh);
-    connect(reloadAction, &QAction::triggered, this, [=] {
+    connect(reloadAction, &QAction::triggered, this, [this] {
         auto index = _tabWidget->currentIndex();
         auto& log = _logs[index];
         auto stream = std::make_shared<std::ifstream>(log.path, std::ios_base::binary);
@@ -135,7 +137,7 @@ void MainWindow::createMenu() {
         auto action = new QAction(QString::fromStdString(parser->name()), this);
         action->setCheckable(true);
         //action->setToolTip(QString::fromStdString(parser->description()));
-        connect(action, &QAction::triggered, this, [=, parser = parser] {
+        connect(action, &QAction::triggered, this, [this, parser = parser] {
             auto index = _tabWidget->currentIndex();
             auto& log = _logs[index];
             auto stream = std::make_shared<std::ifstream>(log.path, std::ios_base::binary);
@@ -152,7 +154,7 @@ void MainWindow::createMenu() {
     connect(aboutAction, &QAction::triggered, this, &MainWindow::showAbout);
     helpMenu->addAction(aboutAction);
 
-    _updateMenu = [=] {
+    _updateMenu = [=, this] {
         fileMenu->clear();
         auto openAction = new QAction("&Open", this);
         openAction->setShortcut(QKeySequence::Open);
@@ -166,7 +168,7 @@ void MainWindow::createMenu() {
         fileMenu->addSeparator();
         for (auto recentFile : g_Config.sessionConfig().recentFiles) {
             auto action = new QAction(QString::fromStdString(recentFile), this);
-            connect(action, &QAction::triggered, this, [=] {
+            connect(action, &QAction::triggered, this, [=, this] {
                 openLog(recentFile);
             });
             fileMenu->addAction(action);
@@ -350,11 +352,11 @@ void MainWindow::openLog(std::string path, std::string parser) {
 
     auto searchTable = new grid::LogTable(nullptr, font);
 
-    connect(file.get(), &LogFile::stateChanged, this, [=, file = file.get()] {
-        handleStateChanged(file, table, searchTable, searchLine, _updateMenu, [=] {
-            auto it = ranges::find_if(_logs, [=](auto& x) { return x.file.get() == file; });
+    connect(file.get(), &LogFile::stateChanged, this, [=, this, file = file.get()] {
+        handleStateChanged(file, table, searchTable, searchLine, _updateMenu, [=, this] {
+            auto it = std::ranges::find_if(_logs, [=](auto& x) { return x.file.get() == file; });
             assert(it != end(_logs));
-            this->closeTab(std::distance(begin(_logs), it));
+            closeTab(std::distance(begin(_logs), it));
         });
     });
 
@@ -453,10 +455,10 @@ void MainWindow::setInstanceTracker(seer::InstanceTracker* tracker) {
     seer::log_infof("%s called", __func__);
     assert(tracker);
     _tracker = tracker;
-    _trackerThread = std::thread([=] {
-        while (auto message = tracker->waitMessage()) {
+    _trackerThread = std::thread([this] {
+        while (auto message = _tracker->waitMessage()) {
             seer::log_infof("posting file path to UI thread");
-            _dispatcher.postToUIThread([=] {
+            _dispatcher.postToUIThread([=, this] {
                 seer::log_infof("received file path through InstanceTracker: %s", *message);
                 openLog(*message);
                 activateWindow();

@@ -7,8 +7,7 @@
 #include <regex>
 #include <sstream>
 #include <fstream>
-
-#include <range/v3/algorithm.hpp>
+#include <algorithm>
 
 using namespace boost::filesystem;
 using namespace nlohmann;
@@ -137,7 +136,7 @@ void Config::init(std::shared_ptr<IFileSystem> fileSystem) {
 
     auto configPath = getConfigJsonPath();
     auto files = _fileSystem->files(configPath.parent_path());
-    if (ranges::find(files, configPath) == end(files)) {
+    if (std::ranges::find(files, configPath) == end(files)) {
         seer::log_infof("no config found at [%s]", configPath);
         save();
         return;

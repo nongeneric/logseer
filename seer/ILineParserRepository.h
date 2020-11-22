@@ -1,10 +1,10 @@
 #pragma once
 
 #include "ILineParser.h"
-#include <range/v3/view.hpp>
 #include <istream>
 #include <memory>
 #include <map>
+#include <ranges>
 
 namespace seer {
 
@@ -18,7 +18,7 @@ public:
 };
 
 inline std::shared_ptr<ILineParser> resolveByName(ILineParserRepository* repository, std::string name) {
-    for (auto& parser : repository->parsers() | ranges::views::values) {
+    for (auto& parser : repository->parsers() | std::views::values) {
         if (parser->name() == name)
             return parser;
     }

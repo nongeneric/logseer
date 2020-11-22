@@ -1,5 +1,6 @@
 #include <catch2/catch.hpp>
 
+#include <seer/StriingLiterals.h>
 #include <gui/GraphemeMap.h>
 #include <seer/bformat.h>
 
@@ -42,7 +43,7 @@ TEST_CASE("grapheme_map_tab") {
 }
 
 TEST_CASE("grapheme_map_grapheme_cluster") {
-    QString line{u8"g̈"}; // 0067 + 0308
+    QString line{u8"g̈"_as_char}; // 0067 + 0308
     REQUIRE( line.size() == 2 );
     GraphemeMap gmap(line, &g_singleSizeTestMetrics);
     REQUIRE( gmap.graphemeSize() == 1 );
@@ -52,7 +53,7 @@ TEST_CASE("grapheme_map_grapheme_cluster") {
 }
 
 TEST_CASE("grapheme_map_grapheme_cluster_and_tab") {
-    QString line{u8"g̈1\t2g̈3"}; // 0067 + 0308
+    QString line{u8"g̈1\t2g̈3"_as_char}; // 0067 + 0308
     // index: gg1t2gg3
     // graph: g1t2g3
     // pos  : g1__2g3 (tab 4)
@@ -84,7 +85,7 @@ TEST_CASE("grapheme_map_empty_line") {
 }
 
 TEST_CASE("grapheme_map_unicode_and_tab") {
-    QString line{u8"\tfürfür"};
+    QString line{u8"\tfürfür"_as_char};
     // graph: tfürfür
     // pos  : ____furfur (4 tab)
     //        0123456789
