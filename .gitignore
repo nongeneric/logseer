@@ -3,3 +3,4 @@ CMakeLists.txt.user*
 compile_commands.json
 .clangd
 .vscode
+.cache

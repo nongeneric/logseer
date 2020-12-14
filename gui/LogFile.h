@@ -141,7 +141,7 @@ public:
     }
 
 signals:
-    void filterRequested(std::shared_ptr<FilterTableModel> model, int column);
+    void filterRequested(std::shared_ptr<FilterTableModel> model, int column, std::string header);
     void stateChanged();
     void progressChanged(int progress);
 };

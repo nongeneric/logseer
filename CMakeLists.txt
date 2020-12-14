@@ -18,7 +18,6 @@ include_directories(SYSTEM thirdparty/EWAHBoolArray/headers)
 include_directories(SYSTEM thirdparty/sml/include/boost)
 include_directories(SYSTEM thirdparty/concurrentqueue)
 include_directories(SYSTEM thirdparty/json/include)
-include_directories(SYSTEM thirdparty/range-v3/include)
 
 if(WIN32)
     set(Boost_ARCHITECTURE "-x64")
@@ -38,9 +37,6 @@ add_compile_options(-Werror -Werror=return-type -Wall -Wextra -Wno-implicit-fall
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     add_compile_options(-Wno-error=unused-parameter)
     add_compile_options(-Wno-error=unused-variable)
-    add_compile_options(-O0 -ggdb)
-else()
-    add_compile_options(-O3)
 endif()
 
 add_subdirectory(gui)

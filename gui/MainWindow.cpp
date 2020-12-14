@@ -421,11 +421,12 @@ void MainWindow::openLog(std::string path, std::string parser) {
         file.get(),
         &LogFile::filterRequested,
         this,
-        [file = file.get(), this](auto filterModel, int column) {
+        [file = file.get(), this](auto filterModel, int column, std::string header) {
             connect(filterModel.get(), &FilterTableModel::checkedChanged, this, [=] {
                 file->setColumnFilter(column, filterModel->checkedValues());
             });
             _filterDialog = new FilterDialog(filterModel, this);
+            _filterDialog->setWindowTitle(QString::fromStdString(bformat("Column [%s] filter", header)));
             _filterDialog->setSizeGripEnabled(true);
             _filterDialog->resize(450, 450);
             _filterDialog->exec();

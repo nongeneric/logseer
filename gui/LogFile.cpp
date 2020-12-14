@@ -269,10 +269,11 @@ void LogFile::includeOnlyValue(int column, const std::string& value) {
 void LogFile::requestFilter(int column) {
     if (column == 0 || !_indexingComplete)
         return;
-    if (!_lineParser->getColumnFormats().at(column - 1).indexed)
+    auto format = _lineParser->getColumnFormats().at(column - 1);
+    if (!format.indexed)
         return;
     auto filterModel = std::make_shared<FilterTableModel>(_index->getValues(column - 1));
-    emit filterRequested(filterModel, column);
+    emit filterRequested(filterModel, column, format.header);
 }
 
 void LogFile::setColumnFilter(int column, std::set<std::string> values) {
