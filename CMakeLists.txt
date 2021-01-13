@@ -30,7 +30,7 @@ find_package(Boost 1.56 COMPONENTS system program_options filesystem REQUIRED)
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Release)
+    set(CMAKE_BUILD_TYPE RelWithDebInfo)
 endif()
 
 add_compile_options(-Werror -Werror=return-type -Wall -Wextra -Wno-implicit-fallthrough)

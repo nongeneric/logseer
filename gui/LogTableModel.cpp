@@ -251,6 +251,8 @@ int LogTableModel::columnCount([[maybe_unused]] const QModelIndex& parent) const
 }
 
 QVariant LogTableModel::data(const QModelIndex& index, int role) const {
+    if (!index.isValid())
+        return {};
     auto lineIndex = lineOffset(index.row());
     if (role != Qt::DisplayRole && role != Qt::ForegroundRole)
         return {};
