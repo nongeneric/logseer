@@ -347,7 +347,9 @@ TEST_CASE("filter_multilines") {
         if (!formats[i].indexed)
             continue;
         auto values = index.getValues(i);
-        auto it = std::ranges::find(values, "", &ColumnIndexInfo::value);
+        auto it = std::find_if(begin(values), end(values), [&] (auto& info) {
+            return info.value == "";
+        });
         REQUIRE( it != end(values) );
         REQUIRE( it->count == 3 );
     }

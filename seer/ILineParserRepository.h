@@ -4,7 +4,6 @@
 #include <istream>
 #include <memory>
 #include <map>
-#include <ranges>
 
 namespace seer {
 
@@ -18,7 +17,7 @@ public:
 };
 
 inline std::shared_ptr<ILineParser> resolveByName(ILineParserRepository* repository, std::string name) {
-    for (auto& parser : repository->parsers() | std::views::values) {
+    for (auto& [_, parser] : repository->parsers()) {
         if (parser->name() == name)
             return parser;
     }

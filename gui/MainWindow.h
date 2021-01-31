@@ -25,7 +25,6 @@ class MainWindow : public QMainWindow {
 
     ThreadDispatcher _dispatcher;
     QTabWidget* _tabWidget;
-    FilterDialog* _filterDialog;
     std::vector<OpenedLogFile> _logs;
     QStackedLayout* _centralLayout;
     QLabel* _dragAndDropTip;

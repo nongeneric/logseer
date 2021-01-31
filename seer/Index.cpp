@@ -375,7 +375,9 @@ std::vector<ColumnIndexInfo> Index::getValues(int column) {
     std::vector<ColumnIndexInfo> values;
     for (auto& [value, index] : _columns[column].index) {
         auto checked = true;
-        auto filter = std::ranges::find(_filters, column, &ColumnFilter::column);
+        auto filter = std::find_if(begin(_filters), end(_filters), [&] (auto& filter) {
+            return filter.column == column;
+        });
         if (filter != end(_filters)) {
             auto& selected = filter->selected;
             checked = selected.find(value) != end(selected);
@@ -401,7 +403,9 @@ std::vector<ColumnIndexInfo> Index::getValues(int column) {
         values.push_back({value, checked, count});
     }
 
-    std::ranges::sort(values, std::less<>(), &ColumnIndexInfo::value);
+    std::sort(begin(values), end(values), [&](auto& a, auto& b) {
+        return a.value < b.value;
+    });
 
     return values;
 }

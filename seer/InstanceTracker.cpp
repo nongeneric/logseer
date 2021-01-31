@@ -100,8 +100,9 @@ void InstanceTracker::stop() {
         shutdown(_socket, LOGSEER_SHUTDOWN_RDWR);
         LOGSEER_CLOSE_SOCKET(_socket);
         _socket = LOGSEER_INVALID_SOCKET;
-        _queue.enqueue({});
     }
+
+    _queue.enqueue({});
 
     if (_thread.joinable()) {
         _thread.join();

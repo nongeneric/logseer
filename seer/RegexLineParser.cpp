@@ -51,7 +51,9 @@ void RegexLineParser::load(std::string config) {
                 auto columnName = (*it)["column"].get<std::string>();
                 auto value = (*it)["value"].get<std::string>();
                 auto color = std::stoi((*it)["color"].get<std::string>(), 0, 16);
-                auto column = std::ranges::find(_formats, columnName, &RegexColumnFormat::name);
+                auto column = std::find_if(begin(_formats), end(_formats), [&] (auto& format) {
+                    return format.name == columnName;
+                });
                 if (column == end(_formats))
                     continue;
                 auto columnIndex = static_cast<int>(std::distance(begin(_formats), column));

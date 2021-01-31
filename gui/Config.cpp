@@ -136,7 +136,7 @@ void Config::init(std::shared_ptr<IFileSystem> fileSystem) {
 
     auto configPath = getConfigJsonPath();
     auto files = _fileSystem->files(configPath.parent_path());
-    if (std::ranges::find(files, configPath) == end(files)) {
+    if (std::find(begin(files), end(files), configPath) == end(files)) {
         seer::log_infof("no config found at [%s]", configPath);
         save();
         return;

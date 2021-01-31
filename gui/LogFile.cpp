@@ -191,7 +191,9 @@ void LogFile::applyFilter() {
 void LogFile::adaptFilter() {
     for (auto& [c, filters] : _columnFilters) {
         std::vector<std::string> values;
-        std::ranges::transform(_index->getValues(c), std::back_inserter(values), &seer::ColumnIndexInfo::value);
+        for (auto& info : _index->getValues(c)) {
+            values.push_back(info.value);
+        }
 
         std::set<std::string> intersection;
         std::set_intersection(begin(values),

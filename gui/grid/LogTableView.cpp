@@ -53,7 +53,11 @@ public:
 
         auto it = _cache.find(s);
         if (it == end(_cache)) {
+#if QT_VERSION < QT_VERSION_CHECK(5,11,0)
+            it = _cache.emplace(s, _fm.width(str)).first;
+#else
             it = _cache.emplace(s, _fm.horizontalAdvance(str)).first;
+#endif
         }
         return it->second;
     }
@@ -112,7 +116,7 @@ void LogTableView::paintRow(QPainter* painter, int row, int y) {
         graphemes.resize(searchRange.size());
 
         if (isRowSelected) {
-            std::ranges::fill(graphemes, selectedGrapheme);
+            std::fill(begin(graphemes), end(graphemes), selectedGrapheme);
         } else if (columnSelection && columnSelection->row == row &&
                    columnSelection->column == column) {
             assert(columnSelection->first >= 0);

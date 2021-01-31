@@ -18,7 +18,12 @@ struct RegexConfig {
 };
 
 struct FontConfig {
-    std::string name = "Mono";
+    std::string name =
+#if __MINGW32__
+        "Courier";
+#else
+        "Mono";
+#endif
     int size = 10;
 };
 

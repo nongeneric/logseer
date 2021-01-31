@@ -6,6 +6,7 @@
 #include <QAbstractTableModel>
 #include <vector>
 #include <tuple>
+#include <variant>
 
 namespace gui {
 

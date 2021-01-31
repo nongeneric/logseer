@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=logseer
+GenericName=Log Viewer
+Comment=A column-based log viewer
+TryExec=logseer
+Exec=logseer %F
+Icon=logseer
+Categories=Utility;TextTools;Development
+Keywords=log;
+X-Desktop-File-Install-Version=0.26

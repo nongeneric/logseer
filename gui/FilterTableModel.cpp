@@ -68,7 +68,7 @@ void FilterTableModel::invertSelection(std::vector<int> rows) {
             _infos.at(row).checked = value;
         }
     };
-    if (std::ranges::any_of(rows, unchecked)) {
+    if (std::any_of(begin(rows), end(rows), unchecked)) {
         setAll(true);
     } else {
         setAll(false);

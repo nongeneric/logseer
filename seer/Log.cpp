@@ -2,6 +2,12 @@
 
 #ifndef __MINGW32__
 
+#include <spdlog/version.h>
+
+#if SPDLOG_VERSION > 10200
+#define SPDLOG_FMT_EXTERNAL
+#endif
+
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_sinks.h>
 #include <spdlog/sinks/basic_file_sink.h>

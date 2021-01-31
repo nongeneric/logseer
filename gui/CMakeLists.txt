@@ -51,5 +51,5 @@ target_link_libraries(gui
     seer
 )
 
-add_executable(logseer main.cpp ${QT_RESOURCES} resources/resources.qrc)
+add_executable(logseer main.cpp ${QT_RESOURCES} resources/resources.qrc "${CMAKE_CURRENT_SOURCE_DIR}/resources/winicon/icon.rc")
 target_link_libraries(logseer gui)

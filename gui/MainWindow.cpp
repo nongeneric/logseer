@@ -255,13 +255,11 @@ void MainWindow::showAbout() {
     auto title = bformat("About %s", g_name);
     auto text = bformat("<b>%1% %2%%3%</b><p>"
                         "Config: <a href='file://%4%'>%4%</a><p>"
-                        "Home Page: <a href='%5%'>%5%</a><p>"
-                        "GitHub: <a href='%6%'>%6%</a>",
+                        "GitHub: <a href='%5%'>%5%</a>",
                         g_name,
                         g_version,
                         debugBuild,
                         g_Config.getConfigDirectory().string(),
-                        "https://rcebits.com/logseer/",
                         "https://github.com/nongeneric/logseer");
     QMessageBox::about(this, QString::fromStdString(title), QString::fromStdString(text));
 }
@@ -298,6 +296,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), _dispatcher(this)
     setCentralWidget(centralWidget);
     setAcceptDrops(true);
     setWindowTitle(QString("logseer%0").arg(g_debug ? " [DEBUG]" : ""));
+    setWindowIcon(QIcon(":/logseer.svg"));
     resize(800, 600);
     updateTabWidgetVisibility();
 
@@ -354,7 +353,7 @@ void MainWindow::openLog(std::string path, std::string parser) {
 
     connect(file.get(), &LogFile::stateChanged, this, [=, this, file = file.get()] {
         handleStateChanged(file, table, searchTable, searchLine, _updateMenu, [=, this] {
-            auto it = std::ranges::find_if(_logs, [=](auto& x) { return x.file.get() == file; });
+            auto it = std::find_if(begin(_logs), end(_logs), [=](auto& x) { return x.file.get() == file; });
             assert(it != end(_logs));
             closeTab(std::distance(begin(_logs), it));
         });
@@ -425,11 +424,11 @@ void MainWindow::openLog(std::string path, std::string parser) {
             connect(filterModel.get(), &FilterTableModel::checkedChanged, this, [=] {
                 file->setColumnFilter(column, filterModel->checkedValues());
             });
-            _filterDialog = new FilterDialog(filterModel, this);
-            _filterDialog->setWindowTitle(QString::fromStdString(bformat("Column [%s] filter", header)));
-            _filterDialog->setSizeGripEnabled(true);
-            _filterDialog->resize(450, 450);
-            _filterDialog->exec();
+            FilterDialog filterDialog(filterModel, this);
+            filterDialog.setWindowTitle(QString::fromStdString(bformat("[%s] filter", header)));
+            filterDialog.setSizeGripEnabled(true);
+            filterDialog.resize(450, 450);
+            filterDialog.exec();
         });
 
     connect(table,

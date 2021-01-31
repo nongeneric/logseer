@@ -4,5 +4,6 @@
         <file>filter.svg</file>
         <file>200_journalctl.json</file>
         <file>500_logseer.json</file>
+        <file>logseer.svg</file>
     </qresource>
 </RCC>
