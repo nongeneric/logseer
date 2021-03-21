@@ -43,6 +43,10 @@ struct SessionConfig {
     std::vector<std::string> recentFiles;
 };
 
+struct GeneralConfig {
+    bool showCloseTabButton = true;
+};
+
 class IFileSystem {
 public:
     virtual ~IFileSystem() = default;
@@ -65,6 +69,7 @@ class Config {
     FontConfig _fontConfig;
     SearchConfig _searchConfig;
     SessionConfig _sessionConfig;
+    GeneralConfig _generalConfig;
     std::shared_ptr<IFileSystem> _fileSystem;
 
     boost::filesystem::path getHomeDirectory();
@@ -78,6 +83,7 @@ public:
     FontConfig fontConfig();
     SearchConfig searchConfig();
     SessionConfig sessionConfig();
+    GeneralConfig generalConfig();
     void save(FontConfig const& config);
     void save(SearchConfig const& config);
     void save(SessionConfig const& config);

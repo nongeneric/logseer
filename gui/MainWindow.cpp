@@ -160,7 +160,7 @@ void MainWindow::createMenu() {
         openAction->setShortcut(QKeySequence::Open);
         connect(openAction, &QAction::triggered, this, &MainWindow::openFile);
         fileMenu->addAction(openAction);
-        auto closeAction = new QAction("&Close", this);
+        auto closeAction = new QAction("&Close Tab", this);
         closeAction->setShortcut(QKeySequence::Close);
         connect(closeAction, &QAction::triggered, this, &MainWindow::closeCurrentTab);
         fileMenu->addAction(closeAction);
@@ -266,7 +266,7 @@ void MainWindow::showAbout() {
 
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), _dispatcher(this) {
     _tabWidget = new QTabWidget(this);
-    _tabWidget->setTabsClosable(true);
+    _tabWidget->setTabsClosable(g_Config.generalConfig().showCloseTabButton);
     _tabWidget->setMovable(true);
     _updateMenu = []{};
 

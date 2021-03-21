@@ -55,6 +55,9 @@ The config is stored in the home directory ``~/.logseer/logseer.json``. It is cr
             "name": "Mono",
             "size": 10
         },
+        "general": {
+            "showCloseTabButton": true
+        },
         "search": {
             "caseSensitive": false,
             "messageOnly": false,
@@ -65,6 +68,8 @@ The config is stored in the home directory ``~/.logseer/logseer.json``. It is cr
 **font.name** is the font name used for the log text.
 
 **font.size** is the font size in points.
+
+**general.showCloseTabButton** is used to show or hide the Close Tab button on each tab. The Ctrl+W shortcut and the menu entry are unaffected.
 
 **search.\*** are the search settings. They are updated at runtime by **logseer**.
 

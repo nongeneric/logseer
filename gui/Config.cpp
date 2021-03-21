@@ -27,6 +27,8 @@ struct {
     const char* sessionOpenedFilePath = "path";
     const char* sessionOpenedFileParser = "parser";
     const char* sessionRecentFiles = "recentFiles";
+    const char* generalGroup = "general";
+    const char* showCloseTabButton = "showCloseTabButton";
 } g_consts;
 
 } // namespace
@@ -112,6 +114,11 @@ void Config::save() {
                 {g_consts.sessionOpenedFiles, 0},
                 {g_consts.sessionRecentFiles, _sessionConfig.recentFiles},
             }
+        },
+        {
+            g_consts.generalGroup, {
+                {g_consts.showCloseTabButton, _generalConfig.showCloseTabButton},
+            }
         }
     };
 
@@ -152,6 +159,13 @@ void Config::init(std::shared_ptr<IFileSystem> fileSystem) {
     _searchConfig.messageOnly = search[g_consts.searchMessageOnly].get<bool>();
     _searchConfig.regex = search[g_consts.searchRegex].get<bool>();
     _searchConfig.caseSensitive = search[g_consts.searchCaseSensitive].get<bool>();
+
+    auto general = j[g_consts.generalGroup];
+    auto jShowCloseTabButton = general[g_consts.showCloseTabButton];
+    if (!jShowCloseTabButton.is_null()) {
+        _generalConfig.showCloseTabButton = jShowCloseTabButton.get<bool>();
+    }
+
     auto session = j[g_consts.sessionGroup];
     if (!session.is_null()) {
         auto openedFiles = session[g_consts.sessionOpenedFiles];
@@ -183,6 +197,10 @@ SearchConfig Config::searchConfig() {
 
 SessionConfig Config::sessionConfig() {
     return _sessionConfig;
+}
+
+GeneralConfig Config::generalConfig() {
+    return _generalConfig;
 }
 
 void Config::save(FontConfig const& config) {
