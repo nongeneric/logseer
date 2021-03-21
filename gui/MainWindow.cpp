@@ -161,7 +161,7 @@ void MainWindow::createMenu() {
         connect(openAction, &QAction::triggered, this, &MainWindow::openFile);
         fileMenu->addAction(openAction);
         auto closeAction = new QAction("&Close Tab", this);
-        closeAction->setShortcut(QKeySequence::Close);
+        closeAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_W));
         connect(closeAction, &QAction::triggered, this, &MainWindow::closeCurrentTab);
         fileMenu->addAction(closeAction);
 
@@ -284,9 +284,9 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), _dispatcher(this)
         std::swap(_logs[from], _logs[to]);
     });
 
-    _dragAndDropTip = new QLabel("Drag & Drop Files Here to Open");
+    _dragAndDropTip = new QLabel("Drag & Drop Files Here to Open", this);
     _dragAndDropTip->setAlignment(Qt::AlignCenter);
-    _centralLayout = new QStackedLayout();
+    _centralLayout = new QStackedLayout(this);
     _centralLayout->addWidget(_dragAndDropTip);
     _centralLayout->addWidget(_tabWidget);
 
