@@ -48,6 +48,7 @@ bool LogScrollArea::isVisible(int row) {
 
 void LogScrollArea::resizeEvent(QResizeEvent* event) {
     _view->resize(event->size());
+    scrollContentsBy(0, 0);
     setRowCount(_rowCount);
 }
 

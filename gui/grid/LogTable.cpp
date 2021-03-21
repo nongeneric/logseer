@@ -159,10 +159,6 @@ void LogTable::updateMessageWidth(int width) {
     }
 }
 
-void LogTable::mousePressEvent(QMouseEvent* event) {
-    QWidget::mousePressEvent(event);
-}
-
 void LogTable::keyPressEvent(QKeyEvent* event) {
     if (event->key() == Qt::Key_Home) {
         _scrollArea->ensureVisible(0);
@@ -172,10 +168,6 @@ void LogTable::keyPressEvent(QKeyEvent* event) {
     } else {
         QWidget::keyPressEvent(event);
     }
-}
-
-void LogTable::paintEvent(QPaintEvent* event) {
-    QWidget::paintEvent(event);
 }
 
 void LogTable::resizeEvent(QResizeEvent*) {
