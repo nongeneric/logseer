@@ -15,7 +15,6 @@ LogScrollArea::LogScrollArea(QWidget* parent) : QAbstractScrollArea(parent) {
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     setBackgroundRole(QPalette::Light);
-    verticalScrollBar()->setPageStep(10);
 }
 
 void LogScrollArea::setWidget(LogTableView* view, FilterHeaderView* header) {
@@ -49,6 +48,7 @@ bool LogScrollArea::isVisible(int row) {
 void LogScrollArea::resizeEvent(QResizeEvent* event) {
     _view->resize(event->size());
     scrollContentsBy(0, 0);
+    verticalScrollBar()->setPageStep(_view->visibleRows());
     setRowCount(_rowCount);
 }
 
