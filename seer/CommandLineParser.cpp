@@ -1,5 +1,6 @@
 #include "CommandLineParser.h"
 #include <boost/program_options.hpp>
+#include <boost/filesystem.hpp>
 #include "seer/Log.h"
 #include "version.h"
 #include <sstream>
@@ -51,6 +52,10 @@ bool CommandLineParser::parse(int argc, const char* const argv[]) {
         _verbose = console_vm.count("verbose");
 
         po::notify(console_vm);
+
+        for (auto& path : _paths) {
+            path = boost::filesystem::absolute(path).string();
+        }
     } catch(std::exception& e) {
         _error = bformat(
             "can't parse program options:\n%s\n\n%s", e.what(), help());
