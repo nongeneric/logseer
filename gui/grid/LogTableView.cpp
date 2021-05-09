@@ -354,7 +354,7 @@ LogTableView::LogTableView(QFont font, LogTable* parent)
     _gmapFontMetrics = std::make_unique<GmapFontMetrics>(fm);
 
     auto copyAction = new QAction(_table->scrollArea());
-    copyAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_C));
+    copyAction->setShortcut(QKeySequence(static_cast<int>(Qt::CTRL) | Qt::Key_C));
     copyAction->setShortcutContext(Qt::WidgetWithChildrenShortcut);
     connect(copyAction, &QAction::triggered, [this] { LogTableView::copyToClipboard(true); });
     addAction(copyAction);

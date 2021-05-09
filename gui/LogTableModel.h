@@ -7,6 +7,7 @@
 #include <vector>
 #include <tuple>
 #include <variant>
+#include <optional>
 
 namespace gui {
 

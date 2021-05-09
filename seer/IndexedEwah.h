@@ -7,7 +7,7 @@
 namespace seer {
 
 class IndexedEwah : public IRandomArray {
-    using Iter = decltype(((EWAHBoolArray<uint64_t>*)0)->begin());
+    using Iter = decltype(((EWAHBoolArray<uint64_t>*)1)->begin());
     unsigned _bucketSize;
     std::vector<Iter> _buckets;
     int _size = 0;

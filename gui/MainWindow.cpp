@@ -161,7 +161,7 @@ void MainWindow::createMenu() {
         connect(openAction, &QAction::triggered, this, &MainWindow::openFile);
         fileMenu->addAction(openAction);
         auto closeAction = new QAction("&Close Tab", this);
-        closeAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_W));
+        closeAction->setShortcut(QKeySequence(static_cast<int>(Qt::CTRL) | Qt::Key_W));
         connect(closeAction, &QAction::triggered, this, &MainWindow::closeCurrentTab);
         fileMenu->addAction(closeAction);
 
@@ -200,7 +200,7 @@ void MainWindow::createMenu() {
                 continue;
             auto columnName = model->headerData(i, Qt::Horizontal, Qt::DisplayRole).toString();
             auto action = new QAction(columnName, this);
-            action->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_1 + Qt::Key(indexColumn)));
+            action->setShortcut(QKeySequence(Qt::CTRL | (Qt::Key_1 + Qt::Key(indexColumn))));
             connect(action, &QAction::triggered, this, [=, file=log.file.get()] {
                 file->requestFilter(i);
             });
