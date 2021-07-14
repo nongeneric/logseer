@@ -25,7 +25,7 @@ public:
         return {{"Message", false, false}};
     }
 
-    bool isMatch(std::vector<std::string>, std::string_view) override {
+    bool isMatch(const std::vector<std::string>&, std::string_view) override {
         return true;
     }
 

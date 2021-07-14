@@ -5,7 +5,7 @@
 #include "RandomBitArray.h"
 #include "IndexedEwah.h"
 #include "Hist.h"
-#include <ewah.h>
+#include <ewah/ewah.h>
 #include <stdint.h>
 #include <string>
 #include <unordered_map>
@@ -19,7 +19,7 @@ namespace seer {
 
 inline constexpr int g_tabWidth = 4;
 
-using ewah_bitset = EWAHBoolArray<uint64_t>;
+using ewah_bitset = ewah::EWAHBoolArray<uint64_t>;
 
 struct ColumnIndexInfo {
     std::string value;

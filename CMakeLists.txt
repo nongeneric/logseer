@@ -14,7 +14,7 @@ configure_file (
 include_directories("${CMAKE_BINARY_DIR}")
 include_directories("${CMAKE_SOURCE_DIR}")
 include_directories(SYSTEM thirdparty/Catch2/single_include)
-include_directories(SYSTEM thirdparty/EWAHBoolArray/headers)
+include_directories(SYSTEM thirdparty/EWAHBoolArray/include)
 include_directories(SYSTEM thirdparty/sml/include/boost)
 include_directories(SYSTEM thirdparty/concurrentqueue)
 include_directories(SYSTEM thirdparty/json/include)

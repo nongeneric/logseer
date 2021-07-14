@@ -258,3 +258,175 @@ TEST_CASE("report_regex_parser_error") {
         )_";
     REQUIRE_THROWS_AS(seer::RegexLineParser("").load(json), seer::RegexpOutOfBoundGroupReferenceException);
 }
+
+TEST_CASE("match_using_magic") {
+    auto json =
+        R"_(
+            {
+                "description": "test description",
+                "regex": "(\\d+) (.*?) (.*?) (.*)",
+                "magic": "123",
+                "columns": [
+                    {
+                        "name": "Timestamp",
+                        "group": 1,
+                        "indexed": false,
+                        "autosize": true
+                    },
+                    {
+                        "name": "Level",
+                        "group": 2,
+                        "indexed": true
+                    },
+                    {
+                        "name": "Component",
+                        "group": 3,
+                        "indexed": true
+                    },
+                    {
+                        "name": "Message",
+                        "group": 4,
+                        "indexed": false
+                    }
+                ]
+            }
+        )_";
+
+    seer::RegexLineParser parser{""};
+    parser.load(json);
+
+    REQUIRE( !parser.isMatch({""}, "") );
+    REQUIRE( !parser.isMatch({"abcde"}, "") );
+    REQUIRE( parser.isMatch({"12345"}, "") );
+}
+
+TEST_CASE("forbid_both_lua_and_magic") {
+    auto json =
+        R"_(
+            {
+                "description": "test description",
+                "regex": "(\\d+) (.*?) (.*?) (.*)",
+                "magic": "123",
+                "detector": [ "" ],
+                "columns": [
+                    {
+                        "name": "Timestamp",
+                        "group": 1,
+                        "indexed": false,
+                        "autosize": true
+                    },
+                    {
+                        "name": "Level",
+                        "group": 2,
+                        "indexed": true
+                    },
+                    {
+                        "name": "Component",
+                        "group": 3,
+                        "indexed": true
+                    },
+                    {
+                        "name": "Message",
+                        "group": 4,
+                        "indexed": false
+                    }
+                ]
+            }
+        )_";
+
+    REQUIRE_THROWS_AS(seer::RegexLineParser("").load(json), seer::OptionInconsistencyException);
+}
+
+TEST_CASE("lua_detect_by_filename") {
+    auto json =
+        R"_(
+            {
+                "description": "test description",
+                "regex": "(\\d+) (.*?) (.*?) (.*)",
+                "detector": [
+                    "return string.find(fileName, '.ext') ~= nil"
+                ],
+                "columns": [
+                    {
+                        "name": "Timestamp",
+                        "group": 1,
+                        "indexed": false,
+                        "autosize": true
+                    },
+                    {
+                        "name": "Level",
+                        "group": 2,
+                        "indexed": true
+                    },
+                    {
+                        "name": "Component",
+                        "group": 3,
+                        "indexed": true
+                    },
+                    {
+                        "name": "Message",
+                        "group": 4,
+                        "indexed": false
+                    }
+                ]
+            }
+        )_";
+
+    seer::RegexLineParser parser{""};
+    parser.load(json);
+
+    REQUIRE( !parser.isMatch({""}, "file") );
+    REQUIRE( parser.isMatch({""}, "file.ext") );
+}
+
+TEST_CASE("lua_detect_by_parsed_status") {
+    auto json =
+        R"_(
+            {
+                "description": "test description",
+                "regex": "(A|B)",
+                "detector": [
+                    "return #lines >= 2 and lines[0].parsed and lines[1].parsed"
+                ],
+                "columns": [
+                    {
+                        "name": "message",
+                        "group": 1,
+                        "indexed": false
+                    }
+                ]
+            }
+        )_";
+
+    seer::RegexLineParser parser{""};
+    parser.load(json);
+
+    REQUIRE( parser.isMatch({"A", "B", "A"}, "") );
+    REQUIRE( !parser.isMatch({"A", "C", "A", "B"}, "") );
+}
+
+TEST_CASE("lua_detect_by_content") {
+    auto json =
+        R"_(
+            {
+                "description": "test description",
+                "regex": "(A|B)",
+                "detector": [
+                    "return #lines >= 2 and lines[0].text == 'A'"
+                ],
+                "columns": [
+                    {
+                        "name": "message",
+                        "group": 1,
+                        "indexed": false
+                    }
+                ]
+            }
+        )_";
+
+    seer::RegexLineParser parser{""};
+    parser.load(json);
+
+    REQUIRE( parser.isMatch({"A", "B", "A"}, "") );
+    REQUIRE( !parser.isMatch({"B", "B", "A"}, "") );
+}

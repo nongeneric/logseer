@@ -1,5 +1,7 @@
 #include "RegexLineParser.h"
 
+#include <seer/lua/LuaInterpreter.h>
+
 #include <nlohmann/json.hpp>
 #include <boost/algorithm/string.hpp>
 #include <seer/bformat.h>
@@ -12,6 +14,64 @@
 using namespace nlohmann;
 
 namespace seer {
+
+class MagicLogDetector : public ILogDetector {
+    std::string _magic;
+public:
+    MagicLogDetector(std::string magic) : _magic(std::move(magic)) {}
+
+    bool isMatch(const std::vector<std::string>& lines, [[maybe_unused]] std::string_view fileName) override {
+        if (lines.empty())
+            return false;
+        return boost::starts_with(lines.front(), _magic);
+    }
+};
+
+class DefaultLogDetector : public ILogDetector {
+    RegexLineParser* _parser;
+
+public:
+    DefaultLogDetector(RegexLineParser* parser) : _parser(parser) {}
+
+    bool isMatch(const std::vector<std::string>& lines, [[maybe_unused]] std::string_view fileName) override {
+        if (lines.empty())
+            return false;
+        std::vector<std::string> columns;
+        return _parser->parseLine(lines.front(), columns);
+    }
+};
+
+class LuaLogDetector : public ILogDetector {
+    RegexLineParser* _parser;
+    std::string _script;
+public:
+    LuaLogDetector(RegexLineParser* parser, std::string script) : _parser(parser), _script(script) {
+        LuaThread thread;
+        if (!thread.pushScript(script))
+            throw std::runtime_error("lua script syntax error");
+    }
+
+    bool isMatch(const std::vector<std::string>& lines, std::string_view fileName) override {
+        LuaThread thread;
+        LuaTable luaLines;
+        std::vector<std::string> columns;
+        for (auto i = 0u; i < lines.size(); ++i) {
+            auto luaLine = std::make_shared<LuaTable>();
+            luaLine->insert(std::make_shared<LuaString>("text"),
+                            std::make_shared<LuaString>(lines[i]));
+            luaLine->insert(std::make_shared<LuaString>("parsed"),
+                            std::make_shared<LuaBool>(_parser->parseLine(lines[i], columns)));
+            luaLines.insert(std::make_shared<LuaInt>(i), luaLine);
+        }
+        thread.setGlobal("lines", luaLines);
+        LuaString luaFileName{std::string(fileName)};
+        thread.setGlobal("fileName", luaFileName);
+        thread.pushScript(_script);
+        if (!thread.execTop())
+            return false;
+        return thread.popBool();
+    }
+};
 
 RegexLineParser::RegexLineParser(std::string name) : _name(name) {}
 
@@ -33,8 +93,22 @@ void RegexLineParser::load(std::string config) {
 
         auto& columns = j["columns"];
         auto magic = j["magic"];
+        auto detector = j["detector"];
+
+        if (!magic.is_null() && !detector.is_null())
+            throw OptionInconsistencyException("Both 'magic' and 'detector' can't be set at the same time");
+
         if (!magic.is_null()) {
-            _magic = magic.get<std::string>();
+            _detector = std::make_shared<MagicLogDetector>(magic.get<std::string>());
+        } else if (!detector.is_null()) {
+            std::string text;
+            for (auto it = begin(detector); it != end(detector); ++it) {
+                text += it->get<std::string>();
+                text += "\n";
+            }
+            _detector = std::make_shared<LuaLogDetector>(this, text);
+        } else {
+            _detector = std::make_shared<DefaultLogDetector>(this);
         }
 
         for (auto it = begin(columns); it != end(columns); ++it) {
@@ -144,15 +218,9 @@ uint32_t RegexLineParser::rgb(const std::vector<std::string>& columns) const {
     return 0;
 }
 
-bool RegexLineParser::isMatch([[maybe_unused]] std::vector<std::string> sample,
-                              [[maybe_unused]] std::string_view fileName) {
-    if (sample.empty())
-        return false;
-    if (!_magic.empty()) {
-        return boost::starts_with(sample.front(), _magic);
-    }
-    std::vector<std::string> columns;
-    return parseLine(sample[0], columns);
+bool RegexLineParser::isMatch(const std::vector<std::string>& sample,
+                              std::string_view fileName) {
+    return _detector->isMatch(sample, fileName);
 }
 
 std::string RegexLineParser::name() const{

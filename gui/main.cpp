@@ -17,8 +17,6 @@ int main(int argc, char *argv[]) {
         }
         gui::g_Config.init();
 
-        seer::InstanceTracker tracker(gui::g_socketName);
-
         if (!parser.help().empty()) {
             std::cout << parser.help() << std::endl;
             return 0;
@@ -28,6 +26,8 @@ int main(int argc, char *argv[]) {
             std::cout << parser.version() << std::endl;
             return 0;
         }
+
+        seer::InstanceTracker tracker(gui::g_socketName);
 
         if (tracker.connected()) {
             seer::log_infof("InstanceTracker connected to an existing instance");

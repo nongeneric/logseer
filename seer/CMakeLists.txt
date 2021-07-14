@@ -3,6 +3,7 @@ project(seer)
 find_package(Qt5Core)
 find_library(PCRE2 pcre2-8)
 find_library(PCRE2_16 pcre2-16)
+find_library(LUA lua)
 
 add_library(${PROJECT_NAME} STATIC
     ILineParser.h
@@ -38,6 +39,8 @@ add_library(${PROJECT_NAME} STATIC
     task/IndexingTask.cpp
     task/SearchingTask.h
     task/SearchingTask.cpp
+    lua/LuaInterpreter.h
+    lua/LuaInterpreter.cpp
 )
 
 set(LIBS PUBLIC
@@ -46,6 +49,7 @@ set(LIBS PUBLIC
     ${PCRE2_16}
     pthread
     ${Boost_LIBRARIES}
+    ${LUA}
 )
 
 if(WIN32)

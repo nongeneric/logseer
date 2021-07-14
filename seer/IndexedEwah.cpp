@@ -6,7 +6,7 @@ IndexedEwah::IndexedEwah(unsigned bucketSize)
     : _bucketSize(bucketSize)
 { }
 
-void IndexedEwah::init(const EWAHBoolArray<uint64_t> &ewah)
+void IndexedEwah::init(const ewah::EWAHBoolArray<uint64_t> &ewah)
 {
     auto it = ewah.begin();
     auto end = ewah.end();

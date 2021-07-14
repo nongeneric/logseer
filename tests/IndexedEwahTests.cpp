@@ -3,7 +3,7 @@
 #include "seer/IndexedEwah.h"
 
 TEST_CASE("indexed_ewah_simple") {
-    EWAHBoolArray<uint64_t> array;
+    ewah::EWAHBoolArray<uint64_t> array;
     std::vector<uint32_t> values {
         0, 3, 4, 5, 7, 10, 105, 500
     };
