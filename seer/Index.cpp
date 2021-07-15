@@ -222,6 +222,13 @@ public:
     bool index() {
         auto columnFormats = _lineParser->getColumnFormats();
 
+        if (columnFormats.size() == 1) {
+            log_infof("parser [%s] has a single column and doesn't require indexing", _lineParser->name());
+            _columns->clear();
+            _columns->resize(1);
+            return true;
+        }
+
         prepareThreads();
 
         log_info("started indexing");
