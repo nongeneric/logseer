@@ -58,10 +58,6 @@ void LogFile::interruptIndexing() {
     _indexingTask->stop();
 }
 
-void LogFile::doneInterrupted() {
-    emit stateChanged();
-}
-
 void LogFile::pauseAndSearch(sm::SearchEvent event) {
     emit stateChanged();
     _scheduledSearchEvent = event;
@@ -129,32 +125,28 @@ void LogFile::enterComplete() {
 }
 
 void LogFile::enterInterrupted() {
-    emit stateChanged();
+    if (_scheduledReload) {
+        std::optional<sm::ReloadEvent> event;
+        event.swap(_scheduledReload);
+        if (event->parser) {
+            if (_lineParser != event->parser) {
+                _columnFilters.clear();
+            }
+            _lineParser = std::move(event->parser);
+        }
+        _stream = std::move(event->stream);
+        _logTableModel.reset();
+        _searchLogTableModel.reset();
+        _indexingComplete = false;
+        parse();
+    } else {
+        emit stateChanged();
+    }
 }
 
 void LogFile::searchFromPaused() {
     emit stateChanged();
     searchFromComplete(*_scheduledSearchEvent);
-}
-
-void LogFile::reloadFromComplete(sm::ReloadEvent event) {
-    if (event.parser) {
-        if (_lineParser != event.parser) {
-            _columnFilters.clear();
-        }
-        _lineParser = std::move(event.parser);
-    }
-    _stream = std::move(event.stream);
-    _logTableModel.reset();
-    _searchLogTableModel.reset();
-    _indexingComplete = false;
-    enterParsing();
-}
-
-void LogFile::reloadFromParsing(sm::ReloadEvent) {
-}
-
-void LogFile::reloadFromIndexing(sm::ReloadEvent) {
 }
 
 void LogFile::subscribeToSelectionChanged(LogTableModel* model) {

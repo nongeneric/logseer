@@ -44,12 +44,12 @@ class LogFile : public QObject, sm::IStateHandler {
     ThreadDispatcher _dispatcher;
     std::optional<sm::SearchEvent> _scheduledSearchEvent;
     bool _indexingComplete = false;
+    std::optional<sm::ReloadEvent> _scheduledReload;
 
     void enterParsing() override;
     void interruptParsing() override;
     void enterIndexing() override;
     void interruptIndexing() override;
-    void doneInterrupted() override;
     void pauseAndSearch(sm::SearchEvent) override;
     void resumeIndexing() override;
     void searchFromComplete(sm::SearchEvent) override;
@@ -57,9 +57,6 @@ class LogFile : public QObject, sm::IStateHandler {
     void enterComplete() override;
     void enterInterrupted() override;
     void searchFromPaused() override;
-    void reloadFromComplete(sm::ReloadEvent) override;
-    void reloadFromParsing(sm::ReloadEvent) override;
-    void reloadFromIndexing(sm::ReloadEvent) override;
 
     inline void finish() {
         _sm.process_event(sm::FinishEvent{});
@@ -112,7 +109,8 @@ public:
 
     inline void reload(std::shared_ptr<std::istream> stream,
                        std::shared_ptr<seer::ILineParser> parser = {}) {
-        _sm.process_event(sm::ReloadEvent{stream, parser});
+        _scheduledReload = {stream, parser};
+        interrupt();
     }
 
     inline std::string dbgStateName() {

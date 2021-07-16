@@ -562,8 +562,9 @@ TEST_CASE("log_file_get_autosize_attibute") {
 }
 
 TEST_CASE("dump_statemachine", "[.]") {
+    // java -jar plantuml.jar /tmp/logseer-sm.uml
     boost::sml::sm<gui::sm::StateMachine> sm;
-    std::ofstream f("/tmp/uml.txt");
+    std::ofstream f("/tmp/logseer-sm.uml");
     f << gui::sm::dump(sm);
 }
 

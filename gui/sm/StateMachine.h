@@ -30,7 +30,6 @@ struct IStateHandler {
     virtual void interruptParsing() = 0;
     virtual void enterIndexing() = 0;
     virtual void interruptIndexing() = 0;
-    virtual void doneInterrupted() = 0;
     virtual void pauseAndSearch(SearchEvent) = 0;
     virtual void resumeIndexing() = 0;
     virtual void searchFromComplete(SearchEvent) = 0;
@@ -38,9 +37,6 @@ struct IStateHandler {
     virtual void enterComplete() = 0;
     virtual void enterInterrupted() = 0;
     virtual void searchFromPaused() = 0;
-    virtual void reloadFromComplete(ReloadEvent) = 0;
-    virtual void reloadFromParsing(ReloadEvent) = 0;
-    virtual void reloadFromIndexing(ReloadEvent) = 0;
 };
 
 inline auto IdleState = state<class IdleState>;
@@ -73,7 +69,6 @@ struct StateMachine {
     MAKE_ACTION(interruptParsing);
     MAKE_ACTION(enterIndexing);
     MAKE_ACTION(interruptIndexing);
-    MAKE_ACTION(doneInterrupted);
     MAKE_ACTION_E(pauseAndSearch);
     MAKE_ACTION(resumeIndexing);
     MAKE_ACTION_E(searchFromComplete);
@@ -81,9 +76,6 @@ struct StateMachine {
     MAKE_ACTION(enterComplete);
     MAKE_ACTION(enterInterrupted);
     MAKE_ACTION(searchFromPaused);
-    MAKE_ACTION_E(reloadFromComplete);
-    MAKE_ACTION_E(reloadFromParsing);
-    MAKE_ACTION_E(reloadFromIndexing);
 
     inline auto operator()() const {
 #define ACTION(name) a_ ## name {}
@@ -93,12 +85,10 @@ struct StateMachine {
             *IdleState + event<ParseEvent> / ACTION(enterParsing) = ParsingState,
             ParsingState + event<InterruptEvent> / ACTION(interruptParsing) = InterruptingState,
             ParsingState + event<IndexEvent> / ACTION(enterIndexing) = IndexingState,
-            //ParsingState + event<ReloadEvent> / ACTION(reloadFromParsing) = ParsingState,
             ParsingState + event<FailEvent> / ACTION(enterFailed) = FailedState,
             IndexingState + event<InterruptEvent> / ACTION(interruptIndexing) = InterruptingState,
             IndexingState + event<FinishEvent> / ACTION(enterComplete) = CompleteState,
             IndexingState + event<SearchEvent> / ACTION(pauseAndSearch) = PausingIndexingState,
-            //IndexingState + event<ReloadEvent> / ACTION(reloadFromIndexing) = ParsingState,
             IndexingState + event<FailEvent> / ACTION(enterFailed) = FailedState,
             PausingIndexingState + event<PausedEvent> / ACTION(searchFromPaused) = SearchingState,
             PausingIndexingState + event<FinishEvent> / ACTION(searchFromPaused) = SearchingState,
@@ -106,10 +96,10 @@ struct StateMachine {
             SearchingState + event<FailEvent> / ACTION(enterFailed) = FailedState,
             CompleteState + event<SearchEvent> / ACTION(searchFromComplete) = SearchingState,
             CompleteState + event<InterruptEvent> / ACTION(enterInterrupted) = InterruptedState,
-            CompleteState + event<ReloadEvent> / ACTION(reloadFromComplete) = ParsingState,
             FailedState + event<InterruptEvent> / ACTION(enterInterrupted) = InterruptedState,
-            InterruptingState + event<FinishEvent> / ACTION(doneInterrupted) = InterruptedState,
-            InterruptingState + event<IndexEvent> / ACTION(doneInterrupted) = InterruptedState);
+            InterruptingState + event<FinishEvent> / ACTION(enterInterrupted) = InterruptedState,
+            InterruptingState + event<IndexEvent> / ACTION(enterInterrupted) = InterruptedState,
+            InterruptedState + event<ParseEvent> / ACTION(enterParsing) = ParsingState);
         // clang-format on
 
 #undef ACTION
