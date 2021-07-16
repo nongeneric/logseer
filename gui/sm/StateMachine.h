@@ -37,6 +37,7 @@ struct IStateHandler {
     virtual void enterComplete() = 0;
     virtual void enterInterrupted() = 0;
     virtual void searchFromPaused() = 0;
+    virtual void searchFromSearching(SearchEvent) = 0;
 };
 
 inline auto IdleState = state<class IdleState>;
@@ -76,6 +77,7 @@ struct StateMachine {
     MAKE_ACTION(enterComplete);
     MAKE_ACTION(enterInterrupted);
     MAKE_ACTION(searchFromPaused);
+    MAKE_ACTION_E(searchFromSearching);
 
     inline auto operator()() const {
 #define ACTION(name) a_ ## name {}
@@ -93,6 +95,7 @@ struct StateMachine {
             PausingIndexingState + event<PausedEvent> / ACTION(searchFromPaused) = SearchingState,
             PausingIndexingState + event<FinishEvent> / ACTION(searchFromPaused) = SearchingState,
             SearchingState + event<FinishEvent> / ACTION(resumeIndexing) = IndexingState,
+            SearchingState + event<SearchEvent> / ACTION(searchFromSearching) = SearchingState,
             SearchingState + event<FailEvent> / ACTION(enterFailed) = FailedState,
             CompleteState + event<SearchEvent> / ACTION(searchFromComplete) = SearchingState,
             CompleteState + event<InterruptEvent> / ACTION(enterInterrupted) = InterruptedState,

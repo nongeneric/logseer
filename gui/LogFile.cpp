@@ -71,6 +71,12 @@ void LogFile::resumeIndexing() {
         emit stateChanged();
         _indexingTask->start();
     }
+
+    if (_scheduledSearchEvent) {
+        std::optional<sm::SearchEvent> event;
+        event.swap(_scheduledSearchEvent);
+        _sm.process_event(*event);
+    }
 }
 
 void LogFile::searchFromComplete(sm::SearchEvent event) {
@@ -146,7 +152,15 @@ void LogFile::enterInterrupted() {
 
 void LogFile::searchFromPaused() {
     emit stateChanged();
-    searchFromComplete(*_scheduledSearchEvent);
+    assert(_scheduledSearchEvent);
+    std::optional<sm::SearchEvent> event;
+    event.swap(_scheduledSearchEvent);
+    searchFromComplete(*event);
+}
+
+void LogFile::searchFromSearching(sm::SearchEvent event) {
+    _scheduledSearchEvent = event;
+    _searchingTask->stop();
 }
 
 void LogFile::subscribeToSelectionChanged(LogTableModel* model) {

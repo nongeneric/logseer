@@ -57,6 +57,7 @@ class LogFile : public QObject, sm::IStateHandler {
     void enterComplete() override;
     void enterInterrupted() override;
     void searchFromPaused() override;
+    void searchFromSearching(sm::SearchEvent) override;
 
     inline void finish() {
         _sm.process_event(sm::FinishEvent{});
