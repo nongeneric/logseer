@@ -34,6 +34,8 @@ add_library(gui STATIC
     grid/LogScrollArea.cpp
     grid/HistMap.h
     grid/HistMap.cpp
+    grid/GotoLineDialog.h
+    grid/GotoLineDialog.cpp
     sm/Logger.h
     sm/StateMachine.h
     ThreadDispatcher.h

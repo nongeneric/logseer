@@ -167,4 +167,5 @@ Ctrl+Shift+Tab | Switch to the previous tab.
 Ctrl+W | Close the current tab.
 Ctrl+R | Clear all filters.
 Ctrl+C | Copy selected lines.
+Ctrl+G | Goto line.
 Ctrl+Shift+C | Copy selected lines (with headers and spaces).

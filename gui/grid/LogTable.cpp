@@ -1,12 +1,12 @@
 #include "LogTable.h"
 
+#include "GotoLineDialog.h"
+
 #include <QFontMetrics>
 #include <QResizeEvent>
 #include <QScrollBar>
 #include <QSizePolicy>
 #include <QVBoxLayout>
-
-#include "LogTableView.h"
 
 namespace gui::grid {
 
@@ -160,7 +160,16 @@ void LogTable::updateMessageWidth(int width) {
 }
 
 void LogTable::keyPressEvent(QKeyEvent* event) {
-    if (event->key() == Qt::Key_Home) {
+    if (event->key() == Qt::Key_G && event->modifiers() & Qt::CTRL) {
+        GotoLineDialog dialog(this, _model->unfilteredRowCount());
+        if (dialog.exec() == QDialog::Accepted) {
+            assert(dialog.getLine() > 0);
+            auto filteredRow = _model->findRow(*dialog.getLine() - 1);
+            if (filteredRow != -1) {
+                _scrollArea->ensureVisible(filteredRow);
+            }
+        }
+    } else if (event->key() == Qt::Key_Home) {
         _scrollArea->ensureVisible(0);
     } else if (event->key() == Qt::Key_End) {
         auto max = std::max(0, _model->rowCount({}) - 1);

@@ -246,6 +246,10 @@ int LogTableModel::rowCount([[maybe_unused]] const QModelIndex& parent) const {
     return _index->getLineCount();
 }
 
+int LogTableModel::unfilteredRowCount() const {
+    return _parser->lineCount();
+}
+
 int LogTableModel::columnCount([[maybe_unused]] const QModelIndex& parent) const {
     return _columns.size();
 }
