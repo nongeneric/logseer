@@ -37,7 +37,7 @@ Configure and build
 
 To cross-compile for windows you need MinGW
 
-    $ dnf install mingw64-gcc-c++ mingw64-boost mingw64-qt5-qtbase-devel
+    $ dnf install mingw64-gcc-c++ mingw64-boost mingw64-qt5-qtbase-devel mingw64-qt5-qtsvg
 
 Now configure and build
 

@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 3.14)
 
-project(logseer VERSION 0.1.0 LANGUAGES CXX)
+project(logseer VERSION 0.1.0 LANGUAGES CXX C)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -18,6 +18,10 @@ include_directories(SYSTEM thirdparty/EWAHBoolArray/include)
 include_directories(SYSTEM thirdparty/sml/include/boost)
 include_directories(SYSTEM thirdparty/concurrentqueue)
 include_directories(SYSTEM thirdparty/json/include)
+
+file(GLOB LUA_SOURCES thirdparty/lua/*.c)
+add_library(lua STATIC $<FILTER:${LUA_SOURCES},EXCLUDE,onelua.c>)
+target_include_directories(lua INTERFACE SYSTEM thirdparty/lua)
 
 if(WIN32)
     set(Boost_ARCHITECTURE "-x64")

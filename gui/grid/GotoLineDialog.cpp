@@ -28,13 +28,13 @@ GotoLineDialog::GotoLineDialog(QWidget* parent, int64_t lineCount)
     setLayout(vbox);
     setFixedSize(sizeHint());
 
-    connect(_line, &QLineEdit::textChanged, this, [=] {
+    connect(_line, &QLineEdit::textChanged, this, [this] {
         _go->setEnabled(getLine().has_value());
     });
-    connect(_cancel, &QPushButton::clicked, this, [=] {
+    connect(_cancel, &QPushButton::clicked, this, [this] {
         reject();
     });
-    connect(_go, &QPushButton::clicked, this, [=] {
+    connect(_go, &QPushButton::clicked, this, [this] {
         accept();
     });
 }
