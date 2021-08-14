@@ -135,7 +135,17 @@ Its format can be described with the following ``json`` format specification
 
 **regex** specifies a pattern that extracts the columns from a text line. It needs to produce a set of regex groups that will then be treated as columns. There might be unused groups.
 
-**magic** (not shown) is the first few characters of the log file, used to select the appropriate log format when opening new files. If not specified, **logseer** will attempt to parse the first few lines of the log file with different parsers and select the first one that doesn't err.
+**magic** is the first few characters of the log file, used to select the appropriate log format when opening new files. If not specified, **logseer** will attempt to parse the first few lines of the log file with different parsers and select the first one that doesn't err.
+
+**detector** can be specified instead of **magic** as a log format detector. It's a lua script that is called each time logseer tries to open a log file. The script should return True if it recognizes the log file format. It can base its decision on two global variables:
+* fileName -- log file name.
+* lines -- an array of pairs { string text, boolean parsed }. It contains the first several lines of the log file, with **parsed** indicating the result of matching **text** against **regex**.
+
+Example lua detectors:
+
+    "return string.find(fileName, '.ext') ~= nil"
+    "return #lines >= 2 and lines[0].parsed and lines[1].parsed"
+    "return #lines >= 2 and lines[0].text == 'A'"
 
 **columns** is an array that provides descriptions for columns, extracted using the **regex** property.
 
