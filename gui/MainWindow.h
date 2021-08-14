@@ -44,6 +44,7 @@ class MainWindow : public QMainWindow {
     void closeCurrentTab();
     void clearFilters();
     void showAbout();
+    int findTab(const LogFile* file);
 
 public:
     explicit MainWindow(QWidget* parent = nullptr);

@@ -264,6 +264,11 @@ void MainWindow::showAbout() {
     QMessageBox::about(this, QString::fromStdString(title), QString::fromStdString(text));
 }
 
+int MainWindow::findTab(const LogFile* file) {
+    auto it = std::find_if(begin(_logs), end(_logs), [=](auto& x) { return x.file.get() == file; });
+    return it == end(_logs) ? -1 : std::distance(begin(_logs), it);
+}
+
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), _dispatcher(this) {
     _tabWidget = new QTabWidget(this);
     _tabWidget->setTabsClosable(g_Config.generalConfig().showCloseTabButton);
@@ -352,10 +357,14 @@ void MainWindow::openLog(std::string path, std::string parser) {
     auto searchTable = new grid::LogTable(nullptr, font);
 
     connect(file.get(), &LogFile::stateChanged, this, [=, this, file = file.get()] {
+        auto index = findTab(file);
+        if (index != -1) {
+            auto toolTip = bformat("%s\nparser type: %s", path.c_str(), file->lineParser()->name());
+            _tabWidget->setTabToolTip(index, QString::fromStdString(toolTip));
+        }
         handleStateChanged(file, table, searchTable, searchLine, _updateMenu, [=, this] {
-            auto it = std::find_if(begin(_logs), end(_logs), [=](auto& x) { return x.file.get() == file; });
-            assert(it != end(_logs));
-            closeTab(std::distance(begin(_logs), it));
+            assert(index != -1);
+            closeTab(index);
         });
     });
 
@@ -443,8 +452,6 @@ void MainWindow::openLog(std::string path, std::string parser) {
         fileName = boost::filesystem::path(path).filename().string();
     }
     auto index = _tabWidget->addTab(splitter, QString::fromStdString(fileName));
-    auto toolTip = bformat("%s\nparser type: %s", path.c_str(), lineParser->name());
-    _tabWidget->setTabToolTip(index, QString::fromStdString(toolTip));
     _tabWidget->setCurrentIndex(index);
 
     updateTabWidgetVisibility();
