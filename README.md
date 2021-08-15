@@ -21,7 +21,7 @@ Filtering:
 
 Install the dependencies
 
-    $ dnf install git gcc-c++ cmake boost-devel qt5-devel spdlog-devel libfmt-devel pcre2-devel
+    $ dnf install git gcc-c++ cmake boost-devel qt5-devel spdlog-devel fmt-devel pcre2-devel
 
 Clone the repository recursively
 
