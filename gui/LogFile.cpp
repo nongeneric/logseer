@@ -12,37 +12,15 @@ LogFile::LogFile(std::unique_ptr<std::istream>&& stream,
       _stream(std::move(stream)),
       _sm(static_cast<IStateHandler*>(this), _smLogger) {}
 
-void LogFile::enterParsing() {
-    emit stateChanged();
-    _fileParser = std::make_unique<seer::FileParser>(_stream.get(), _lineParser.get());
-    _parsingTask = createParsingTask(_fileParser.get());
-    _parsingTask->setStateChanged([this](auto state) {
-        assert(state != TaskState::Failed);
-        if (state == TaskState::Finished) {
-            _dispatcher.postToUIThread([this] { index(); });
-        }
-    });
-    _parsingTask->setProgressChanged([this](auto progress) {
-        _dispatcher.postToUIThread([=, this] { emit progressChanged(progress); });
-    });
-    _parsingTask->start();
-}
-
-void LogFile::interruptParsing() {
-    emit stateChanged();
-    _parsingTask->stop();
-}
-
 void LogFile::enterIndexing() {
     emit stateChanged();
+    _fileParser = std::make_unique<seer::FileParser>(_stream.get(), _lineParser.get());
     _index = std::make_unique<seer::Index>(_fileParser->lineCount());
     _indexingTask = createIndexingTask(_index.get(), _fileParser.get(), _lineParser.get());
     _indexingTask->setStateChanged([this](auto state) {
         assert(state != TaskState::Failed);
         if (state == TaskState::Finished) {
             _dispatcher.postToUIThread([this] { finish(); });
-        } else if (state == TaskState::Paused) {
-            _dispatcher.postToUIThread([this] { paused(); });
         } else if (state == TaskState::Stopped) {
             _dispatcher.postToUIThread([this] { finish(); });
         }
@@ -56,12 +34,6 @@ void LogFile::enterIndexing() {
 void LogFile::interruptIndexing() {
     emit stateChanged();
     _indexingTask->stop();
-}
-
-void LogFile::pauseAndSearch(sm::SearchEvent event) {
-    emit stateChanged();
-    _scheduledSearchEvent = event;
-    _indexingTask->pause();
 }
 
 void LogFile::resumeIndexing() {
@@ -144,18 +116,10 @@ void LogFile::enterInterrupted() {
         _logTableModel.reset();
         _searchLogTableModel.reset();
         _indexingComplete = false;
-        parse();
+        index();
     } else {
         emit stateChanged();
     }
-}
-
-void LogFile::searchFromPaused() {
-    emit stateChanged();
-    assert(_scheduledSearchEvent);
-    std::optional<sm::SearchEvent> event;
-    event.swap(_scheduledSearchEvent);
-    searchFromComplete(*event);
 }
 
 void LogFile::searchFromSearching(sm::SearchEvent event) {
@@ -215,10 +179,6 @@ std::shared_ptr<seer::task::Task> LogFile::createIndexingTask(seer::Index* index
                                                               seer::FileParser* fileParser,
                                                               seer::ILineParser* lineParser) {
     return std::make_shared<IndexingTask>(index, fileParser, lineParser);
-}
-
-std::shared_ptr<seer::task::Task> LogFile::createParsingTask(seer::FileParser* fileParser) {
-    return std::make_shared<ParsingTask>(fileParser);
 }
 
 LogTableModel* LogFile::logTableModel() {

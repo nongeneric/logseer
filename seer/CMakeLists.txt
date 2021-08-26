@@ -32,8 +32,6 @@ add_library(${PROJECT_NAME} STATIC
     InstanceTracker.cpp
     task/Task.h
     task/Task.cpp
-    task/ParsingTask.h
-    task/ParsingTask.cpp
     task/IndexingTask.h
     task/IndexingTask.cpp
     task/SearchingTask.h

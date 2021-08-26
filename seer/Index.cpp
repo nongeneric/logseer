@@ -101,19 +101,26 @@ class Indexer {
         }
     }
 
-    bool pushLinesToThreads() {
+    bool pushLinesToThreads(bool parsingOnly) {
         std::vector<std::string> columns;
         std::string line;
-        for (uint64_t index = 0, count = _fileParser->lineCount(); index < count; ++index) {
-            if (_stopRequested()) {
-                stopThreads();
-                return false;
-            }
-            _fileParser->readLine(index, line);
-            _queue.enqueue(std::tuple(line, index));
+
+        int index = 0;
+        _fileParser->index([&] (uint64_t pos, uint64_t fileSize) {
             if (_progress) {
-                _progress(index, count);
+                _progress(pos, fileSize);
             }
+        }, [&] (const auto& line) {
+            if (!parsingOnly) {
+                _queue.enqueue(std::tuple(line, index++));
+            }
+        }, [&] {
+            return _stopRequested();
+        });
+
+        if (_stopRequested()) {
+            stopThreads();
+            return false;
         }
         return true;
     }
@@ -226,6 +233,10 @@ public:
             log_infof("parser [%s] has a single column and doesn't require indexing", _lineParser->name());
             _columns->clear();
             _columns->resize(1);
+            log_info("started indexing");
+            if (!pushLinesToThreads(true))
+                return false;
+            log_info("parsing complete");
             return true;
         }
 
@@ -235,7 +246,7 @@ public:
 
         startThreads();
 
-        if (!pushLinesToThreads())
+        if (!pushLinesToThreads(false))
             return false;
 
         stopThreads();
@@ -372,9 +383,10 @@ bool Index::index(FileParser* fileParser,
                   std::function<bool()> stopRequested,
                   std::function<void(uint64_t, uint64_t)> progress)
 {
-    _unfilteredLineCount = fileParser->lineCount();
     Indexer indexer(fileParser, lineParser, stopRequested, progress, &_columns);
-    return indexer.index();
+    auto res = indexer.index();
+    _unfilteredLineCount = fileParser->lineCount();
+    return res;
 }
 
 std::vector<ColumnIndexInfo> Index::getValues(int column) {

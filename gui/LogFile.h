@@ -6,7 +6,6 @@
 #include "seer/FileParser.h"
 #include "seer/ILineParser.h"
 #include "seer/ILineParserRepository.h"
-#include "seer/task/ParsingTask.h"
 #include "seer/task/IndexingTask.h"
 #include "seer/task/SearchingTask.h"
 #include "seer/Log.h"
@@ -35,7 +34,6 @@ class LogFile : public QObject, sm::IStateHandler {
     std::unique_ptr<LogTableModel> _searchLogTableModel;
     std::map<int, std::set<std::string>> _columnFilters;
     std::shared_ptr<std::istream> _stream;
-    std::shared_ptr<seer::task::Task> _parsingTask;
     std::shared_ptr<seer::task::Task> _indexingTask;
     std::unique_ptr<seer::task::SearchingTask> _searchingTask;
     std::shared_ptr<seer::Hist> _searchHist;
@@ -46,25 +44,17 @@ class LogFile : public QObject, sm::IStateHandler {
     bool _indexingComplete = false;
     std::optional<sm::ReloadEvent> _scheduledReload;
 
-    void enterParsing() override;
-    void interruptParsing() override;
     void enterIndexing() override;
     void interruptIndexing() override;
-    void pauseAndSearch(sm::SearchEvent) override;
     void resumeIndexing() override;
     void searchFromComplete(sm::SearchEvent) override;
     void enterFailed() override;
     void enterComplete() override;
     void enterInterrupted() override;
-    void searchFromPaused() override;
     void searchFromSearching(sm::SearchEvent) override;
 
     inline void finish() {
         _sm.process_event(sm::FinishEvent{});
-    }
-
-    inline void paused() {
-        _sm.process_event(sm::PausedEvent{});
     }
 
     inline void fail() {
@@ -81,16 +71,10 @@ protected:
         seer::FileParser* fileParser,
         seer::ILineParser* lineParser);
 
-    virtual std::shared_ptr<seer::task::Task> createParsingTask(seer::FileParser* fileParser);
-
 public:
     LogFile(std::unique_ptr<std::istream>&& stream,
             std::shared_ptr<seer::ILineParser> lineParser);
     ~LogFile() = default;
-
-    inline void parse() {
-        _sm.process_event(sm::ParseEvent{});
-    }
 
     inline void index() {
         _sm.process_event(sm::IndexEvent{});

@@ -48,17 +48,14 @@ void handleStateChanged(LogFile* file,
         copySectionSizes(table->header(), searchTable->header());
     }
 
-    if (file->isState(sm::ParsingState)) {
-        searchLine->setStatus("Parsing...");
+    if (file->isState(sm::IndexingState)) {
+        searchLine->setStatus("Indexing...");
         table->setModel(nullptr);
         searchLine->setSearchEnabled(false);
-    } else if (file->isState(sm::IndexingState)) {
-        searchLine->setStatus("Indexing...");
-        table->setModel(file->logTableModel());
-        searchLine->setSearchEnabled(true);
     } else if (file->isState(sm::SearchingState)) {
         searchLine->setStatus("Searching...");
     } else if (file->isState(sm::CompleteState)) {
+        table->setModel(file->logTableModel());
         auto status = searchModel ? bformat("%d matches found",
                                             searchModel->rowCount({}))
                                   : "";
@@ -241,7 +238,7 @@ void MainWindow::openFile() {
 void MainWindow::closeCurrentTab() {
     auto index = _tabWidget->currentIndex();
     assert(index != -1);
-    closeTab(index);
+    _logs[index].file->interrupt();
 }
 
 void MainWindow::clearFilters() {
@@ -375,7 +372,7 @@ void MainWindow::openLog(std::string path, std::string parser) {
         searchLine->setProgress(progress);
     });
 
-    file->parse();
+    file->index();
 
     vbox->addWidget(table);
     vbox->addWidget(searchLine);

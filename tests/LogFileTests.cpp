@@ -60,18 +60,6 @@ public:
     std::atomic<task::TaskState> state = task::TaskState::Idle;
 };
 
-class TestParsingTask : public TestTask {
-    FileParser* _fileParser;
-
-protected:
-    void testBody() override {
-        _fileParser->index();
-    }
-
-public:
-    TestParsingTask(FileParser* fileParser) : _fileParser(fileParser) {}
-};
-
 class TestIndexingTask : public TestTask {
     Index* _index;
     FileParser* _fileParser;
@@ -94,14 +82,9 @@ protected:
         return indexingTask = std::make_shared<TestIndexingTask>(index, fileParser, lineParser);
     }
 
-    std::shared_ptr<task::Task> createParsingTask(FileParser* fileParser) override {
-        return parsingTask = std::make_shared<TestParsingTask>(fileParser);
-    }
-
 public:
     using LogFile::LogFile;
 
-    std::shared_ptr<TestParsingTask> parsingTask = nullptr;
     std::shared_ptr<TestIndexingTask> indexingTask = nullptr;
 };
 
@@ -117,27 +100,19 @@ void waitFor(P predicate) {
 void waitParsingAndIndexing(LogFile& file) {
     REQUIRE(file.isState(gui::sm::IdleState));
 
-    bool parsed = false, indexed = false;
+    bool indexed = false;
 
     file.connect(&file, &LogFile::stateChanged, [&] {
-        if (file.isState(gui::sm::IndexingState)) {
-            parsed = true;
-        } else if (file.isState(gui::sm::CompleteState)) {
+        if (file.isState(gui::sm::CompleteState)) {
             indexed = true;
         }
     });
-
-    file.parse();
-
-    waitFor([&] { return parsed; });
-
-    REQUIRE((parsed && !indexed));
 
     file.index();
 
     waitFor([&] { return indexed; });
 
-    REQUIRE((parsed && indexed));
+    REQUIRE(indexed);
 
     file.disconnect();
 }
@@ -207,27 +182,15 @@ TEST_CASE("headers_should_not_be_clickable_until_file_indexed") {
     qapp();
 
     auto file = makeLogFile<TestLogFile>(simpleLog);
-    file.parse();
+    file.index();
 
-    waitFor([&] { return file.isState(gui::sm::ParsingState); });
+    waitFor([&] { return file.isState(gui::sm::IndexingState); });
 
     auto model = file.logTableModel();
-
     int filterRequestedCount = 0;
 
     QObject::connect(
         &file, &LogFile::filterRequested, [&] { filterRequestedCount++; });
-
-    for (int i = 0; i < g_TestLogColumns + 1; ++i) {
-        REQUIRE(model->headerData(i, Qt::Horizontal, (int)HeaderDataRole::IsIndexed)
-                    .toBool() == false);
-        file.requestFilter(i);
-    }
-    REQUIRE( filterRequestedCount == 0 );
-
-    file.parsingTask->proceed();
-
-    waitFor([&] { return file.isState(gui::sm::IndexingState); });
 
     for (int i = 0; i < g_TestLogColumns + 1; ++i) {
         REQUIRE(model->headerData(i, Qt::Horizontal, (int)HeaderDataRole::IsIndexed)
@@ -316,7 +279,7 @@ TEST_CASE("count_lines_from_one") {
     REQUIRE(model->data(model->index(5, 0), Qt::DisplayRole).toString() == "6");
 }
 
-TEST_CASE("interrupt_parsing") {
+TEST_CASE("interrupt_indexing") {
     qapp();
 
     std::vector<std::string> trace;
@@ -327,18 +290,18 @@ TEST_CASE("interrupt_parsing") {
         trace.push_back(file.dbgStateName());
     });
 
-    file.parse();
+    file.index();
 
-    waitFor([&] { return file.isState(gui::sm::ParsingState); });
+    waitFor([&] { return file.isState(gui::sm::IndexingState); });
 
     file.interrupt();
 
-    file.parsingTask->proceed();
+    file.indexingTask->proceed();
 
     waitFor([&] { return file.isState(gui::sm::InterruptedState); });
 
     std::vector<std::string> expected {
-        "gui::sm::ParsingState",
+        "gui::sm::IndexingState",
         "gui::sm::InterruptingState",
         "gui::sm::InterruptedState"
     };
@@ -482,25 +445,15 @@ TEST_CASE("column_max_width_should_be_set_after_file_has_been_indexed") {
     qapp();
 
     auto file = makeLogFile<TestLogFile>(simpleLog);
-    file.parse();
+    file.index();
 
-    waitFor([&] { return file.isState(gui::sm::ParsingState); });
+    waitFor([&] { return file.isState(gui::sm::IndexingState); });
 
     auto model = file.logTableModel();
     auto longestColumnIndex = [&] (int index) {
         auto role = (int)HeaderDataRole::LongestColumnIndex;
         return model->headerData(index, Qt::Horizontal, role).toInt();
     };
-
-    REQUIRE( longestColumnIndex(0) == -1 );
-    REQUIRE( longestColumnIndex(1) == -1 );
-    REQUIRE( longestColumnIndex(2) == -1 );
-    REQUIRE( longestColumnIndex(3) == -1 );
-    REQUIRE( longestColumnIndex(4) == -1 );
-
-    file.parsingTask->proceed();
-
-    waitFor([&] { return file.isState(gui::sm::IndexingState); });
 
     file.indexingTask->proceed();
 
@@ -562,9 +515,9 @@ TEST_CASE("log_file_get_autosize_attibute") {
 }
 
 TEST_CASE("dump_statemachine", "[.]") {
-    // java -jar plantuml.jar /tmp/logseer-sm.uml
+    // java -jar plantuml.jar /tmp/logseer-sm.plantuml
     boost::sml::sm<gui::sm::StateMachine> sm;
-    std::ofstream f("/tmp/logseer-sm.uml");
+    std::ofstream f("/tmp/logseer-sm.plantuml");
     f << gui::sm::dump(sm);
 }
 
@@ -670,9 +623,7 @@ TEST_CASE("reload_from_complete_state_after_search") {
     qapp();
 
     auto file = makeLogFile<TestLogFile>(simpleLog);
-    file.parse();
-    waitFor([&] { return file.isState(gui::sm::ParsingState); });
-    file.parsingTask->proceed();
+    file.index();
     waitFor([&] { return file.isState(gui::sm::IndexingState); });
     file.indexingTask->proceed();
     waitFor([&] { return file.isState(gui::sm::CompleteState); });
@@ -691,8 +642,6 @@ TEST_CASE("reload_from_complete_state_after_search") {
 
     file.reload(std::make_shared<std::stringstream>(simpleLogAlt));
 
-    waitFor([&] { return file.isState(gui::sm::ParsingState); });
-    file.parsingTask->proceed();
     waitFor([&] { return file.isState(gui::sm::IndexingState); });
     file.indexingTask->proceed();
     waitFor([&] { return file.isState(gui::sm::CompleteState); });
@@ -700,7 +649,6 @@ TEST_CASE("reload_from_complete_state_after_search") {
     searchModel = file.searchLogTableModel();
     REQUIRE( searchModel == nullptr );
 
-    file.parsingTask->proceed();
     file.indexingTask->proceed();
 
     waitFor([&] { return file.isState(gui::sm::CompleteState); });

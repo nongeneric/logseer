@@ -31,6 +31,7 @@ class FileParser {
 public:
     FileParser(std::istream* stream, ILineParser* lineParser);
     void index(std::function<void(uint64_t, uint64_t)> progress = {},
+               std::function<void(const std::string&)> onNewLine = {},
                std::function<bool()> stopRequested = []{ return false; });
     uint64_t lineCount();
     bool readLine(uint64_t index, std::vector<std::string>& line);

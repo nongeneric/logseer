@@ -73,11 +73,11 @@ FileParser::FileParser(std::istream* stream, ILineParser* lineParser)
 }
 
 void FileParser::index(std::function<void(uint64_t, uint64_t)> progress,
+                       std::function<void(const std::string&)> onNewLine,
                        std::function<bool()> stopRequested) {
     auto lock = std::lock_guard(_mutex);
     _indexed = true;
     std::string line;
-    std::vector<std::string> columns;
     uint64_t index = 0;
     _lineOffsets.reset(32, [this](uint64_t offset) {
         _stream->seekg(offset);
@@ -94,6 +94,9 @@ void FileParser::index(std::function<void(uint64_t, uint64_t)> progress,
 
     _stream->ignore(_bomSize);
     while (std::getline(*_stream, line)) {
+        if (onNewLine) {
+            onNewLine(line);
+        }
         _stream->ignore(_eolRightPadding);
         auto pos = _stream->tellg();
         _lineOffsets.add(pos);
