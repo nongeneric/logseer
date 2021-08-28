@@ -58,7 +58,7 @@ TEST_CASE("simple_index") {
     fileParser.index();
 
     Index index;
-    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+    index.index(&fileParser, lineParser.get(), 0, []{ return false; }, [](auto, auto){});
     REQUIRE( index.getLineCount() == 6 );
     REQUIRE( index.mapIndex(0) == 0 );
     REQUIRE( index.mapIndex(5) == 5 );
@@ -100,7 +100,7 @@ TEST_CASE("get_values") {
     fileParser.index();
 
     Index index;
-    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+    index.index(&fileParser, lineParser.get(), 0, []{ return false; }, [](auto, auto){});
     auto values = index.getValues(1);
     REQUIRE( values.size() == 3 );
     REQUIRE( values[0].value == "ERR" );
@@ -149,7 +149,7 @@ TEST_CASE("get_values_three_columns") {
     fileParser.index();
 
     Index index;
-    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+    index.index(&fileParser, lineParser.get(), 0, []{ return false; }, [](auto, auto){});
     auto values = index.getValues(1);
     REQUIRE( values.size() == 3 );
     REQUIRE( values[0].value == "ERR" );
@@ -223,7 +223,7 @@ TEST_CASE("search") {
     fileParser.index();
 
     Index index;
-    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+    index.index(&fileParser, lineParser.get(), 0, []{ return false; }, [](auto, auto){});
     REQUIRE( index.getLineCount() == 6 );
     REQUIRE( index.mapIndex(0) == 0 );
     REQUIRE( index.mapIndex(5) == 5 );
@@ -268,7 +268,7 @@ TEST_CASE("search_regex") {
     fileParser.index();
 
     Index index;
-    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+    index.index(&fileParser, lineParser.get(), 0, []{ return false; }, [](auto, auto){});
     REQUIRE( index.getLineCount() == 6 );
     REQUIRE( index.mapIndex(0) == 0 );
     REQUIRE( index.mapIndex(5) == 5 );
@@ -313,7 +313,7 @@ TEST_CASE("search_multiline") {
     REQUIRE( fileParser.lineCount() == 8 );
 
     Index index;
-    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+    index.index(&fileParser, lineParser.get(), 0, []{ return false; }, [](auto, auto){});
     REQUIRE( index.getLineCount() == 8 );
 
     seer::Hist hist(1);
@@ -339,7 +339,7 @@ TEST_CASE("filter_multilines") {
     REQUIRE( fileParser.lineCount() == 8 );
 
     Index index;
-    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+    index.index(&fileParser, lineParser.get(), 0, []{ return false; }, [](auto, auto){});
     REQUIRE( index.getLineCount() == 8 );
 
     auto formats = lineParser->getColumnFormats();
@@ -375,7 +375,7 @@ TEST_CASE("search_progress") {
     fileParser.index();
 
     Index index;
-    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+    index.index(&fileParser, lineParser.get(), 0, []{ return false; }, [](auto, auto){});
 
     seer::Hist hist(1);
 
@@ -431,7 +431,7 @@ TEST_CASE("multiline_index") {
     fileParser.index();
 
     Index index;
-    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+    index.index(&fileParser, lineParser.get(), 0, []{ return false; }, [](auto, auto){});
     REQUIRE( index.getLineCount() == 11 );
     REQUIRE( index.mapIndex(0) == 0 );
     REQUIRE( index.mapIndex(5) == 5 );
@@ -482,7 +482,7 @@ TEST_CASE("get_values_adjacent") {
     fileParser.index();
 
     Index index;
-    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+    index.index(&fileParser, lineParser.get(), 0, []{ return false; }, [](auto, auto){});
 
     REQUIRE( true );
 }
@@ -512,7 +512,7 @@ TEST_CASE("get_values_counts") {
     const auto SUB = 1;
 
     Index index;
-    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+    index.index(&fileParser, lineParser.get(), 0, []{ return false; }, [](auto, auto){});
     auto values = index.getValues(1);
     REQUIRE( values.size() == 3 );
     REQUIRE( values[ERROR].count == 1 );
@@ -571,7 +571,7 @@ TEST_CASE("index_column_width") {
     fileParser.index();
 
     Index index;
-    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+    index.index(&fileParser, lineParser.get(), 0, []{ return false; }, [](auto, auto){});
 
     REQUIRE( index.maxWidth(0).width == 2 );
     REQUIRE( index.maxWidth(1).width == 4 );
@@ -586,7 +586,7 @@ TEST_CASE("multiline_index_column_width") {
     fileParser.index();
 
     Index index;
-    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+    index.index(&fileParser, lineParser.get(), 0, []{ return false; }, [](auto, auto){});
 
     REQUIRE( index.maxWidth(0).width == 2 );
     REQUIRE( index.maxWidth(1).width == 4 );
@@ -601,7 +601,7 @@ TEST_CASE("search_hist_simple") {
     fileParser.index();
 
     Index index;
-    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+    index.index(&fileParser, lineParser.get(), 0, []{ return false; }, [](auto, auto){});
 
     /*
         10 INFO CORE message 1
@@ -656,7 +656,7 @@ TEST_CASE("search_unicode") {
     fileParser.index();
 
     Index index;
-    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+    index.index(&fileParser, lineParser.get(), 0, []{ return false; }, [](auto, auto){});
 
     /*
         10 ИНФО CORE message 1
@@ -727,7 +727,7 @@ TEST_CASE("default_line_parser_columns") {
     FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
     Index index;
-    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+    index.index(&fileParser, lineParser.get(), 0, []{ return false; }, [](auto, auto){});
 
     REQUIRE( index.getLineCount() == 4 );
     REQUIRE( fileParser.lineCount() == 4 );
@@ -749,7 +749,7 @@ TEST_CASE("parse_zeroes") {
     FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
     Index index;
-    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+    index.index(&fileParser, lineParser.get(), 0, []{ return false; }, [](auto, auto){});
 
     REQUIRE( index.getLineCount() == 1 );
     REQUIRE( fileParser.lineCount() == 1 );

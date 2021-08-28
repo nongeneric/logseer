@@ -67,7 +67,7 @@ class TestIndexingTask : public TestTask {
 
 protected:
     void testBody() override {
-        _index->index(_fileParser, _lineParser, [] { return false; });
+        _index->index(_fileParser, _lineParser, 0, [] { return false; });
     }
 
 public:

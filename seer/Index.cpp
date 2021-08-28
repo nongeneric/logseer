@@ -2,53 +2,92 @@
 
 #include "Log.h"
 #include "ParallelFor.h"
-#include "BoundedConcurrentQueue.h"
+#include "SPMCQueue.h"
 #include "Searcher.h"
+#include <QString>
 #include <numeric>
 #include <optional>
 #include <thread>
 #include <tuple>
 #include <algorithm>
-#include <QString>
 
 namespace seer {
 
 constexpr float g_maxFailureRatio = .1f;
+constexpr int g_producerBatchSize = 1000;
+constexpr int g_consumerBatchSize = 200;
+constexpr int g_stringPoolSize = g_producerBatchSize;
 
 int lineLength(const std::string& line) {
     return line.size();
 }
 
+template <class T>
+class Pool {
+    moodycamel::ConcurrentQueue<T> _queue;
+    moodycamel::ConsumerToken _consumerToken{_queue};
+
+public:
+    void enqueue(moodycamel::ProducerToken& token, T* items, int size) {
+        _queue.enqueue_bulk(token, std::make_move_iterator(items), size);
+    }
+
+    int dequeue(T* items, int maxSize) {
+        int size = 0;
+        while (size = _queue.try_dequeue_bulk(_consumerToken, items, maxSize), !size) {
+            std::this_thread::yield();
+        }
+        return size;
+    }
+
+    template <class F>
+    void preallocate(int size, F create) {
+        while (size--) {
+            _queue.enqueue(create());
+        }
+    }
+
+    moodycamel::ProducerToken getToken() {
+        return moodycamel::ProducerToken(_queue);
+    }
+};
+
 class Indexer {
+    struct QueueItem {
+        std::string line;
+        int lineNumber;
+    };
+
     using Result = std::vector<ColumnInfo>;
-    using QueueItem = std::optional<std::tuple<std::string, int>>;
+    using QueueItemPtr = std::unique_ptr<QueueItem>;
 
     FileParser* _fileParser;
     ILineParser* _lineParser;
+    unsigned _maxThreads;
     std::function<bool()> _stopRequested;
     std::function<void(uint64_t, uint64_t)> _progress;
     std::vector<ColumnInfo>* _columns;
-    BoundedConcurrentQueue<QueueItem> _queue;
-    unsigned _threadCount;
+    SPMCQueue<QueueItemPtr> _queue;
+    Pool<QueueItemPtr> _stringPool;
     std::vector<Result> _results;
     std::vector<std::thread> _threads;
     std::vector<ewah_bitset> _failures;
     ewah_bitset _combinedFailures;
 
     void prepareThreads() {
-        constexpr auto itemsPerThread = 256;
-        _threadCount = std::thread::hardware_concurrency();
-        auto capacity = itemsPerThread * _threadCount;
-        _queue = BoundedConcurrentQueue<QueueItem>(capacity);
+        auto threadCount = std::thread::hardware_concurrency();
+        if (_maxThreads) {
+            threadCount = std::min(_maxThreads, threadCount);
+        }
 
         Result emptyIndex;
         for (auto format : _lineParser->getColumnFormats()) {
             emptyIndex.push_back({{}, format.indexed, {}, {}});
         }
 
-        _results = {_threadCount, emptyIndex};
-        _threads.resize(_threadCount);
-        _failures.resize(_threadCount);
+        _results = {threadCount, emptyIndex};
+        _threads.resize(threadCount);
+        _failures.resize(threadCount);
 
         *_columns = emptyIndex;
     }
@@ -57,27 +96,32 @@ class Indexer {
         std::vector<std::string> columns;
         [[maybe_unused]] int lastLineIndex = 0;
         auto lastColumn = _lineParser->getColumnFormats().size() - 1;
-        QueueItem item;
+        std::vector<QueueItemPtr> items(g_consumerBatchSize);
+        auto token = _stringPool.getToken();
         for (;;) {
-            _queue.dequeue(item);
-            if (!item)
+            int size = _queue.dequeue(&items[0], items.size());
+            if (!size)
                 return;
-            auto& [line, lineIndex] = *item;
-            assert(lineIndex >= lastLineIndex);
-            lastLineIndex = lineIndex;
-            auto& index = _results[id];
-            if (_lineParser->parseLine(line, columns)) {
-                for (auto i = 0u; i < columns.size(); ++i) {
-                    index[i].maxWidth = std::max(index[i].maxWidth, {lineIndex, lineLength(columns[i])});
-                    if (index[i].indexed) {
-                        index[i].index[columns[i]].set(lineIndex);
+
+            for (auto i = 0; i < size; ++i) {
+                auto& [line, lineIndex] = *items[i];
+                assert(lineIndex >= lastLineIndex);
+                lastLineIndex = lineIndex;
+                auto& index = _results[id];
+                if (_lineParser->parseLine(line, columns)) {
+                    for (auto i = 0u; i < columns.size(); ++i) {
+                        index[i].maxWidth = std::max(index[i].maxWidth, {lineIndex, lineLength(columns[i])});
+                        if (index[i].indexed) {
+                            index[i].index[columns[i]].set(lineIndex);
+                        }
                     }
+                } else {
+                    _failures[id].set(lineIndex);
+                    auto& info = index[lastColumn];
+                    info.maxWidth = std::max(info.maxWidth, {lineIndex, lineLength(line)});
                 }
-            } else {
-                _failures[id].set(lineIndex);
-                auto& info = index[lastColumn];
-                info.maxWidth = std::max(info.maxWidth, {lineIndex, lineLength(line)});
             }
+            _stringPool.enqueue(token, &items[0], size);
         }
     }
 
@@ -92,9 +136,7 @@ class Indexer {
     }
 
     void stopThreads() {
-        for (auto i = 0u; i < _threadCount; ++i) {
-            _queue.enqueue({});
-        }
+        _queue.stop();
 
         for (auto& th : _threads) {
             th.join();
@@ -104,24 +146,37 @@ class Indexer {
     bool pushLinesToThreads(bool parsingOnly) {
         std::vector<std::string> columns;
         std::string line;
-
-        int index = 0;
+        std::vector<QueueItemPtr> items;
+        int lineNumber = 0;
+        size_t itemsPos = 0;
+        _stringPool.preallocate(g_stringPoolSize, [] { return std::make_unique<QueueItem>(); });
         _fileParser->index([&] (uint64_t pos, uint64_t fileSize) {
             if (_progress) {
                 _progress(pos, fileSize);
             }
         }, [&] (const auto& line) {
-            if (!parsingOnly) {
-                _queue.enqueue(std::tuple(line, index++));
+            if (parsingOnly)
+                return;
+            if (itemsPos == items.size()) {
+                _queue.enqueue(&items[0], items.size());
+                items.resize(g_producerBatchSize);
+                items.resize(_stringPool.dequeue(&items[0], g_producerBatchSize));
+                itemsPos = 0;
             }
+            items[itemsPos]->line = line;
+            items[itemsPos++]->lineNumber = lineNumber++;
         }, [&] {
             return _stopRequested();
         });
-
         if (_stopRequested()) {
             stopThreads();
             return false;
         }
+
+        if (!items.empty()) {
+            _queue.enqueue(&items[0], itemsPos);
+        }
+
         return true;
     }
 
@@ -217,11 +272,13 @@ class Indexer {
 public:
     Indexer(FileParser* fileParser,
             ILineParser* lineParser,
+            unsigned maxThreads,
             std::function<bool()> stopRequested,
             std::function<void(uint64_t, uint64_t)> progress,
             std::vector<ColumnInfo>* columns)
         : _fileParser(fileParser),
           _lineParser(lineParser),
+          _maxThreads(maxThreads),
           _stopRequested(stopRequested),
           _progress(progress),
           _columns(columns) {}
@@ -233,14 +290,16 @@ public:
             log_infof("parser [%s] has a single column and doesn't require indexing", _lineParser->name());
             _columns->clear();
             _columns->resize(1);
-            log_info("started indexing");
+            log_info("started parsing");
             if (!pushLinesToThreads(true))
                 return false;
-            log_info("parsing complete");
+            log_info("parsing done");
             return true;
         }
 
         prepareThreads();
+
+        auto past = std::chrono::high_resolution_clock::now();
 
         log_info("started indexing");
 
@@ -260,7 +319,9 @@ public:
         discoverMultilines();
         reduceIndexes();
 
-        log_info("indexing complete");
+        auto now = std::chrono::high_resolution_clock::now();
+        log_infof("indexing done in %d ms",
+                  std::chrono::duration_cast<std::chrono::milliseconds>(now - past).count());
 
         return true;
     }
@@ -380,10 +441,11 @@ uint64_t Index::mapIndex(uint64_t index) {
 
 bool Index::index(FileParser* fileParser,
                   ILineParser* lineParser,
+                  unsigned maxThreads,
                   std::function<bool()> stopRequested,
                   std::function<void(uint64_t, uint64_t)> progress)
 {
-    Indexer indexer(fileParser, lineParser, stopRequested, progress, &_columns);
+    Indexer indexer(fileParser, lineParser, maxThreads, stopRequested, progress, &_columns);
     auto res = indexer.index();
     _unfilteredLineCount = fileParser->lineCount();
     return res;

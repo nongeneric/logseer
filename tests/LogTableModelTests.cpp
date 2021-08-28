@@ -16,7 +16,7 @@ TEST_CASE("return_roles") {
     fileParser.index();
 
     Index index;
-    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+    index.index(&fileParser, lineParser.get(), 0, []{ return false; }, [](auto, auto){});
     LogTableModel model(&fileParser);
     model.showIndexedColumns();
     model.setIndex(&index);
@@ -49,7 +49,7 @@ TEST_CASE("model_row_selection") {
     fileParser.index();
 
     Index index;
-    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+    index.index(&fileParser, lineParser.get(), 0, []{ return false; }, [](auto, auto){});
     LogTableModel model(&fileParser);
 
     REQUIRE( model.rowCount({}) == 6 );
@@ -84,7 +84,7 @@ TEST_CASE("model_row_selection_extending_past_last_line") {
     fileParser.index();
 
     Index index;
-    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+    index.index(&fileParser, lineParser.get(), 0, []{ return false; }, [](auto, auto){});
     LogTableModel model(&fileParser);
 
     REQUIRE( model.rowCount({}) == 6 );
@@ -109,7 +109,7 @@ TEST_CASE("model_row_selection_extending_without_previous_selection") {
     fileParser.index();
 
     Index index;
-    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+    index.index(&fileParser, lineParser.get(), 0, []{ return false; }, [](auto, auto){});
     LogTableModel model(&fileParser);
 
     REQUIRE( model.rowCount({}) == 6 );
@@ -140,7 +140,7 @@ TEST_CASE("model_selection") {
     fileParser.index();
 
     Index index;
-    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+    index.index(&fileParser, lineParser.get(), 0, []{ return false; }, [](auto, auto){});
     LogTableModel model(&fileParser);
 
     REQUIRE( model.rowCount({}) == 6 );
@@ -243,7 +243,7 @@ TEST_CASE("copy_raw_lines") {
     fileParser.index();
 
     Index index;
-    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+    index.index(&fileParser, lineParser.get(), 0, []{ return false; }, [](auto, auto){});
     LogTableModel model(&fileParser);
 
     std::vector<std::string> expected {
@@ -267,7 +267,7 @@ TEST_CASE("copy_lines") {
     fileParser.index();
 
     Index index;
-    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+    index.index(&fileParser, lineParser.get(), 0, []{ return false; }, [](auto, auto){});
     LogTableModel model(&fileParser);
 
     std::vector<std::string> expected {
@@ -293,7 +293,7 @@ TEST_CASE("copy_lines_multiline") {
     fileParser.index();
 
     Index index;
-    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+    index.index(&fileParser, lineParser.get(), 0, []{ return false; }, [](auto, auto){});
     LogTableModel model(&fileParser);
 
     std::vector<std::string> expected {
@@ -321,7 +321,7 @@ TEST_CASE("copy_lines_line_number_spacing") {
     fileParser.index();
 
     Index index;
-    index.index(&fileParser, lineParser.get(), []{ return false; }, [](auto, auto){});
+    index.index(&fileParser, lineParser.get(), 0, []{ return false; }, [](auto, auto){});
     LogTableModel model(&fileParser);
 
     std::vector<std::string> expected {

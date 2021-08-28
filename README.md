@@ -56,6 +56,7 @@ The config is stored in the home directory ``~/.logseer/logseer.json``. It is cr
             "size": 10
         },
         "general": {
+            "maxThreads": 10,
             "showCloseTabButton": true
         },
         "search": {
@@ -68,6 +69,8 @@ The config is stored in the home directory ``~/.logseer/logseer.json``. It is cr
 **font.name** is the font name used for the log text.
 
 **font.size** is the font size in points.
+
+**general.maxThreads** up to **maxThreads** threads will be used for indexing. Set to 0 to use all available cores.
 
 **general.showCloseTabButton** is used to show or hide the Close Tab button on each tab. The Ctrl+W shortcut and the menu entry are unaffected.
 

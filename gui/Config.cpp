@@ -29,6 +29,7 @@ struct {
     const char* sessionRecentFiles = "recentFiles";
     const char* generalGroup = "general";
     const char* showCloseTabButton = "showCloseTabButton";
+    const char* maxThreads = "maxThreads";
 } g_consts;
 
 } // namespace
@@ -118,6 +119,7 @@ void Config::save() {
         {
             g_consts.generalGroup, {
                 {g_consts.showCloseTabButton, _generalConfig.showCloseTabButton},
+                {g_consts.maxThreads, _generalConfig.maxThreads},
             }
         }
     };
@@ -164,6 +166,11 @@ void Config::init(std::shared_ptr<IFileSystem> fileSystem) {
     auto jShowCloseTabButton = general[g_consts.showCloseTabButton];
     if (!jShowCloseTabButton.is_null()) {
         _generalConfig.showCloseTabButton = jShowCloseTabButton.get<bool>();
+    }
+
+    auto jMaxThreads = general[g_consts.maxThreads];
+    if (!jMaxThreads.is_null()) {
+        _generalConfig.maxThreads = jMaxThreads.get<unsigned>();
     }
 
     auto session = j[g_consts.sessionGroup];

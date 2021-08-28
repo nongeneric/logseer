@@ -73,6 +73,7 @@ public:
     uint64_t mapIndex(uint64_t index);
     bool index(FileParser* fileParser,
                ILineParser* lineParser,
+               unsigned maxThreads,
                std::function<bool()> stopRequested,
                std::function<void(uint64_t, uint64_t)> progress = {});
     std::vector<ColumnIndexInfo> getValues(int column);

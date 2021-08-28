@@ -45,6 +45,7 @@ struct SessionConfig {
 
 struct GeneralConfig {
     bool showCloseTabButton = true;
+    unsigned maxThreads = 10;
 };
 
 class IFileSystem {
