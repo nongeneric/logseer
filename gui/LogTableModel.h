@@ -130,7 +130,6 @@ public:
 
 signals:
     void selectionChanged();
-    void columnWidthsChanged();
 };
 
 } // namespace gui

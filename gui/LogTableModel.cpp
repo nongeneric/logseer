@@ -214,7 +214,6 @@ void LogTableModel::setColumnWidths(std::vector<seer::ColumnWidth> widths) {
     for (auto i = 0u; i < widths.size(); ++i) {
         _columns[i].maxWidth = widths[i];
     }
-    emit columnWidthsChanged();
 }
 
 QVariant LogTableModel::headerData(int section, Qt::Orientation orientation, int role) const {

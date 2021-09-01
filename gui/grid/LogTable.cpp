@@ -104,12 +104,10 @@ void LogTable::setModel(LogTableModel* model) {
         _view->update();
     });
 
-    connect(_model, &LogTableModel::columnWidthsChanged, this, [this] {
-        for (auto column = 0; column < _model->columnCount({}); ++column) {
-            auto longestIndex = _model->headerData(column, Qt::Horizontal, (int)HeaderDataRole::LongestColumnIndex).toInt();
-            setColumnWidth(column, longestIndex);
-        }
-    });
+    for (auto column = 0; column < _model->columnCount({}); ++column) {
+        auto longestIndex = _model->headerData(column, Qt::Horizontal, (int)HeaderDataRole::LongestColumnIndex).toInt();
+        setColumnWidth(column, longestIndex);
+    }
 }
 
 void LogTable::setHist(const seer::Hist* hist) {
