@@ -15,6 +15,11 @@ using namespace nlohmann;
 
 namespace seer {
 
+class RegexLineParserContext : public ILineParserContext {
+public:
+    std::shared_ptr<pcre2_match_data> matchData;
+};
+
 class MagicLogDetector : public ILogDetector {
     std::string _magic;
 public:
@@ -37,7 +42,7 @@ public:
         if (lines.empty())
             return false;
         std::vector<std::string> columns;
-        return _parser->parseLine(lines.front(), columns);
+        return _parser->parseLine(lines.front(), columns, *_parser->createContext());
     }
 };
 
@@ -60,7 +65,7 @@ public:
             luaLine->insert(std::make_shared<LuaString>("text"),
                             std::make_shared<LuaString>(lines[i]));
             luaLine->insert(std::make_shared<LuaString>("parsed"),
-                            std::make_shared<LuaBool>(_parser->parseLine(lines[i], columns)));
+                            std::make_shared<LuaBool>(_parser->parseLine(lines[i], columns, *_parser->createContext())));
             luaLines.insert(std::make_shared<LuaInt>(i), luaLine);
         }
         thread.setGlobal("lines", luaLines);
@@ -172,31 +177,34 @@ void RegexLineParser::load(std::string config) {
 }
 
 bool RegexLineParser::parseLine(std::string_view line,
-                                std::vector<std::string>& columns) {
-    auto matchData = std::shared_ptr<pcre2_match_data>(
-        pcre2_match_data_create_from_pattern(_re.get(), nullptr),
-        pcre2_match_data_free);
+                                std::vector<std::string>& columns,
+                                ILineParserContext& context) {
+
+    auto typedContext = dynamic_cast<RegexLineParserContext*>(&context);
+    assert(typedContext);
+    auto matchData = typedContext->matchData.get();
 
     auto rc = pcre2_jit_match(_re.get(),
                               (PCRE2_SPTR8)line.data(),
                               line.size(),
                               0,
                               0,
-                              matchData.get(),
+                              matchData,
                               nullptr);
     if (rc < 0)
         return false;
 
-    auto vec = pcre2_get_ovector_pointer(matchData.get());
-    columns.clear();
+    auto vec = pcre2_get_ovector_pointer(matchData);
+    columns.resize(_formats.size());
 
+    int c = 0;
     for (auto& format : _formats) {
         auto i = format.group;
-        assert(static_cast<size_t>(i) <
-               pcre2_get_ovector_count(matchData.get()));
+        assert(static_cast<size_t>(i) < pcre2_get_ovector_count(matchData));
         auto group = line.data() + vec[2 * i];
         auto len = vec[2 * i + 1] - vec[2 * i];
-        columns.emplace_back(group, len);
+        columns[c].assign(group, len);
+        ++c;
     }
     return true;
 }
@@ -221,6 +229,14 @@ uint32_t RegexLineParser::rgb(const std::vector<std::string>& columns) const {
 bool RegexLineParser::isMatch(const std::vector<std::string>& sample,
                               std::string_view fileName) {
     return _detector->isMatch(sample, fileName);
+}
+
+std::unique_ptr<ILineParserContext> RegexLineParser::createContext() const {
+    auto context = std::make_unique<RegexLineParserContext>();
+    context->matchData = std::shared_ptr<pcre2_match_data>(
+        pcre2_match_data_create_from_pattern(_re.get(), nullptr),
+        pcre2_match_data_free);
+    return context;
 }
 
 std::string RegexLineParser::name() const{

@@ -34,9 +34,14 @@ public:
                std::function<void(const std::string&)> onNewLine = {},
                std::function<bool()> stopRequested = []{ return false; });
     uint64_t lineCount();
-    bool readLine(uint64_t index, std::vector<std::string>& line);
     void readLine(uint64_t index, std::string& line);
     ILineParser* lineParser() const;
+    size_t calcLineIndexSize() const;
 };
+
+bool readAndParseLine(FileParser& fileParser,
+                      uint64_t index,
+                      std::vector<std::string>& line,
+                      ILineParserContext& context);
 
 } // namespace seer

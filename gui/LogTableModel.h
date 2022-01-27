@@ -95,6 +95,7 @@ class LogTableModel : public QAbstractTableModel {
 
     seer::Index* _index = nullptr;
     seer::FileParser* _parser;
+    std::unique_ptr<seer::ILineParserContext> _parserContext;
     std::vector<ColumnInfo> _columns;
     bool _showIndexedColumns = false;
 

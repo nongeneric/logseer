@@ -10,18 +10,20 @@ TEST_CASE("line_color_simple") {
     FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
 
+    auto context = lineParser->createContext();
+
     std::vector<std::string> line;
     REQUIRE( lineParser->rgb(line) == 0 ); // empty line
-    fileParser.readLine(0, line);
+    readAndParseLine(fileParser, 0, line, *context);
     REQUIRE( lineParser->rgb(line) == 0 );
-    fileParser.readLine(1, line);
+    readAndParseLine(fileParser, 1, line, *context);
     REQUIRE( lineParser->rgb(line) == 0 );
-    fileParser.readLine(2, line);
+    readAndParseLine(fileParser, 2, line, *context);
     REQUIRE( lineParser->rgb(line) == 0x550000 );
-    fileParser.readLine(3, line);
+    readAndParseLine(fileParser, 3, line, *context);
     REQUIRE( lineParser->rgb(line) == 0 );
-    fileParser.readLine(4, line);
+    readAndParseLine(fileParser, 4, line, *context);
     REQUIRE( lineParser->rgb(line) == 0xff0000 );
-    fileParser.readLine(5, line);
+    readAndParseLine(fileParser, 5, line, *context);
     REQUIRE( lineParser->rgb(line) == 0x550000 );
 }

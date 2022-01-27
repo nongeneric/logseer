@@ -24,27 +24,29 @@ TEST_CASE("simple_parser") {
     FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
 
+    auto context = lineParser->createContext();
+
     REQUIRE(fileParser.lineCount() == 6);
     std::vector<std::string> line;
-    fileParser.readLine(0, line);
+    readAndParseLine(fileParser, 0, line, *context);
     REQUIRE(line[0] == "10");
     REQUIRE(line[1] == "INFO");
     REQUIRE(line[2] == "CORE");
     REQUIRE(line[3] == "message 1");
 
-    fileParser.readLine(2, line);
+    readAndParseLine(fileParser, 2, line, *context);
     REQUIRE(line[0] == "17");
     REQUIRE(line[1] == "WARN");
     REQUIRE(line[2] == "CORE");
     REQUIRE(line[3] == "message 3");
 
-    fileParser.readLine(5, line);
+    readAndParseLine(fileParser, 5, line, *context);
     REQUIRE(line[0] == "40");
     REQUIRE(line[1] == "WARN");
     REQUIRE(line[2] == "SUB");
     REQUIRE(line[3] == "message 6");
 
-    fileParser.readLine(1, line);
+    readAndParseLine(fileParser, 1, line, *context);
     REQUIRE(line[0] == "15");
     REQUIRE(line[1] == "INFO");
     REQUIRE(line[2] == "SUB");
@@ -724,6 +726,8 @@ TEST_CASE("default_line_parser_columns") {
     auto lineParser = repository.resolve(ss);
     REQUIRE( lineParser->name() == "default" );
 
+    auto context = lineParser->createContext();
+
     FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
     Index index;
@@ -735,7 +739,7 @@ TEST_CASE("default_line_parser_columns") {
     fileParser.readLine(0, line);
     std::vector<std::string> columns;
     REQUIRE( line == "message1" );
-    fileParser.readLine(0, columns);
+    readAndParseLine(fileParser, 0, columns, *context);
     REQUIRE( columns.size() == 1 );
     REQUIRE( columns[0] == "message1" );
 }
@@ -745,6 +749,8 @@ TEST_CASE("parse_zeroes") {
     std::stringstream ss(zeroesLog);
     auto lineParser = repository.resolve(ss);
     REQUIRE( lineParser->name() == "default" );
+
+    auto context = lineParser->createContext();
 
     FileParser fileParser(&ss, lineParser.get());
     fileParser.index();
@@ -758,7 +764,7 @@ TEST_CASE("parse_zeroes") {
     std::vector<std::string> columns;
     REQUIRE( line.size() == std::string("message1").size() );
     REQUIRE( line == "message1" );
-    fileParser.readLine(0, columns);
+    readAndParseLine(fileParser, 0, columns, *context);
     REQUIRE( columns.size() == 1 );
     REQUIRE( columns[0] == "message1" );
 

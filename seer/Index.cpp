@@ -92,7 +92,7 @@ class Indexer {
         *_columns = emptyIndex;
     }
 
-    void threadBody(int id) {
+    void threadBody(int id, ILineParserContext& lineParserContext) {
         std::vector<std::string> columns;
         [[maybe_unused]] int lastLineIndex = 0;
         auto lastColumn = _lineParser->getColumnFormats().size() - 1;
@@ -108,7 +108,7 @@ class Indexer {
                 assert(lineIndex >= lastLineIndex);
                 lastLineIndex = lineIndex;
                 auto& index = _results[id];
-                if (_lineParser->parseLine(line, columns)) {
+                if (_lineParser->parseLine(line, columns, lineParserContext)) {
                     for (auto i = 0u; i < columns.size(); ++i) {
                         index[i].maxWidth = std::max(index[i].maxWidth, {lineIndex, lineLength(columns[i])});
                         if (index[i].indexed) {
@@ -128,8 +128,9 @@ class Indexer {
     void startThreads() {
         int threadId = 0;
         for (auto& th : _threads) {
-            th = std::thread([this, id = threadId] {
-                threadBody(id);
+            th = std::thread([=, this] {
+                auto context = _lineParser->createContext();
+                threadBody(threadId, *context);
             });
             threadId++;
         }
@@ -198,11 +199,14 @@ class Indexer {
         auto failureRatio = failures.size() / static_cast<float>(_fileParser->lineCount());
         auto readConsequently = failureRatio > g_maxFailureRatio;
 
+        auto lineParserContext = _lineParser->createContext();
+
         size_t pos = -1;
         std::string line;
         auto readLine = [&] (auto index) {
+            std::string text;
             if (!readConsequently) {
-                _fileParser->readLine(index, columns);
+                readAndParseLine(*_fileParser, index, columns, *lineParserContext);
                 return;
             }
 
@@ -213,7 +217,7 @@ class Indexer {
                 _fileParser->readLine(pos, line);
                 pos++;
             }
-            [[maybe_unused]] auto result = _fileParser->readLine(index, columns);
+            [[maybe_unused]] auto result = readAndParseLine(*_fileParser, index, columns, *lineParserContext);
             assert(result);
             pos++;
         };
@@ -259,14 +263,32 @@ class Indexer {
                 for (auto& [name, set] : result[i].index) {
                     auto existing = column.index.find(name);
                     if (existing == end(column.index)) {
-                        column.index[name] = set;
+                        column.index[name] = std::move(set);
                     } else {
                         auto& existingSet = existing->second;
                         existingSet = existingSet | set;
                     }
                 }
             }
+            result.clear();
         }
+    }
+
+    void logIndexSize() {
+        size_t totalSize = 0;
+        size_t count = 0;
+        for (auto& column : *_columns) {
+            for (auto& [_, set] : column.index) {
+                totalSize += set.sizeOnDisk();
+            }
+            count += column.index.size();
+        }
+
+        log_infof("file index: %g MB",
+                  static_cast<double>(_fileParser->calcLineIndexSize()) / (1 << 20));
+        log_infof("bitsets: %d, total size: %g MB",
+                  count,
+                  static_cast<double>(totalSize) / (1 << 20));
     }
 
 public:
@@ -318,6 +340,8 @@ public:
 
         discoverMultilines();
         reduceIndexes();
+
+        logIndexSize();
 
         auto now = std::chrono::high_resolution_clock::now();
         log_infof("indexing done in %d ms",
@@ -383,12 +407,15 @@ void Index::search(FileParser* fileParser,
     auto searcher = createSearcher(QString::fromStdString(text), regex, caseSensitive);
     auto lineMap = std::make_shared<RandomBitArray>(1024);
     std::vector<std::string> columns;
+
+    auto lineParserContext = fileParser->lineParser()->createContext();
+
     auto add = [&] (auto index, auto histIndex, auto histSize) {
         fileParser->readLine(index, line);
         auto lineToSearch = &line;
         if (messageOnly) {
             columns.clear();
-            fileParser->lineParser()->parseLine(line, columns);
+            fileParser->lineParser()->parseLine(line, columns, *lineParserContext);
             if (!columns.empty()) {
                 lineToSearch = &columns.back();
             }

@@ -15,7 +15,7 @@ constexpr int g_sampleBytes = 1000;
 
 class DefaultLineParser : public ILineParser {
 public:
-    bool parseLine(std::string_view line, std::vector<std::string> &columns) override {
+    bool parseLine(std::string_view line, std::vector<std::string> &columns, ILineParserContext& /*context*/) override {
         columns.clear();
         columns.push_back(line.data());
         return true;
@@ -32,6 +32,8 @@ public:
     std::string name() const override {
         return "default";
     }
+
+    std::unique_ptr<ILineParserContext> createContext() const override { return {}; }
 };
 
 LineParserRepository::LineParserRepository(bool initializeDefaultParser) {

@@ -34,4 +34,8 @@ uint64_t OffsetIndex::size() {
     return _current;
 }
 
+size_t OffsetIndex::calcLineIndexSize() const {
+    return _index.size() * sizeof(decltype(_index[0]));
+}
+
 } // namespace seer

@@ -56,10 +56,11 @@ class RegexLineParser : public ILineParser {
 public:
     RegexLineParser(std::string name);
     void load(std::string config);
-    bool parseLine(std::string_view line, std::vector<std::string> &columns) override;
+    bool parseLine(std::string_view line, std::vector<std::string> &columns, ILineParserContext& context) override;
     std::vector<ColumnFormat> getColumnFormats() override;
     bool isMatch(const std::vector<std::string>& sample, std::string_view fileName) override;
     uint32_t rgb(const std::vector<std::string>& columns) const override;
+    std::unique_ptr<ILineParserContext> createContext() const override;
     std::string name() const override;
 };
 

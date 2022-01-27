@@ -18,6 +18,7 @@ public:
     uint64_t map(uint64_t index);
     void reset(int delta, NextCallback next);
     uint64_t size();
+    size_t calcLineIndexSize() const;
 };
 
 } // namespace seer

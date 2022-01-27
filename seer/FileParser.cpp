@@ -115,12 +115,6 @@ uint64_t FileParser::lineCount() {
     return _lineOffsets.size() - 1;
 }
 
-bool FileParser::readLine(uint64_t index, std::vector<std::string>& line) {
-    std::string text;
-    readLine(index, text);
-    return _lineParser->parseLine(text, line);
-}
-
 void FileParser::readLine(uint64_t index, std::string& line) {
     auto lock = std::lock_guard(_mutex);
     assert(index < _lineOffsets.size());
@@ -163,6 +157,20 @@ void FileParser::readLine(uint64_t index, std::string& line) {
 
 ILineParser* FileParser::lineParser() const {
     return _lineParser;
+}
+
+
+size_t FileParser::calcLineIndexSize() const {
+    return _lineOffsets.calcLineIndexSize();
+}
+
+bool readAndParseLine(FileParser& fileParser,
+                      uint64_t index,
+                      std::vector<std::string>& line,
+                      ILineParserContext& context) {
+    std::string text;
+    fileParser.readLine(index, text);
+    return fileParser.lineParser()->parseLine(text, line, context);
 }
 
 } // namespace seer

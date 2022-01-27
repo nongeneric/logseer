@@ -82,7 +82,8 @@ std::vector<std::string> LogTableModel::values(int column) const {
 }
 
 LogTableModel::LogTableModel(seer::FileParser* parser)
-    : _parser(parser) {
+    : _parser(parser),
+      _parserContext(_parser->lineParser()->createContext()) {
     _columns.push_back({"#", false, true});
     for (auto& column : parser->lineParser()->getColumnFormats()) {
         _columns.push_back(
@@ -128,7 +129,7 @@ void LogTableModel::copyLines(uint64_t begin, uint64_t end, LogTableModel::LineH
     }
     std::vector<std::string> columns;
     copyRawLines(begin, end, [&] (auto& line) {
-        if (_parser->lineParser()->parseLine(line, columns)) {
+        if (_parser->lineParser()->parseLine(line, columns, *_parser->lineParser()->createContext())) {
             for (auto i = 0u; i < columns.size(); ++i) {
                 auto& width = widths.at(i + 1);
                 width = std::max(width, graphemeLength(columns[i]));
@@ -171,7 +172,7 @@ void LogTableModel::copyLines(uint64_t begin, uint64_t end, LogTableModel::LineH
     auto index = begin;
     copyRawLines(begin, end, [&] (auto& line) {
         formatted.clear();
-        if (_parser->lineParser()->parseLine(line, columns)) {
+        if (_parser->lineParser()->parseLine(line, columns, *_parser->lineParser()->createContext())) {
             append(bformat("%d", lineOffset(index) + 1), 0);
             for (auto i = 0u; i < columns.size(); ++i) {
                 append(columns[i], i + 1);
@@ -260,7 +261,7 @@ QVariant LogTableModel::data(const QModelIndex& index, int role) const {
     if (role != Qt::DisplayRole && role != Qt::ForegroundRole)
         return {};
     std::vector<std::string> line;
-    _parser->readLine(lineIndex, line);
+    readAndParseLine(*_parser, lineIndex, line, *_parserContext);
     if (role == Qt::ForegroundRole)
         return QColor(_parser->lineParser()->rgb(line));
     if (index.column() == LineNumber)
