@@ -7,7 +7,7 @@ PointerAlignment: Left
 AccessModifierOffset: -4
 ColumnLimit: 100
 ConstructorInitializerAllOnOneLineOrOnePerLine: true
-NamespaceIndentation: All
+NamespaceIndentation: None
 AllowShortCaseLabelsOnASingleLine: true
 IndentCaseLabels: true
 AllowShortFunctionsOnASingleLine: Empty

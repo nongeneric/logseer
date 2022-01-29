@@ -30,6 +30,8 @@ add_library(${PROJECT_NAME} STATIC
     Searcher.cpp
     InstanceTracker.h
     InstanceTracker.cpp
+    FilterAlgo.h
+    FilterAlgo.cpp
     task/Task.h
     task/Task.cpp
     task/IndexingTask.h

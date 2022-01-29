@@ -4,6 +4,7 @@
 #include "ParallelFor.h"
 #include "SPMCQueue.h"
 #include "Searcher.h"
+#include "StopWatch.h"
 #include <QString>
 #include <numeric>
 #include <optional>
@@ -82,7 +83,7 @@ class Indexer {
 
         Result emptyIndex;
         for (auto format : _lineParser->getColumnFormats()) {
-            emptyIndex.push_back({{}, format.indexed, {}, {}});
+            emptyIndex.push_back({{}, format.indexed, {}, {}, {}});
         }
 
         _results = {threadCount, emptyIndex};
@@ -191,7 +192,7 @@ class Indexer {
 
         Result columnInfos;
         for (auto format : _lineParser->getColumnFormats()) {
-            columnInfos.push_back({{}, format.indexed, {}, {}});
+            columnInfos.push_back({{}, format.indexed, {}, {}, {}});
         }
         std::vector<std::string> columns;
         auto failures = _combinedFailures.toArray();
@@ -321,7 +322,7 @@ public:
 
         prepareThreads();
 
-        auto past = std::chrono::high_resolution_clock::now();
+        StopWatch sw;
 
         log_info("started indexing");
 
@@ -343,9 +344,7 @@ public:
 
         logIndexSize();
 
-        auto now = std::chrono::high_resolution_clock::now();
-        log_infof("indexing done in %d ms",
-                  std::chrono::duration_cast<std::chrono::milliseconds>(now - past).count());
+        log_infof("indexing done in %d ms", sw.msElapsed());
 
         return true;
     }
@@ -355,12 +354,32 @@ void Index::makePerColumnIndex(std::vector<ColumnFilter>::const_iterator first,
                                std::vector<ColumnFilter>::const_iterator last) {
     for (auto filter = first; filter != last; ++filter) {
         std::vector<const ewah_bitset*> perValue;
-        assert(_columns[filter->column].indexed);
         auto& column = _columns[filter->column];
+        assert(column.indexed);
         for (auto& value : filter->selected) {
             perValue.push_back(&column.index[value]);
         }
-        _columns[filter->column].combinedIndex = fast_logicalor(perValue.size(), &perValue[0]);
+
+        std::vector<const ewah_bitset*> oldSelectedSets;
+        for (auto& valueName : column.selectedValues) {
+            oldSelectedSets.push_back(&column.index[valueName]);
+        }
+
+        StopWatch sw;
+
+        FilterAlgo algo(column.currentIndex, oldSelectedSets, perValue);
+        auto stats = algo.stats();
+        auto useNaive = stats.naiveOps <= stats.diffOps;
+        column.currentIndex = useNaive ? algo.naive() : algo.diff();
+
+        log_infof("filtered column %d using %d algorithm (%d <= %d) in %d ms",
+                  filter - first,
+                  useNaive ? "naive" : "diff",
+                  stats.naiveOps,
+                  stats.diffOps,
+                  sw.msElapsed());
+
+        column.selectedValues = filter->selected;
     }
 }
 
@@ -380,18 +399,19 @@ void Index::filter(const std::vector<ColumnFilter>& filters) {
     log_info("started filtering");
 
     makePerColumnIndex(begin(filters), end(filters));
-    _filter = _columns[_filters[0].column].combinedIndex;
+    _filter = _columns[_filters[0].column].currentIndex;
     for (auto it = begin(_filters) + 1; it != end(_filters); ++it) {
-        _filter = _filter & _columns[it->column].combinedIndex;
+        _filter = _filter & _columns[it->column].currentIndex;
     }
 
     log_info("filtering complete");
 
-    auto iewah = std::make_shared<IndexedEwah>(1024);
+    StopWatch sw;
+    auto iewah = std::make_shared<IndexedEwah>(2048);
     iewah->init(_filter);
     _lineMap = std::move(iewah);
 
-    log_info("building lineMap complete");
+    log_infof("building lineMap completed in %d ms", sw.msElapsed());
 }
 
 void Index::search(FileParser* fileParser,
@@ -502,9 +522,9 @@ std::vector<ColumnIndexInfo> Index::getValues(int column) {
         if (first == last) {
             count = index.numberOfOnes();
         } else {
-            auto otherColumnsIndex = _columns[first->column].combinedIndex;
+            auto otherColumnsIndex = _columns[first->column].currentIndex;
             for (auto it = first + 1; it != last; ++it) {
-                otherColumnsIndex = otherColumnsIndex & _columns[it->column].combinedIndex;
+                otherColumnsIndex = otherColumnsIndex & _columns[it->column].currentIndex;
             }
             count = (otherColumnsIndex & index).numberOfOnes();
         }

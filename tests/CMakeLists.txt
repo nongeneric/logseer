@@ -25,6 +25,7 @@ add_executable(tests
     GraphemeMapTests.cpp
     ForeachRangeTests.cpp
     InstanceTrackerTests.cpp
+    FilterAlgoTests.cpp
 )
 
 target_link_libraries(tests gui)
