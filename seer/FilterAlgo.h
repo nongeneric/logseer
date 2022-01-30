@@ -14,7 +14,6 @@ struct FilterAlgoStats {
 
 class FilterAlgo {
     const ewah_bitset& _baseSet;
-    std::vector<const ewah_bitset*>& _baseVec;
     std::vector<const ewah_bitset*>& _newVec;
     std::vector<const ewah_bitset*> _removed;
     std::vector<const ewah_bitset*> _added;

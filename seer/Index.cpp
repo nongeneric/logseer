@@ -417,7 +417,7 @@ void Index::filter(const std::vector<ColumnFilter>& filters) {
     _lineMap = std::move(iewah);
 }
 
-void Index::search(FileParser* fileParser,
+bool Index::search(FileParser* fileParser,
                    std::string text,
                    bool regex,
                    bool caseSensitive,
@@ -459,7 +459,7 @@ void Index::search(FileParser* fileParser,
         uint64_t done = 0;
         for (auto index : _filter) {
             if (stopRequested())
-                return;
+                return false;
             add(index, done, size);
             done++;
             if (progress)
@@ -468,13 +468,14 @@ void Index::search(FileParser* fileParser,
     } else {
         for (uint64_t i = 0; i < _unfilteredLineCount; ++i) {
             if (stopRequested())
-                return;
+                return false;
             add(i, i, _unfilteredLineCount);
             if (progress)
                 progress(i, _unfilteredLineCount);
         }
         _filtered = true;
     }
+    return true;
 }
 
 uint64_t Index::getLineCount() {

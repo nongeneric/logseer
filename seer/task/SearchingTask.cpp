@@ -27,7 +27,7 @@ std::shared_ptr<Hist> SearchingTask::hist() {
 
 void SearchingTask::body() {
     _hist = std::make_shared<Hist>(3000);
-    _index->search(
+    auto result = _index->search(
         _fileParser,
         _text,
         _regex,
@@ -36,6 +36,9 @@ void SearchingTask::body() {
         *_hist,
         [this] { return isStopRequested(); },
         [&](auto done, auto total) { reportProgress((done * 100) / total); });
+
+    if (!result)
+        reportStopped();
 }
 
 } // namespace seer::task

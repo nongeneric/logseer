@@ -18,7 +18,10 @@ void IndexedEwah::init(const ewah::EWAHBoolArray<uint64_t> &ewah) {
     uint64_t words = 0;
     while (it.hasNext()) {
         if (words % bucketSizeInWords == 0) {
-            _buckets.emplace_back(_size, it);
+            _buckets.push_back({
+                .firstIndex = _size,
+                .iter = it
+            });
         }
         _size += std::popcount(it.next());
         words++;

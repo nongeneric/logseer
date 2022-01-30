@@ -60,7 +60,7 @@ class Index {
 public:
     Index(uint64_t unfilteredLineCount = 0);
     void filter(const std::vector<ColumnFilter>& filters);
-    void search(FileParser* fileParser,
+    bool search(FileParser* fileParser,
                 std::string text,
                 bool regex,
                 bool caseSensitive,

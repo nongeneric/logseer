@@ -18,7 +18,6 @@ SearchLine::SearchLine(bool regexInitial,
 
     auto edit = new QLineEdit();
     _button = new QPushButton();
-    _button->setText("Search");
 
     auto topHbox = new QHBoxLayout();
     topHbox->addWidget(edit);
@@ -65,6 +64,8 @@ SearchLine::SearchLine(bool regexInitial,
     });
 
     auto search = [=, this] {
+        if (!_button->isEnabled())
+            return;
         emit searchRequested(edit->text().toStdString(),
                              regex->isChecked(),
                              caseSensitive->isChecked(),
@@ -80,6 +81,10 @@ SearchLine::SearchLine(bool regexInitial,
 
 void SearchLine::setStatus(std::string status) {
     _status->setText(QString::fromStdString(status));
+}
+
+void SearchLine::setSearchButtonTitle(SearchButtonTitle title) {
+    _button->setText(title == SearchButtonTitle::Search ? "Search" : "Abort");
 }
 
 void SearchLine::setProgress(int progress) {

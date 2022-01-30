@@ -46,14 +46,20 @@ void handleStateChanged(LogFile* file,
     if (searchModel) {
         table->setHist(file->searchHist());
         copySectionSizes(table->header(), searchTable->header());
+    } else {
+        table->setHist(nullptr);
+        table->setSearchHighlight("", false, false, false);
     }
 
     if (file->isState(sm::IndexingState)) {
         searchLine->setStatus("Indexing...");
         table->setModel(nullptr);
         searchLine->setSearchEnabled(false);
+        searchLine->setSearchButtonTitle(SearchButtonTitle::Search);
     } else if (file->isState(sm::SearchingState)) {
         searchLine->setStatus("Searching...");
+        searchLine->setSearchEnabled(true);
+        searchLine->setSearchButtonTitle(SearchButtonTitle::Abort);
     } else if (file->isState(sm::CompleteState)) {
         table->setModel(file->logTableModel());
         auto status = searchModel ? bformat("%d matches found",
@@ -62,6 +68,7 @@ void handleStateChanged(LogFile* file,
         searchLine->setStatus(status);
         searchLine->setProgress(-1);
         searchLine->setSearchEnabled(true);
+        searchLine->setSearchButtonTitle(SearchButtonTitle::Search);
         updateMenu();
     } else if (file->isState(sm::InterruptedState)) {
         close();

@@ -30,11 +30,11 @@ void Task::reportProgress(int progress) {
 }
 
 void Task::reportError() {
-    changeState(TaskState::Failed);
+    _state = TaskState::Failed;
 }
 
 void Task::reportStopped() {
-    changeState(TaskState::Stopped);
+    _state = TaskState::Stopped;
 }
 
 bool Task::isStopRequested() {
@@ -55,8 +55,9 @@ void Task::start() {
         return;
     _thread = std::thread([this] {
         body();
-        if (_state != TaskState::Failed)
-            changeState(TaskState::Finished);
+        if (_state != TaskState::Failed && _state != TaskState::Stopped)
+            _state = TaskState::Finished;
+        changeState(_state);
     });
 }
 

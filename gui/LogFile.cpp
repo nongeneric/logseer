@@ -43,12 +43,6 @@ void LogFile::resumeIndexing() {
         emit stateChanged();
         _indexingTask->start();
     }
-
-    if (_scheduledSearchEvent) {
-        std::optional<sm::SearchEvent> event;
-        event.swap(_scheduledSearchEvent);
-        _sm.process_event(*event);
-    }
 }
 
 void LogFile::searchFromComplete(sm::SearchEvent event) {
@@ -60,9 +54,8 @@ void LogFile::searchFromComplete(sm::SearchEvent event) {
                                                      event.caseSensitive,
                                                      event.messageOnly);
     _searchingTask->setStateChanged([this](auto state) {
-        assert(state != TaskState::Failed);
-        if (state == TaskState::Finished) {
-            _dispatcher.postToUIThread([=, this] {
+        _dispatcher.postToUIThread([=, this] {
+            if (state == TaskState::Finished) {
                 auto newSearchTableModel = std::make_unique<LogTableModel>(_fileParser.get());
                 subscribeToSelectionChanged(newSearchTableModel.get());
                 _searchLogTableModel = std::move(newSearchTableModel);
@@ -70,8 +63,13 @@ void LogFile::searchFromComplete(sm::SearchEvent event) {
                 _searchIndex = _searchingTask->index();
                 _searchLogTableModel->setIndex(_searchIndex.get());
                 finish();
-            });
-        }
+            } else if (state == TaskState::Stopped) {
+                _searchLogTableModel = nullptr;
+                _searchHist.reset();
+                _searchIndex.reset();
+                finish();
+            }
+        });
     });
     _searchingTask->setProgressChanged([this](auto progress) {
         _dispatcher.postToUIThread([=, this] { emit progressChanged(progress); });
@@ -122,9 +120,9 @@ void LogFile::enterInterrupted() {
     }
 }
 
-void LogFile::searchFromSearching(sm::SearchEvent event) {
-    _scheduledSearchEvent = event;
-    _searchingTask->stop();
+void LogFile::searchFromSearching(sm::SearchEvent /*event*/) {
+    if (_searchingTask)
+        _searchingTask->stop();
 }
 
 void LogFile::subscribeToSelectionChanged(LogTableModel* model) {

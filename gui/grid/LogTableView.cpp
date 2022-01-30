@@ -489,7 +489,7 @@ void LogTableView::setSearchHighlight(std::string text,
                                       bool messageOnly) {
     _messageOnlyHighlight = messageOnly;
     auto qText = QString::fromStdString(text);
-    _searcher = seer::createSearcher(qText, regex, caseSensitive);
+    _searcher = text.empty() ? nullptr : seer::createSearcher(qText, regex, caseSensitive);
     update();
 }
 

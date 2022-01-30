@@ -8,6 +8,11 @@
 
 namespace gui {
 
+enum class SearchButtonTitle {
+    Search,
+    Abort
+};
+
 class SearchLine : public QWidget {
     Q_OBJECT
 
@@ -21,6 +26,7 @@ public:
                         bool messageOnlyInitial,
                         QWidget* parent = nullptr);
     void setStatus(std::string status);
+    void setSearchButtonTitle(SearchButtonTitle title);
     void setProgress(int progress);
     void setSearchEnabled(bool enabled);
 

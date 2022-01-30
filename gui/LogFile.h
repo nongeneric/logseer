@@ -40,7 +40,6 @@ class LogFile : public QObject, sm::IStateHandler {
     sm::Logger _smLogger;
     boost::sml::sm<sm::StateMachine, boost::sml::logger<sm::Logger>> _sm;
     ThreadDispatcher _dispatcher;
-    std::optional<sm::SearchEvent> _scheduledSearchEvent;
     bool _indexingComplete = false;
     std::optional<sm::ReloadEvent> _scheduledReload;
 
@@ -76,11 +75,11 @@ public:
             std::shared_ptr<seer::ILineParser> lineParser);
     ~LogFile() = default;
 
-    inline void index() {
+    void index() {
         _sm.process_event(sm::IndexEvent{});
     }
 
-    inline void search(std::string text,
+    void search(std::string text,
                        bool regex,
                        bool caseSensitive,
                        bool messageOnly) {
@@ -88,17 +87,17 @@ public:
             sm::SearchEvent{text, regex, caseSensitive, messageOnly});
     }
 
-    inline void interrupt() {
+    void interrupt() {
         _sm.process_event(sm::InterruptEvent{});
     }
 
-    inline void reload(std::shared_ptr<std::istream> stream,
+    void reload(std::shared_ptr<std::istream> stream,
                        std::shared_ptr<seer::ILineParser> parser = {}) {
         _scheduledReload = {stream, parser};
         interrupt();
     }
 
-    inline std::string dbgStateName() {
+    std::string dbgStateName() {
         std::string name;
         _sm.visit_current_states([&](auto state) {
             name = state.c_str();
@@ -119,7 +118,7 @@ public:
     void includeOnlyValue(int column, const std::string& value);
 
     template <class S>
-    inline bool isState(S state) {
+    bool isState(S state) {
         return _sm.is(state);
     }
 

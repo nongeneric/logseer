@@ -5,7 +5,7 @@ namespace seer {
 FilterAlgo::FilterAlgo(const ewah_bitset& baseSet,
                        std::vector<const ewah_bitset*>& baseVec,
                        std::vector<const ewah_bitset*>& newVec)
-    : _baseSet(baseSet), _baseVec(baseVec), _newVec(newVec)
+    : _baseSet(baseSet), _newVec(newVec)
 {
     std::sort(begin(baseVec), end(baseVec));
     std::sort(begin(newVec), end(newVec));
