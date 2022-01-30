@@ -76,6 +76,7 @@ public:
                std::function<bool()> stopRequested,
                std::function<void(uint64_t, uint64_t)> progress = {});
     std::vector<ColumnIndexInfo> getValues(int column);
+    size_t numberOfValues(int column) const;
     ColumnWidth maxWidth(int column);
 };
 

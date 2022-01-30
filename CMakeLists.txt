@@ -37,7 +37,7 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE RelWithDebInfo)
 endif()
 
-add_compile_options(-Werror -Werror=return-type -Wall -Wextra -Wno-implicit-fallthrough)
+add_compile_options(-march=skylake -Werror -Werror=return-type -Wall -Wextra -Wno-implicit-fallthrough)
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     add_compile_options(-Wno-error=unused-parameter)
     add_compile_options(-Wno-error=unused-variable)

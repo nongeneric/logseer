@@ -146,7 +146,7 @@ void LogFile::applyFilter() {
         _logTableModel->setFilterActive(i, false);
     }
     for (auto& [c, v] : _columnFilters) {
-        _logTableModel->setFilterActive(c + 1, v.size() != _index->getValues(c).size());
+        _logTableModel->setFilterActive(c + 1, v.size() != _index->numberOfValues(c));
         filters.push_back({c, v});
     }
     _index->filter(filters);

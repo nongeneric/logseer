@@ -503,6 +503,8 @@ bool Index::index(FileParser* fileParser,
 }
 
 std::vector<ColumnIndexInfo> Index::getValues(int column) {
+    StopWatch sw;
+
     assert(_columns.at(column).indexed);
     std::vector<ColumnIndexInfo> values;
     for (auto& [value, index] : _columns[column].index) {
@@ -539,7 +541,13 @@ std::vector<ColumnIndexInfo> Index::getValues(int column) {
         return a.value < b.value;
     });
 
+    log_infof("Index::getValues(%d) finished in %d ms", column, sw.msElapsed());
+
     return values;
+}
+
+size_t Index::numberOfValues(int column) const {
+    return _columns.at(column).index.size();
 }
 
 ColumnWidth Index::maxWidth(int column) {
