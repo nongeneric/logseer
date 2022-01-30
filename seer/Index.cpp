@@ -372,7 +372,7 @@ void Index::makePerColumnIndex(std::vector<ColumnFilter>::const_iterator first,
         auto useNaive = stats.naiveOps <= stats.diffOps;
         column.currentIndex = useNaive ? algo.naive() : algo.diff();
 
-        log_infof("filtered column %d using %d algorithm (%d <= %d) in %d ms",
+        log_infof("filtered column %d using %d algorithm (%d vs %d) in %d ms",
                   filter - first,
                   useNaive ? "naive" : "diff",
                   stats.naiveOps,
@@ -409,9 +409,12 @@ void Index::filter(const std::vector<ColumnFilter>& filters) {
     StopWatch sw;
     auto iewah = std::make_shared<IndexedEwah>(2048);
     iewah->init(_filter);
-    _lineMap = std::move(iewah);
 
-    log_infof("building lineMap completed in %d ms", sw.msElapsed());
+    log_infof("done building lineMap in %d ms (%g MB)",
+              sw.msElapsed(),
+              static_cast<double>(iewah->sizeInBytes()) / (1 << 20));
+
+    _lineMap = std::move(iewah);
 }
 
 void Index::search(FileParser* fileParser,

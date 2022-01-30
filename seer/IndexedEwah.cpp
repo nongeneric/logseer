@@ -1,35 +1,77 @@
 #include "IndexedEwah.h"
+#include <bit>
+#include <bitset>
 
 namespace seer {
 
+constexpr size_t g_bitsInWord = sizeof(uint64_t) * 8;
+
 IndexedEwah::IndexedEwah(unsigned bucketSize)
     : _bucketSize(bucketSize)
-{ }
-
-void IndexedEwah::init(const ewah::EWAHBoolArray<uint64_t> &ewah)
 {
-    auto it = ewah.begin();
-    auto end = ewah.end();
-    auto i = 0;
-    while (it != end) {
-        if (i % _bucketSize == 0) {
-            _buckets.push_back(it);
+    assert(bucketSize >= g_bitsInWord && (bucketSize % g_bitsInWord == 0));
+}
+
+void IndexedEwah::init(const ewah::EWAHBoolArray<uint64_t> &ewah) {
+    auto it = ewah.uncompress();
+    auto bucketSizeInWords = _bucketSize / g_bitsInWord;
+    uint64_t words = 0;
+    while (it.hasNext()) {
+        if (words % bucketSizeInWords == 0) {
+            _buckets.emplace_back(_size, it);
         }
-        ++it;
-        ++i;
+        _size += std::popcount(it.next());
+        words++;
     }
-    _size = i;
+    // last bucket may contain one extra word
+}
+
+size_t indexOfNthSetBit(uint64_t word, size_t n) {
+    assert(static_cast<size_t>(std::popcount(word)) > n);
+    size_t index = 0;
+    std::bitset<64> bits(word);
+    for (;;) {
+        while (!bits[index])
+            index++;
+        if (n == 0)
+            return index;
+        n--;
+        index++;
+    }
+    return index;
 }
 
 uint64_t IndexedEwah::get(uint64_t index) {
-    auto it = _buckets[index / _bucketSize];
-    auto offset = index % _bucketSize;
-    for (auto i = 0ull; i < offset; ++i, ++it) ;
-    return *it;
+    assert(index < _size);
+    auto it = std::lower_bound(
+        begin(_buckets), end(_buckets), index, [](const Bucket& a, uint64_t index) {
+            return a.firstIndex < index;
+        });
+    if (it == end(_buckets) || it->firstIndex != index)
+        --it;
+    uint64_t value = std::distance(begin(_buckets), it) * _bucketSize;
+    auto ewahIt = it->iter;
+    index -= it->firstIndex;
+    for (;;) {
+        assert(ewahIt.hasNext());
+        auto word = ewahIt.next();
+        size_t ones = std::popcount(word);
+        if (ones > index) {
+            return value + indexOfNthSetBit(word, index);
+        }
+        index -= ones;
+        value += g_bitsInWord;
+    }
+    assert(false);
+    return 0;
 }
 
 uint64_t IndexedEwah::size() const {
     return _size;
+}
+
+size_t IndexedEwah::sizeInBytes() const {
+    return _buckets.size() * sizeof(Bucket);
 }
 
 } // namespace seer

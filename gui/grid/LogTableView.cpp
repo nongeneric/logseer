@@ -256,7 +256,7 @@ void LogTableView::copyToClipboard(bool raw) {
     if (rowSelection) {
         auto first = rowSelection->first;
         auto last = rowSelection->last;
-        seer::log_infof("copying to clipboard lines [%d; %d)", first, last);
+        seer::log_infof("copying to clipboard lines [%d; %d]", first, last);
         QString text;
         auto append =  [&] (auto& line) {
             text += QString::fromStdString(line);

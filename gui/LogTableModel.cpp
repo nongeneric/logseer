@@ -123,7 +123,7 @@ size_t graphemeLength(const std::string& str) {
 
 void LogTableModel::copyLines(uint64_t begin, uint64_t end, LogTableModel::LineHandler accept) {
     std::vector<size_t> widths;
-    widths.push_back(bformat("%d", lineOffset(end) + 1).size());
+    widths.push_back(bformat("%d", lineOffset(end - 1) + 1).size());
     for (auto i = 1u; i < _columns.size(); ++i) {
         widths.push_back(_columns[i].name.size());
     }
