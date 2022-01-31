@@ -19,4 +19,5 @@ ${LINUXDEPLOY} --plugin qt \
     --output appimage
 
 LIBC=`/usr/lib64/libc.so.6 | grep "release version" | awk -F " " '{print $NF}'`
-mv logseer-x86_64.AppImage logseer-x86_64.glibc_${LIBC::-1}.AppImage
+VERSION=`grep "project(" -i $SRC/CMakeLists.txt | awk -F " " '{print $3}'`
+mv logseer-x86_64.AppImage logseer-${VERSION}.x86_64.glibc_${LIBC::-1}.AppImage
