@@ -9,7 +9,7 @@ HistMap::HistMap(QWidget* parent) : QWidget(parent) {}
 
 void HistMap::setHist(const seer::Hist* hist) {
     _hist = hist;
-    repaint();
+    update();
 }
 
 void HistMap::paintEvent(QPaintEvent* event) {
