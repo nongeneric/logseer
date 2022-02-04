@@ -25,7 +25,7 @@ void LogTable::setColumnWidth(int column, int longestColumnIndex) {
     QFontMetricsF fm(_header->font());
     auto isIndexed = _model->headerData(column, Qt::Horizontal, (int)HeaderDataRole::IsIndexed).toBool();
     auto headerText = _model->headerData(column, Qt::Horizontal, Qt::DisplayRole).toString();
-    auto headerWidth = fm.width(headerText);
+    auto headerWidth = fm.horizontalAdvance(headerText);
     if (isIndexed) {
         headerWidth += _header->style()->pixelMetric(QStyle::PM_SmallIconSize);
     }

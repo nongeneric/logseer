@@ -383,7 +383,7 @@ void MainWindow::openLog(std::string path, std::string parser) {
 
     vbox->addWidget(table);
     vbox->addWidget(searchLine);
-    vbox->setMargin(0);
+    vbox->setContentsMargins(0, 0, 0, 0);
 
     auto splitter = new QSplitter();
     splitter->setOrientation(Qt::Vertical);

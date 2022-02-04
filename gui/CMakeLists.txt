@@ -53,5 +53,7 @@ target_link_libraries(gui
     seer
 )
 
+target_compile_definitions(gui PUBLIC QT_DISABLE_DEPRECATED_BEFORE=0x050F00)
+
 add_executable(logseer main.cpp ${QT_RESOURCES} resources/resources.qrc "${CMAKE_CURRENT_SOURCE_DIR}/resources/winicon/icon.rc")
 target_link_libraries(logseer gui)
