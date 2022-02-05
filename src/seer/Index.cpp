@@ -4,7 +4,8 @@
 #include "ParallelFor.h"
 #include "SPMCQueue.h"
 #include "Searcher.h"
-#include "StopWatch.h"
+#include "Stopwatch.h"
+#include <fmt/chrono.h>
 #include <QString>
 #include <numeric>
 #include <optional>
@@ -322,7 +323,7 @@ public:
 
         prepareThreads();
 
-        StopWatch sw;
+        Stopwatch sw;
 
         log_info("started indexing");
 
@@ -344,7 +345,7 @@ public:
 
         logIndexSize();
 
-        log_infof("indexing done in {} ms", sw.msElapsed());
+        log_infof("indexing done in {}", sw.msElapsed());
 
         return true;
     }
@@ -365,14 +366,14 @@ void Index::makePerColumnIndex(std::vector<ColumnFilter>::const_iterator first,
             oldSelectedSets.push_back(&column.index[valueName]);
         }
 
-        StopWatch sw;
+        Stopwatch sw;
 
         FilterAlgo algo(column.currentIndex, oldSelectedSets, perValue);
         auto stats = algo.stats();
         auto useNaive = stats.naiveOps <= stats.diffOps;
         column.currentIndex = useNaive ? algo.naive() : algo.diff();
 
-        log_infof("filtered column {} using {} algorithm ({} vs {}) in {} ms",
+        log_infof("filtered column {} using {} algorithm ({} vs {}) in {}",
                   filter - first,
                   useNaive ? "naive" : "diff",
                   stats.naiveOps,
@@ -406,11 +407,11 @@ void Index::filter(const std::vector<ColumnFilter>& filters) {
 
     log_info("filtering complete");
 
-    StopWatch sw;
+    Stopwatch sw;
     auto iewah = std::make_shared<IndexedEwah>(2048);
     iewah->init(_filter);
 
-    log_infof("done building lineMap in {} ms ({:.2f} MB)",
+    log_infof("done building lineMap in {} ({:.2f} MB)",
               sw.msElapsed(),
               static_cast<double>(iewah->sizeInBytes()) / (1 << 20));
 
@@ -503,7 +504,7 @@ bool Index::index(FileParser* fileParser,
 }
 
 std::vector<ColumnIndexInfo> Index::getValues(int column) {
-    StopWatch sw;
+    Stopwatch sw;
 
     assert(_columns.at(column).indexed);
     std::vector<ColumnIndexInfo> values;
@@ -540,7 +541,7 @@ std::vector<ColumnIndexInfo> Index::getValues(int column) {
 
     std::ranges::sort(values, {}, &ColumnIndexInfo::value);
 
-    log_infof("Index::getValues({}) finished in {} ms", column, sw.msElapsed());
+    log_infof("Index::getValues({}) finished in {}", column, sw.msElapsed());
 
     return values;
 }

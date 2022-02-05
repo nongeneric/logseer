@@ -4,11 +4,11 @@
 
 namespace seer {
 
-class StopWatch {
+class Stopwatch {
     std::chrono::high_resolution_clock::time_point _past;
 
 public:
-    StopWatch() {
+    Stopwatch() {
         reset();
     }
 
@@ -16,9 +16,9 @@ public:
         _past = std::chrono::high_resolution_clock::now();
     }
 
-    uint64_t msElapsed() const {
+    auto msElapsed() const {
         auto now = std::chrono::high_resolution_clock::now();
-        return std::chrono::duration_cast<std::chrono::milliseconds>(now - _past).count();
+        return std::chrono::duration_cast<std::chrono::milliseconds>(now - _past);
     }
 };
 

@@ -131,9 +131,9 @@ Qt::ItemFlags FilterTableModel::flags(const QModelIndex &index) const {
 
 std::set<std::string> FilterTableModel::checkedValues() const {
     std::set<std::string> values;
-    for (auto i = 0u; i < _infos.size(); ++i) {
-        if (_infos[i].checked) {
-            values.insert(_infos[i].value);
+    for (const auto& info : _infos) {
+        if (info.checked) {
+            values.insert(info.value);
         }
     }
     return values;
