@@ -13,15 +13,15 @@ configure_file (
 
 include_directories("${CMAKE_BINARY_DIR}")
 include_directories("${CMAKE_SOURCE_DIR}")
-include_directories(SYSTEM thirdparty/Catch2/single_include)
-include_directories(SYSTEM thirdparty/EWAHBoolArray/include)
-include_directories(SYSTEM thirdparty/sml/include/boost)
-include_directories(SYSTEM thirdparty/concurrentqueue)
-include_directories(SYSTEM thirdparty/json/include)
+include_directories(SYSTEM ../thirdparty/Catch2/single_include)
+include_directories(SYSTEM ../thirdparty/EWAHBoolArray/include)
+include_directories(SYSTEM ../thirdparty/sml/include/boost)
+include_directories(SYSTEM ../thirdparty/concurrentqueue)
+include_directories(SYSTEM ../thirdparty/json/include)
 
-file(GLOB LUA_SOURCES thirdparty/lua/*.c)
+file(GLOB LUA_SOURCES ../thirdparty/lua/*.c)
 add_library(lua STATIC $<FILTER:${LUA_SOURCES},EXCLUDE,onelua.c>)
-target_include_directories(lua INTERFACE SYSTEM thirdparty/lua)
+target_include_directories(lua INTERFACE SYSTEM ../thirdparty/lua)
 
 if(WIN32)
     set(Boost_ARCHITECTURE "-x64")
