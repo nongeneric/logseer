@@ -23,7 +23,6 @@
 #include <boost/filesystem.hpp>
 #include <fmt/format.h>
 #include <fstream>
-#include <algorithm>
 
 namespace gui {
 

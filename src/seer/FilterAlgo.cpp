@@ -1,5 +1,7 @@
 #include "FilterAlgo.h"
 
+#include <ranges>
+
 namespace seer {
 
 FilterAlgo::FilterAlgo(const ewah_bitset& baseSet,
@@ -7,8 +9,8 @@ FilterAlgo::FilterAlgo(const ewah_bitset& baseSet,
                        std::vector<const ewah_bitset*>& newVec)
     : _baseSet(baseSet), _newVec(newVec)
 {
-    std::sort(begin(baseVec), end(baseVec));
-    std::sort(begin(newVec), end(newVec));
+    std::ranges::sort(baseVec);
+    std::ranges::sort(newVec);
     std::set_difference(begin(newVec), end(newVec), begin(baseVec), end(baseVec), std::back_inserter(_added));
     std::set_difference(begin(baseVec), end(baseVec), begin(newVec), end(newVec), std::back_inserter(_removed));
 }

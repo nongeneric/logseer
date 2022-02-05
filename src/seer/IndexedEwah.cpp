@@ -1,5 +1,6 @@
 #include "IndexedEwah.h"
 #include <bitset>
+#include <bit>
 
 namespace seer {
 
@@ -22,14 +23,14 @@ void IndexedEwah::init(const ewah::EWAHBoolArray<uint64_t> &ewah) {
                 .iter = it
             });
         }
-        _size += __builtin_popcountll(it.next());
+        _size += std::popcount(it.next());
         words++;
     }
     // last bucket may contain one extra word
 }
 
 size_t indexOfNthSetBit(uint64_t word, size_t n) {
-    assert(static_cast<size_t>(__builtin_popcountll(word)) > n);
+    assert(static_cast<size_t>(std::popcount(word)) > n);
     size_t index = 0;
     std::bitset<64> bits(word);
     for (;;) {
@@ -57,7 +58,7 @@ uint64_t IndexedEwah::get(uint64_t index) {
     for (;;) {
         assert(ewahIt.hasNext());
         auto word = ewahIt.next();
-        size_t ones = __builtin_popcountll(word);
+        size_t ones = std::popcount(word);
         if (ones > index) {
             return value + indexOfNthSetBit(word, index);
         }

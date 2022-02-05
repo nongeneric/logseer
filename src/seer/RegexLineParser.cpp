@@ -6,7 +6,6 @@
 #include <boost/algorithm/string.hpp>
 #include <fmt/format.h>
 #include <sstream>
-#include <algorithm>
 
 #define PCRE2_CODE_UNIT_WIDTH 8
 #include <pcre2.h>

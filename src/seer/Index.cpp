@@ -10,7 +10,7 @@
 #include <optional>
 #include <thread>
 #include <tuple>
-#include <algorithm>
+#include <ranges>
 
 namespace seer {
 
@@ -537,9 +537,8 @@ std::vector<ColumnIndexInfo> Index::getValues(int column) {
         values.push_back({value, checked, count});
     }
 
-    std::sort(begin(values), end(values), [&](auto& a, auto& b) {
-        return a.value < b.value;
-    });
+
+    std::ranges::sort(values, {}, &ColumnIndexInfo::value);
 
     log_infof("Index::getValues({}) finished in {} ms", column, sw.msElapsed());
 

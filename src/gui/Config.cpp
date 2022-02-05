@@ -7,7 +7,6 @@
 #include <regex>
 #include <sstream>
 #include <fstream>
-#include <algorithm>
 
 using namespace boost::filesystem;
 using namespace nlohmann;

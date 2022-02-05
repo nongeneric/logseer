@@ -7,7 +7,6 @@
 #include "seer/LineParserRepository.h"
 #include "seer/StriingLiterals.h"
 #include <sstream>
-#include <algorithm>
 
 using namespace seer;
 
