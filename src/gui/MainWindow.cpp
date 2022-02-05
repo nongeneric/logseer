@@ -21,9 +21,9 @@
 #include <QFileDialog>
 #include <QShortcut>
 #include <boost/filesystem.hpp>
+#include <fmt/format.h>
 #include <fstream>
 #include <algorithm>
-#include "seer/bformat.h"
 
 namespace gui {
 
@@ -62,9 +62,7 @@ void handleStateChanged(LogFile* file,
         searchLine->setSearchButtonTitle(SearchButtonTitle::Abort);
     } else if (file->isState(sm::CompleteState)) {
         table->setModel(file->logTableModel());
-        auto status = searchModel ? bformat("%d matches found",
-                                            searchModel->rowCount({}))
-                                  : "";
+        auto status = searchModel ? fmt::format("{} matches found", searchModel->rowCount({})) : "";
         searchLine->setStatus(status);
         searchLine->setProgress(-1);
         searchLine->setSearchEnabled(true);
@@ -255,16 +253,16 @@ void MainWindow::clearFilters() {
 }
 
 void MainWindow::showAbout() {
-    auto debugBuild = g_debug ? bformat(" [DEBUG]") : "";
-    auto title = bformat("About %s", g_name);
-    auto text = bformat("<b>%1% %2%%3%</b><p>"
-                        "Config: <a href='file://%4%'>%4%</a><p>"
-                        "GitHub: <a href='%5%'>%5%</a>",
-                        g_name,
-                        g_version,
-                        debugBuild,
-                        g_Config.getConfigDirectory().string(),
-                        "https://github.com/nongeneric/logseer");
+    auto debugBuild = g_debug ? " [DEBUG]" : "";
+    auto title = fmt::format("About {}", g_name);
+    auto text = fmt::format("<b>{0} {1}{2}</b><p>"
+                            "Config: <a href='file://{3}'>{3}</a><p>"
+                            "GitHub: <a href='{4}'>{4}</a>",
+                            g_name,
+                            g_version,
+                            debugBuild,
+                            g_Config.getConfigDirectory().string(),
+                            "https://github.com/nongeneric/logseer");
     QMessageBox::about(this, QString::fromStdString(title), QString::fromStdString(text));
 }
 
@@ -312,7 +310,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), _dispatcher(this)
     for (auto& config : g_Config.regexConfigs()) {
         auto error = _repository.addRegexParser(config.name, config.priority, config.json);
         if (error) {
-            auto title = bformat("Error loading regex config: %s", config.name);
+            auto title = fmt::format("Error loading regex config: {}", config.name);
             QMessageBox::warning(
                 this, QString::fromStdString(title), QString::fromStdString(*error));
         }
@@ -328,7 +326,7 @@ MainWindow::~MainWindow() {
 }
 
 void MainWindow::openLog(std::string path, std::string parser) {
-    seer::log_infof("opening [%s]", path);
+    seer::log_infof("opening [{}]", path);
 
     if (boost::filesystem::is_directory(path)) {
         seer::log_info("attempted to open a directory, ignoring");
@@ -363,7 +361,7 @@ void MainWindow::openLog(std::string path, std::string parser) {
     connect(file.get(), &LogFile::stateChanged, this, [=, this, file = file.get()] {
         auto index = findTab(file);
         if (index != -1) {
-            auto toolTip = bformat("%s\nparser type: %s", path.c_str(), file->lineParser()->name());
+            auto toolTip = fmt::format("{}\nparser type: {}", path.c_str(), file->lineParser()->name());
             _tabWidget->setTabToolTip(index, QString::fromStdString(toolTip));
         }
         handleStateChanged(file, table, searchTable, searchLine, _updateMenu, [=, this] {
@@ -438,7 +436,7 @@ void MainWindow::openLog(std::string path, std::string parser) {
                 file->setColumnFilter(column, filterModel->checkedValues());
             });
             FilterDialog filterDialog(filterModel, this);
-            filterDialog.setWindowTitle(QString::fromStdString(bformat("[%s] filter", header)));
+            filterDialog.setWindowTitle(QString::fromStdString(fmt::format("[{}] filter", header)));
             filterDialog.setSizeGripEnabled(true);
             filterDialog.resize(450, 450);
             filterDialog.exec();
@@ -463,14 +461,14 @@ void MainWindow::openLog(std::string path, std::string parser) {
 }
 
 void MainWindow::setInstanceTracker(seer::InstanceTracker* tracker) {
-    seer::log_infof("%s called", __func__);
+    seer::log_infof("{} called", __func__);
     assert(tracker);
     _tracker = tracker;
     _trackerThread = std::thread([this] {
         while (auto message = _tracker->waitMessage()) {
             seer::log_infof("posting file path to UI thread");
             _dispatcher.postToUIThread([=, this] {
-                seer::log_infof("received file path through InstanceTracker: %s", *message);
+                seer::log_infof("received file path through InstanceTracker: {}", *message);
                 openLog(*message);
                 activateWindow();
             });

@@ -285,9 +285,9 @@ class Indexer {
             count += column.index.size();
         }
 
-        log_infof("file index: %g MB",
+        log_infof("file index: {:.2f} MB",
                   static_cast<double>(_fileParser->calcLineIndexSize()) / (1 << 20));
-        log_infof("bitsets: %d, total size: %g MB",
+        log_infof("bitsets: {}, total size: {:.2f} MB",
                   count,
                   static_cast<double>(totalSize) / (1 << 20));
     }
@@ -310,7 +310,7 @@ public:
         auto columnFormats = _lineParser->getColumnFormats();
 
         if (columnFormats.size() == 1) {
-            log_infof("parser [%s] has a single column and doesn't require indexing", _lineParser->name());
+            log_infof("parser [{}] has a single column and doesn't require indexing", _lineParser->name());
             _columns->clear();
             _columns->resize(1);
             log_info("started parsing");
@@ -344,7 +344,7 @@ public:
 
         logIndexSize();
 
-        log_infof("indexing done in %d ms", sw.msElapsed());
+        log_infof("indexing done in {} ms", sw.msElapsed());
 
         return true;
     }
@@ -372,7 +372,7 @@ void Index::makePerColumnIndex(std::vector<ColumnFilter>::const_iterator first,
         auto useNaive = stats.naiveOps <= stats.diffOps;
         column.currentIndex = useNaive ? algo.naive() : algo.diff();
 
-        log_infof("filtered column %d using %d algorithm (%d vs %d) in %d ms",
+        log_infof("filtered column {} using {} algorithm ({} vs {}) in {} ms",
                   filter - first,
                   useNaive ? "naive" : "diff",
                   stats.naiveOps,
@@ -410,7 +410,7 @@ void Index::filter(const std::vector<ColumnFilter>& filters) {
     auto iewah = std::make_shared<IndexedEwah>(2048);
     iewah->init(_filter);
 
-    log_infof("done building lineMap in %d ms (%g MB)",
+    log_infof("done building lineMap in {} ms ({:.2f} MB)",
               sw.msElapsed(),
               static_cast<double>(iewah->sizeInBytes()) / (1 << 20));
 
@@ -541,7 +541,7 @@ std::vector<ColumnIndexInfo> Index::getValues(int column) {
         return a.value < b.value;
     });
 
-    log_infof("Index::getValues(%d) finished in %d ms", column, sw.msElapsed());
+    log_infof("Index::getValues({}) finished in {} ms", column, sw.msElapsed());
 
     return values;
 }

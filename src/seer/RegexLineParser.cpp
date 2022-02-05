@@ -4,7 +4,7 @@
 
 #include <nlohmann/json.hpp>
 #include <boost/algorithm/string.hpp>
-#include <seer/bformat.h>
+#include <fmt/format.h>
 #include <sstream>
 #include <algorithm>
 
@@ -168,8 +168,8 @@ void RegexLineParser::load(std::string config) {
     int groupCount = pcre2_get_ovector_count(matchData.get());
     for (auto& format : _formats) {
         if (format.group < 0 || format.group >= groupCount)
-            throw RegexpOutOfBoundGroupReferenceException(bformat(
-                "Column \"%s\" references a nonexistent group \"%d\" (there are only %d groups in the regex).",
+            throw RegexpOutOfBoundGroupReferenceException(fmt::format(
+                "Column \"{}\" references a nonexistent group \"{}\" (there are only {} groups in the regex).",
                 format.name,
                 format.group,
                 groupCount));

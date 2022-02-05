@@ -1,6 +1,6 @@
 #pragma once
 
-#include "bformat.h"
+#include <fmt/format.h>
 #include <string>
 #include <type_traits>
 
@@ -9,9 +9,9 @@ namespace seer {
 void log_info(const char* message);
 void log_enable();
 
-template <typename... Args>
-void log_infof(const char* message, const Args&... args) {
-    log_info(bformat(message, args...).c_str());
+template <class... Args>
+void log_infof(fmt::format_string<Args...> format, Args&&... args) {
+    log_info(fmt::format(format, std::forward<Args>(args)...).c_str());
 }
 
 } // namespace seer

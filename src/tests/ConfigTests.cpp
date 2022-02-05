@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 
 #include "gui/Config.h"
-#include "seer/bformat.h"
+#include <fmt/format.h>
 #include "seer/RegexLineParser.h"
 #include <map>
 
@@ -180,7 +180,7 @@ TEST_CASE("config_parse_recent_files") {
 
     session.recentFiles.clear();
     for (auto i = 0; i < 2 * g_maxRecentFiles; ++i) {
-        session.recentFiles.push_back(bformat("file %d.txt", i));
+        session.recentFiles.push_back(fmt::format("file {}.txt", i));
     }
     config2.save(session);
 

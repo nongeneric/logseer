@@ -1,5 +1,5 @@
 #include "GotoLineDialog.h"
-#include "seer/bformat.h"
+#include <fmt/format.h>
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -23,7 +23,7 @@ GotoLineDialog::GotoLineDialog(QWidget* parent, int64_t lineCount)
 
     _go->setText("&OK");
     _cancel->setText("&Cancel");
-    _line->setPlaceholderText(bformat("1..%d", lineCount).c_str());
+    _line->setPlaceholderText(fmt::format("1..{}", lineCount).c_str());
 
     setLayout(vbox);
     setFixedSize(sizeHint());

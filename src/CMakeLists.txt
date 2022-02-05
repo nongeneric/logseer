@@ -33,6 +33,8 @@ set(Boost_USE_STATIC_RUNTIME    OFF)
 find_package(Boost 1.56 COMPONENTS system program_options filesystem REQUIRED)
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
+find_library(FMT fmt)
+
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE RelWithDebInfo)
 endif()

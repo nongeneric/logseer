@@ -53,9 +53,6 @@ set(LIBS PUBLIC
 
 if(WIN32)
     list (APPEND LIBS ws2_32)
-else()
-    find_library(FMT fmt)
-    list (APPEND LIBS ${FMT})
 endif()
 
-target_link_libraries(${PROJECT_NAME} ${LIBS})
+target_link_libraries(${PROJECT_NAME} ${LIBS} ${FMT})

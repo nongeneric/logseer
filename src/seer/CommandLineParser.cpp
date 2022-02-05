@@ -45,7 +45,7 @@ bool CommandLineParser::parse(int argc, const char* const argv[]) {
         }
 
         if (console_vm.count("version")) {
-            _version = bformat("logseer %s", g_version);
+            _version = fmt::format("logseer {}", g_version);
             return true;
         }
 
@@ -57,8 +57,8 @@ bool CommandLineParser::parse(int argc, const char* const argv[]) {
             path = boost::filesystem::absolute(path).string();
         }
     } catch(std::exception& e) {
-        _error = bformat(
-            "can't parse program options:\n%s\n\n%s", e.what(), help());
+        _error = fmt::format(
+            "can't parse program options:\n{}\n\n{}", e.what(), help());
         return false;
     }
 

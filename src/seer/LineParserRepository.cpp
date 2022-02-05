@@ -70,11 +70,11 @@ std::shared_ptr<ILineParser> LineParserRepository::resolve(std::istream& stream)
     }
 
     for (auto& [_, parser] : _parsers) {
-        log_infof("trying parser [%s]", parser->name());
+        log_infof("trying parser [{}]", parser->name());
         if (parser->isMatch(sample, "") || parser == (--end(_parsers))->second) {
             stream.clear();
             stream.seekg(0);
-            log_infof("selected parser [%s]", parser->name());
+            log_infof("selected parser [{}]", parser->name());
             return parser;
         }
     }

@@ -13,7 +13,7 @@ InstanceTracker::InstanceTracker(std::string socketName) {
 
     _socket = socket(AF_UNIX, SOCK_STREAM, 0);
     if (_socket == LOGSEER_INVALID_SOCKET) {
-        log_infof("%s: failed to create AF_UNIX socket, error %d", __func__, LOGSEER_ERRNO);
+        log_infof("{}: failed to create AF_UNIX socket, error {}", __func__, LOGSEER_ERRNO);
         return;
     }
 
@@ -22,7 +22,7 @@ InstanceTracker::InstanceTracker(std::string socketName) {
     strncpy(addr.sun_path, socketName.c_str(), sizeof(addr.sun_path) - 1);
 
     if (!connect(_socket, reinterpret_cast<sockaddr*>(&addr), sizeof addr)) {
-        log_infof("%s: connected to socket %s", __func__, socketName);
+        log_infof("{}: connected to socket {}", __func__, socketName);
         _connected = true;
         return;
     }
@@ -31,7 +31,7 @@ InstanceTracker::InstanceTracker(std::string socketName) {
     LOGSEER_CLOSE_SOCKET(_socket);
     _socket = socket(AF_UNIX, SOCK_STREAM, 0);
     if (_socket == LOGSEER_INVALID_SOCKET) {
-        log_infof("%s: failed to create AF_UNIX socket after failed connect(), error %d", __func__, LOGSEER_ERRNO);
+        log_infof("{}: failed to create AF_UNIX socket after failed connect(), error {}", __func__, LOGSEER_ERRNO);
         return;
     }
 #endif
@@ -39,19 +39,19 @@ InstanceTracker::InstanceTracker(std::string socketName) {
     LOGSEER_UNLINK(socketName.c_str());
     auto ret = bind(_socket, reinterpret_cast<sockaddr*>(&addr), sizeof addr);
     if (ret == -1) {
-        log_infof("%s: failed to bind to socket %s, error %d", __func__, socketName, LOGSEER_ERRNO);
+        log_infof("{}: failed to bind to socket {}, error {}", __func__, socketName, LOGSEER_ERRNO);
         stop();
         return;
     }
 
     ret = listen(_socket, 20);
     if (ret == -1) {
-        log_infof("%s: failed to listen on socket %s", __func__, socketName);
+        log_infof("{}: failed to listen on socket {}", __func__, socketName);
         stop();
         return;
     }
 
-    log_infof("%s: listening on socket %s", __func__, socketName);
+    log_infof("{}: listening on socket {}", __func__, socketName);
 
     _thread = std::thread([this] {
         for (;;) {
@@ -90,7 +90,7 @@ void InstanceTracker::send(std::string path) {
     auto message = boost::filesystem::absolute(path).string() + '\n';
     auto ret = LOGSEER_SOCKET_WRITE(_socket, message.c_str(), message.size() + 1);
     if (ret == 0) {
-        log_infof("%s: could not write to socket, error %d", __func__, LOGSEER_ERRNO);
+        log_infof("{}: could not write to socket, error {}", __func__, LOGSEER_ERRNO);
         return;
     }
 }

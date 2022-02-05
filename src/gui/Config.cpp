@@ -65,7 +65,7 @@ path Config::getConfigJsonPath() {
 void Config::initRegexConfigs() {
     auto dir = getConfigDirectory() / "regex";
 
-    seer::log_infof("searching directory [%s]", dir.string());
+    seer::log_infof("searching directory [{}]", dir.string());
 
     if (!exists(dir)) {
         seer::log_info("initializing the default set of regex configs");
@@ -82,7 +82,7 @@ void Config::initRegexConfigs() {
         std::smatch match;
         auto fileName = p.filename().string();
         if (!std::regex_search(fileName, match, rxFileName)) {
-            seer::log_infof("parser config name [%s] doesn't have the right format", fileName);
+            seer::log_infof("parser config name [{}] doesn't have the right format", fileName);
             continue;
         }
         auto priority = std::stoi(match.str(1));
@@ -146,7 +146,7 @@ void Config::init(std::shared_ptr<IFileSystem> fileSystem) {
     auto configPath = getConfigJsonPath();
     auto files = _fileSystem->files(configPath.parent_path());
     if (std::find(begin(files), end(files), configPath) == end(files)) {
-        seer::log_infof("no config found at [%s]", configPath);
+        seer::log_infof("no config found at [{}]", configPath.string());
         save();
         return;
     }

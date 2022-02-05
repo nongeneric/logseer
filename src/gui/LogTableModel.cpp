@@ -1,9 +1,9 @@
 #include "LogTableModel.h"
 
 #include <QColor>
-#include <seer/bformat.h>
 #include <gui/GraphemeMap.h>
 #include <boost/range/irange.hpp>
+#include <fmt/format.h>
 #include <numeric>
 
 namespace gui {
@@ -123,7 +123,7 @@ size_t graphemeLength(const std::string& str) {
 
 void LogTableModel::copyLines(uint64_t begin, uint64_t end, LogTableModel::LineHandler accept) {
     std::vector<size_t> widths;
-    widths.push_back(bformat("%d", lineOffset(end - 1) + 1).size());
+    widths.push_back(fmt::format("{}", lineOffset(end - 1) + 1).size());
     for (auto i = 1u; i < _columns.size(); ++i) {
         widths.push_back(_columns[i].name.size());
     }
@@ -173,7 +173,7 @@ void LogTableModel::copyLines(uint64_t begin, uint64_t end, LogTableModel::LineH
     copyRawLines(begin, end, [&] (auto& line) {
         formatted.clear();
         if (_parser->lineParser()->parseLine(line, columns, *_parser->lineParser()->createContext())) {
-            append(bformat("%d", lineOffset(index) + 1), 0);
+            append(fmt::format("{}", lineOffset(index) + 1), 0);
             for (auto i = 0u; i < columns.size(); ++i) {
                 append(columns[i], i + 1);
             }

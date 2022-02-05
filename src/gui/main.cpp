@@ -30,9 +30,9 @@ int main(int argc, char *argv[]) {
         seer::InstanceTracker tracker(gui::g_socketName);
 
         if (tracker.connected()) {
-            seer::log_infof("InstanceTracker connected to an existing instance");
+            seer::log_info("InstanceTracker connected to an existing instance");
             for (auto& path : parser.paths()) {
-                seer::log_infof("Sending log path to active instance: %s", path);
+                seer::log_infof("Sending log path to active instance: {}", path);
                 tracker.send(path);
             }
             return 0;

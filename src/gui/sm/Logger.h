@@ -13,12 +13,12 @@ struct Logger {
     template <class SM, class TEvent>
     void log_process_event(const TEvent&) {
         seer::log_infof(
-            "[%s][process_event] %s", aux::get_type_name<SM>(), aux::get_type_name<TEvent>());
+            "[{}][process_event] {}", aux::get_type_name<SM>(), aux::get_type_name<TEvent>());
     }
 
     template <class SM, class TGuard, class TEvent>
     void log_guard(const TGuard&, const TEvent&, bool result) {
-        seer::log_infof("[%s][guard] %s %s %s",
+        seer::log_infof("[{}][guard] {} {} {}",
                         aux::get_type_name<SM>(),
                         aux::get_type_name<TGuard>(),
                         aux::get_type_name<TEvent>(),
@@ -27,7 +27,7 @@ struct Logger {
 
     template <class SM, class TAction, class TEvent>
     void log_action(const TAction&, const TEvent&) {
-        seer::log_infof("[%s][action] %s %s",
+        seer::log_infof("[{}][action] {} {}",
                         aux::get_type_name<SM>(),
                         aux::get_type_name<TAction>(),
                         aux::get_type_name<TEvent>());
@@ -36,7 +36,7 @@ struct Logger {
     template <class SM, class TSrcState, class TDstState>
     void log_state_change(const TSrcState& src, const TDstState& dst) {
         seer::log_infof(
-            "[%s][transition] %s -> %s", aux::get_type_name<SM>(), src.c_str(), dst.c_str());
+            "[{}][transition] {} -> {}", aux::get_type_name<SM>(), src.c_str(), dst.c_str());
     }
 };
 

@@ -256,7 +256,7 @@ void LogTableView::copyToClipboard(bool raw) {
     if (rowSelection) {
         auto first = rowSelection->first;
         auto last = rowSelection->last;
-        seer::log_infof("copying to clipboard lines [%d; %d]", first, last);
+        seer::log_infof("copying to clipboard lines [{}; {}]", first, last);
         QString text;
         auto append =  [&] (auto& line) {
             text += QString::fromStdString(line);
@@ -390,13 +390,13 @@ LogTableView::LogTableView(QFont font, LogTable* parent)
                 std::tie(columnSelection->first, columnSelection->last) =
                     gmap->extendToWordBoundary(columnSelection->first, columnSelection->last);
             }
-            auto number = rowSelection ? bformat("%d lines", rowSelection->size())
-                                       : bformat("%d characters", columnSelection->size());
-            copyAction->setText(QString::fromStdString(bformat("Copy %s", number)));
+            auto number = rowSelection ? fmt::format("{} lines", rowSelection->size())
+                                       : fmt::format("{} characters", columnSelection->size());
+            copyAction->setText(QString::fromStdString(fmt::format("Copy {}", number)));
             menu.addAction(copyAction);
             if (rowSelection) {
                 copyFormattedAction->setText(
-                    QString::fromStdString(bformat("Copy %s (with headers)", number)));
+                    QString::fromStdString(fmt::format("Copy {} (with headers)", number)));
                 menu.addAction(copyFormattedAction);
             }
         }

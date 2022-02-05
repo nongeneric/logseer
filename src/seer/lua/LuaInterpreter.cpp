@@ -1,5 +1,5 @@
 #include "LuaInterpreter.h"
-#include "seer/bformat.h"
+#include <fmt/format.h>
 
 #include <lua.h>
 #include <seer/Log.h>
@@ -48,7 +48,7 @@ LuaThread::LuaThread() {
 
 bool LuaThread::execTop() {
     if (auto err = lua_pcall(_state, 0, 1, 0); err) {
-        log_infof("lua_pcall error: %d", err);
+        log_infof("lua_pcall error: {}", err);
         return false;
     }
     return true;
@@ -56,7 +56,7 @@ bool LuaThread::execTop() {
 
 bool LuaThread::pushScript(const std::string& text) {
     if (auto err = luaL_loadbuffer(_state, text.c_str(), text.size(), ""); err) {
-        log_infof("luaL_loadbuffer error: %d", err);
+        log_infof("luaL_loadbuffer error: {}", err);
         return false;
     }
     return true;
