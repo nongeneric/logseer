@@ -12,6 +12,7 @@ struct SearchEvent {
     std::string text;
     bool regex;
     bool caseSensitive;
+    bool unicodeAware;
     bool messageOnly;
 };
 struct InterruptEvent {};

@@ -43,7 +43,7 @@ class LogTableView : public QWidget {
     LogTable* _table;
     int _rowHeight;
     int _firstRow = 0;
-    std::unique_ptr<seer::ISearcher> _searcher;
+    std::unique_ptr<seer::IHighlightSearcher> _searcher;
     bool _messageOnlyHighlight = false;
     bool _selectWords = false;
     std::unique_ptr<IFontMetrics> _gmapFontMetrics;
@@ -64,6 +64,7 @@ public:
     void setSearchHighlight(std::string text,
                             bool regex,
                             bool caseSensitive,
+                            bool unicodeAware,
                             bool messageOnly);
     QString getSelectionText(const ColumnSelection& columnSelection);
     void invalidateCache();

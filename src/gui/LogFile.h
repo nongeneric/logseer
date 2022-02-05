@@ -82,9 +82,10 @@ public:
     void search(std::string text,
                        bool regex,
                        bool caseSensitive,
+                       bool unicodeAware,
                        bool messageOnly) {
         _sm.process_event(
-            sm::SearchEvent{text, regex, caseSensitive, messageOnly});
+            sm::SearchEvent{text, regex, caseSensitive, unicodeAware, messageOnly});
     }
 
     void interrupt() {

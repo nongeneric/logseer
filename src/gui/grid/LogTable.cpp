@@ -151,8 +151,9 @@ void LogTable::showHistMap() {
 void LogTable::setSearchHighlight(std::string text,
                                   bool regex,
                                   bool caseSensitive,
+                                  bool unicodeAware,
                                   bool messageOnly) {
-    _view->setSearchHighlight(text, regex, caseSensitive, messageOnly);
+    _view->setSearchHighlight(text, regex, caseSensitive, unicodeAware, messageOnly);
 }
 
 void LogTable::updateMessageWidth(int width) {

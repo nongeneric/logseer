@@ -21,6 +21,7 @@ struct {
     const char* searchMessageOnly = "messageOnly";
     const char* searchRegex = "regex";
     const char* searchCaseSensitive = "caseSensitive";
+    const char* unicodeAware = "unicode";
     const char* sessionGroup = "session";
     const char* sessionOpenedFiles = "openedFiles";
     const char* sessionOpenedFilePath = "path";
@@ -106,7 +107,8 @@ void Config::save() {
             g_consts.searchGroup, {
                 {g_consts.searchMessageOnly, _searchConfig.messageOnly},
                 {g_consts.searchRegex, _searchConfig.regex},
-                {g_consts.searchCaseSensitive, _searchConfig.caseSensitive}
+                {g_consts.searchCaseSensitive, _searchConfig.caseSensitive},
+                {g_consts.unicodeAware, _searchConfig.unicodeAware}
             }
         },
         {
@@ -160,6 +162,10 @@ void Config::init(std::shared_ptr<IFileSystem> fileSystem) {
     _searchConfig.messageOnly = search[g_consts.searchMessageOnly].get<bool>();
     _searchConfig.regex = search[g_consts.searchRegex].get<bool>();
     _searchConfig.caseSensitive = search[g_consts.searchCaseSensitive].get<bool>();
+
+    if (auto value = search[g_consts.unicodeAware]; !value.is_null()) {
+        _searchConfig.unicodeAware = value.get<bool>();
+    }
 
     auto general = j[g_consts.generalGroup];
     auto jShowCloseTabButton = general[g_consts.showCloseTabButton];

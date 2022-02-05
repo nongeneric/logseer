@@ -17,17 +17,19 @@ class SearchingTask : public Task {
     std::string _text;
     bool _regex;
     bool _caseSensitive;
+    bool _unicodeAware;
     bool _messageOnly;
     std::shared_ptr<Index> _index;
     std::shared_ptr<Hist> _hist;
 
 public:
     SearchingTask(FileParser* fileParser,
-                    Index* index,
-                    std::string text,
-                    bool regex,
-                    bool caseSensitive,
-                    bool messageOnly);
+                  Index* index,
+                  std::string text,
+                  bool regex,
+                  bool caseSensitive,
+                  bool unicodeAware,
+                  bool messageOnly);
     std::shared_ptr<Index> index();
     std::shared_ptr<Hist> hist();
 

@@ -422,13 +422,14 @@ bool Index::search(FileParser* fileParser,
                    std::string text,
                    bool regex,
                    bool caseSensitive,
+                   bool unicodeAware,
                    bool messageOnly,
                    Hist& hist,
                    std::function<bool()> stopRequested,
                    std::function<void(uint64_t, uint64_t)> progress)
 {
     std::string line;
-    auto searcher = createSearcher(QString::fromStdString(text), regex, caseSensitive);
+    auto searcher = createSearcher(text, regex, caseSensitive, unicodeAware);
     auto lineMap = std::make_shared<RandomBitArray>(1024);
     std::vector<std::string> columns;
 
@@ -444,7 +445,7 @@ bool Index::search(FileParser* fileParser,
                 lineToSearch = &columns.back();
             }
         }
-        if (std::get<0>(searcher->search(QString::fromStdString(*lineToSearch), 0)) != -1) {
+        if (std::get<0>(searcher->search(*lineToSearch, 0)) != -1) {
             lineMap->add(index);
             hist.add(histIndex, histSize);
         }

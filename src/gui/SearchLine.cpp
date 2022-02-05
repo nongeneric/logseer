@@ -11,6 +11,7 @@ namespace gui {
 SearchLine::SearchLine(bool regexInitial,
                        bool caseSensitiveInitial,
                        bool messageOnlyInitial,
+                       bool unicodeAwareInitial,
                        QWidget* parent)
     : QWidget(parent)
 {
@@ -35,6 +36,10 @@ SearchLine::SearchLine(bool regexInitial,
     messageOnly->setChecked(messageOnlyInitial);
     messageOnly->setText("Message only");
 
+    auto unicodeAware = new QCheckBox();
+    unicodeAware->setChecked(unicodeAwareInitial);
+    unicodeAware->setText("Unicode");
+
     _status = new QLabel();
     _progress = new QProgressBar();
     _progress->setMaximum(100);
@@ -47,6 +52,7 @@ SearchLine::SearchLine(bool regexInitial,
     bottomHbox->addWidget(regex);
     bottomHbox->addWidget(caseSensitive);
     bottomHbox->addWidget(messageOnly);
+    bottomHbox->addWidget(unicodeAware);
 
     auto vbox = new QVBoxLayout();
     vbox->addLayout(topHbox);
@@ -54,6 +60,7 @@ SearchLine::SearchLine(bool regexInitial,
     vbox->setAlignment(regex, Qt::AlignRight);
     vbox->setAlignment(caseSensitive, Qt::AlignRight);
     vbox->setAlignment(messageOnly, Qt::AlignRight);
+    vbox->setAlignment(unicodeAware, Qt::AlignRight);
     setLayout(vbox);
 
     auto focusShortcut = new QShortcut(QKeySequence::Find, this);
@@ -69,6 +76,7 @@ SearchLine::SearchLine(bool regexInitial,
         emit searchRequested(edit->text().toStdString(),
                              regex->isChecked(),
                              caseSensitive->isChecked(),
+                             unicodeAware->isChecked(),
                              messageOnly->isChecked());
     };
 

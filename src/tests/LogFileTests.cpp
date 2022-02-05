@@ -315,7 +315,7 @@ TEST_CASE("log_file_search_basic") {
     auto file = makeLogFile(simpleLog);
     waitParsingAndIndexing(file);
 
-    file.search("4", false, false, false);
+    file.search("4", false, false, false, false);
 
     waitFor([&] { return file.isState(gui::sm::CompleteState); });
 
@@ -357,7 +357,7 @@ TEST_CASE("log_file_search_case") {
 
     // sensitive
 
-    file.search("sub", false, true, false);
+    file.search("sub", false, true, false, false);
 
     waitFor([&] { return file.isState(gui::sm::CompleteState); });
 
@@ -369,7 +369,7 @@ TEST_CASE("log_file_search_case") {
 
     // insensitive
 
-    file.search("sub", false, false, false);
+    file.search("sub", false, false, false, false);
 
     waitFor([&] { return file.isState(gui::sm::CompleteState); });
 
@@ -388,7 +388,7 @@ TEST_CASE("log_file_search_regex") {
 
     // sensitive
 
-    file.search("ERR|warn", true, true, false);
+    file.search("ERR|warn", true, true, false, false);
 
     waitFor([&] { return file.isState(gui::sm::CompleteState); });
 
@@ -400,7 +400,7 @@ TEST_CASE("log_file_search_regex") {
 
     // insensitive
 
-    file.search("ERR|warn", true, false, false);
+    file.search("ERR|warn", true, false, false, false);
 
     waitFor([&] { return file.isState(gui::sm::CompleteState); });
 
@@ -412,7 +412,7 @@ TEST_CASE("log_file_search_regex") {
 
     // bad pattern
 
-    file.search("[6-+", true, false, false);
+    file.search("[6-+", true, false, false, false);
 
     waitFor([&] { return file.isState(gui::sm::CompleteState); });
 
@@ -429,7 +429,7 @@ TEST_CASE("log_file_search_message_only") {
     auto file = makeLogFile(simpleLog);
     waitParsingAndIndexing(file);
 
-    file.search("4", false, true, true);
+    file.search("4", false, true, false, true);
 
     waitFor([&] { return file.isState(gui::sm::CompleteState); });
 
@@ -632,7 +632,7 @@ TEST_CASE("reload_from_complete_state_after_search") {
 
     REQUIRE( model->data(model->index(0, 4), Qt::DisplayRole).toString() == "message 1" );
 
-    file.search("message 1", false, false, false);
+    file.search("message 1", false, false, false, false);
 
     waitFor([&] { return file.isState(gui::sm::CompleteState); });
 

@@ -30,6 +30,7 @@ struct FontConfig {
 struct SearchConfig {
     bool caseSensitive = false;
     bool regex = false;
+    bool unicodeAware = false;
     bool messageOnly = false;
 };
 

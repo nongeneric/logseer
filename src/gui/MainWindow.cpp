@@ -47,7 +47,7 @@ void handleStateChanged(LogFile* file,
         copySectionSizes(table->header(), searchTable->header());
     } else {
         table->setHist(nullptr);
-        table->setSearchHighlight("", false, false, false);
+        table->setSearchHighlight("", false, false, false, false);
     }
 
     if (file->isState(sm::IndexingState)) {
@@ -352,6 +352,7 @@ void MainWindow::openLog(std::string path, std::string parser) {
     const auto& searchConfig = g_Config.searchConfig();
     auto searchLine = new SearchLine(searchConfig.regex,
                                      searchConfig.caseSensitive,
+                                     searchConfig.unicodeAware,
                                      searchConfig.messageOnly);
     mainTableAndSearch->setLayout(vbox);
 
@@ -415,16 +416,22 @@ void MainWindow::openLog(std::string path, std::string parser) {
         g_Config.save(config);
     });
 
-    connect(searchLine,
-            &SearchLine::searchRequested,
-            this,
-            [=, file = file.get()] (std::string text, bool regex, bool caseSensitive, bool messageOnly) {
-        if (text.empty())
-            return;
-        file->search(text, regex, caseSensitive, messageOnly);
-        searchTable->setSearchHighlight(text, regex, caseSensitive, messageOnly);
-        table->setSearchHighlight(text, regex, caseSensitive, messageOnly);
-    });
+    connect(
+        searchLine,
+        &SearchLine::searchRequested,
+        this,
+        [=, file = file.get()](
+            std::string text, bool regex, bool caseSensitive, bool unicodeAware, bool messageOnly) {
+            if (text.empty()) {
+                table->setHist(nullptr);
+                searchTable->setModel(nullptr);
+                searchLine->setStatus("");
+            } else {
+                file->search(text, regex, caseSensitive, unicodeAware, messageOnly);
+            }
+            searchTable->setSearchHighlight(text, regex, caseSensitive, unicodeAware, messageOnly);
+            table->setSearchHighlight(text, regex, caseSensitive, unicodeAware, messageOnly);
+        });
 
     connect(
         file.get(),

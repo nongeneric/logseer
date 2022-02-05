@@ -64,6 +64,7 @@ public:
                 std::string text,
                 bool regex,
                 bool caseSensitive,
+                bool unicodeAware,
                 bool messageOnly,
                 Hist& hist,
                 std::function<bool()> stopRequested = [] { return false; },

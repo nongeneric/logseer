@@ -240,22 +240,22 @@ TEST_CASE("search") {
 
     seer::Hist hist(1);
 
-    indexCopy.search(&fileParser, "4", false, true, false, hist);
+    indexCopy.search(&fileParser, "4", false, true, false, false, hist);
     REQUIRE( indexCopy.getLineCount() == 1 );
     REQUIRE( indexCopy.mapIndex(0) == 3 );
 
     indexCopy = index;
-    indexCopy.search(&fileParser, "4", false, true, false, hist);
+    indexCopy.search(&fileParser, "4", false, true, false, false, hist);
     REQUIRE( indexCopy.getLineCount() == 2 );
     REQUIRE( indexCopy.mapIndex(0) == 3 );
     REQUIRE( indexCopy.mapIndex(1) == 5 );
 
     indexCopy = index;
-    indexCopy.search(&fileParser, "inf", false, true, false, hist);
+    indexCopy.search(&fileParser, "inf", false, true, false, false, hist);
     REQUIRE( indexCopy.getLineCount() == 0 );
 
     indexCopy = index;
-    indexCopy.search(&fileParser, "inf", false, false, false, hist);
+    indexCopy.search(&fileParser, "inf", false, false, false, false, hist);
     REQUIRE( indexCopy.getLineCount() == 3 );
     REQUIRE( indexCopy.mapIndex(0) == 0 );
     REQUIRE( indexCopy.mapIndex(1) == 1 );
@@ -285,21 +285,21 @@ TEST_CASE("search_regex") {
 
     seer::Hist hist(1);
 
-    indexCopy.search(&fileParser, "4|9", true, true, false, hist);
+    indexCopy.search(&fileParser, "4|9", true, true, false, false, hist);
     REQUIRE( indexCopy.getLineCount() == 1 );
     REQUIRE( indexCopy.mapIndex(0) == 3 );
 
     indexCopy = index;
-    indexCopy.search(&fileParser, "4\\d", true, true, false, hist);
+    indexCopy.search(&fileParser, "4\\d", true, true, false, false, hist);
     REQUIRE( indexCopy.getLineCount() == 1 );
     REQUIRE( indexCopy.mapIndex(0) == 5 );
 
     indexCopy = index;
-    indexCopy.search(&fileParser, "inf", true, true, false, hist);
+    indexCopy.search(&fileParser, "inf", true, true, false, false, hist);
     REQUIRE( indexCopy.getLineCount() == 0 );
 
     indexCopy = index;
-    indexCopy.search(&fileParser, "inf", true, false, false, hist);
+    indexCopy.search(&fileParser, "inf", true, false, false, false, hist);
     REQUIRE( indexCopy.getLineCount() == 3 );
     REQUIRE( indexCopy.mapIndex(0) == 0 );
     REQUIRE( indexCopy.mapIndex(1) == 1 );
@@ -320,14 +320,14 @@ TEST_CASE("search_multiline") {
     seer::Hist hist(1);
 
     auto indexCopy = index;
-    indexCopy.search(&fileParser, "message 1", true, false, true, hist);
+    indexCopy.search(&fileParser, "message 1", true, false, false, true, hist);
     REQUIRE( indexCopy.getLineCount() == 3 );
     REQUIRE( indexCopy.mapIndex(0) == 0 );
     REQUIRE( indexCopy.mapIndex(1) == 1 );
     REQUIRE( indexCopy.mapIndex(2) == 2 );
 
     indexCopy = index;
-    indexCopy.search(&fileParser, "message 5", true, false, true, hist);
+    indexCopy.search(&fileParser, "message 5", true, false, false, true, hist);
     REQUIRE( indexCopy.getLineCount() == 1 );
     REQUIRE( indexCopy.mapIndex(0) == 4 );
 }
@@ -389,6 +389,7 @@ TEST_CASE("search_progress") {
         false,
         false,
         false,
+        false,
         hist,
         [] { return false; },
         [&](auto i, auto j) {
@@ -410,6 +411,7 @@ TEST_CASE("search_progress") {
     indexCopy.search(
         &fileParser,
         "4",
+        false,
         false,
         false,
         false,
@@ -625,7 +627,7 @@ TEST_CASE("search_hist_simple") {
       + 40 WARN SUB message 6
     */
 
-    indexCopy.search(&fileParser, "4", false, true, false, hist);
+    indexCopy.search(&fileParser, "4", false, true, false, false, hist);
     REQUIRE( hist.get(0, 6) == 0 );
     REQUIRE( hist.get(1, 6) == 0 );
     REQUIRE( hist.get(2, 6) == 0 );
@@ -644,10 +646,31 @@ TEST_CASE("search_hist_simple") {
     indexCopy = index;
     Hist hist2(1000);
     indexCopy.filter(filters);
-    indexCopy.search(&fileParser, "4", false, true, false, hist2);
+    indexCopy.search(&fileParser, "4", false, true, false, false, hist2);
     REQUIRE( hist2.get(0, 3) == 0 );
     REQUIRE( hist2.get(1, 3) == 0 );
     REQUIRE( hist2.get(2, 3) == 1 );
+}
+
+TEST_CASE("search_regex_control_characters") {
+    std::stringstream ss("10 INFO CORE messa?ge\\ 1\n");
+    auto lineParser = createTestParser();
+    FileParser fileParser(&ss, lineParser.get());
+    fileParser.index();
+
+    Index index;
+    index.index(&fileParser, lineParser.get(), 0, []{ return false; }, [](auto, auto){});
+
+    seer::Hist hist(1);
+
+    auto indexCopy = index;
+    indexCopy.search(&fileParser, u8"messa?ge\\"_as_char, false, true, true, false, hist);
+    REQUIRE( indexCopy.getLineCount() == 1 );
+    REQUIRE( indexCopy.mapIndex(0) == 0 );
+
+    indexCopy = index;
+    indexCopy.search(&fileParser, u8"messa.ge"_as_char, false, true, true, false, hist);
+    REQUIRE( indexCopy.getLineCount() == 0 );
 }
 
 TEST_CASE("search_unicode") {
@@ -680,33 +703,33 @@ TEST_CASE("search_unicode") {
     seer::Hist hist(1);
 
     indexCopy = index;
-    indexCopy.search(&fileParser, u8"grüßen"_as_char, false, true, false, hist);
+    indexCopy.search(&fileParser, u8"grüßen"_as_char, false, true, true, false, hist);
     REQUIRE( indexCopy.getLineCount() == 1 );
     REQUIRE( indexCopy.mapIndex(0) == 5 );
 
     indexCopy = index;
-    indexCopy.search(&fileParser, u8"grüßen"_as_char, false, false, false, hist);
+    indexCopy.search(&fileParser, u8"grüßen"_as_char, false, false, true, false, hist);
     REQUIRE( indexCopy.getLineCount() == 2 );
     REQUIRE( indexCopy.mapIndex(0) == 3 );
     REQUIRE( indexCopy.mapIndex(1) == 5 );
 
     indexCopy = index;
-    indexCopy.search(&fileParser, u8"GRÜSSEN"_as_char, false, true, false, hist);
+    indexCopy.search(&fileParser, u8"GRÜSSEN"_as_char, false, true, true, false, hist);
     REQUIRE( indexCopy.getLineCount() == 1 );
     REQUIRE( indexCopy.mapIndex(0) == 4 );
 
     indexCopy = index;
-    indexCopy.search(&fileParser, u8"GRÜSSEN"_as_char, false, false, false, hist);
+    indexCopy.search(&fileParser, u8"GRÜSSEN"_as_char, false, false, true, false, hist);
     REQUIRE( indexCopy.getLineCount() == 1 );
     REQUIRE( indexCopy.mapIndex(0) == 4 );
 
     indexCopy = index;
-    indexCopy.search(&fileParser, u8"GRÜẞEN"_as_char, false, true, false, hist);
+    indexCopy.search(&fileParser, u8"GRÜẞEN"_as_char, false, true, true, false, hist);
     REQUIRE( indexCopy.getLineCount() == 1 );
     REQUIRE( indexCopy.mapIndex(0) == 3 );
 
     indexCopy = index;
-    indexCopy.search(&fileParser, u8"GRÜẞEN"_as_char, false, false, false, hist);
+    indexCopy.search(&fileParser, u8"GRÜẞEN"_as_char, false, false, true, false, hist);
     REQUIRE( indexCopy.getLineCount() == 2 );
     REQUIRE( indexCopy.mapIndex(0) == 3 );
     REQUIRE( indexCopy.mapIndex(1) == 5 );

@@ -21,10 +21,11 @@ class SearchLine : public QWidget {
     QPushButton* _button;
 
 public:
-    explicit SearchLine(bool regexInitial,
-                        bool caseSensitiveInitial,
-                        bool messageOnlyInitial,
-                        QWidget* parent = nullptr);
+    SearchLine(bool regexInitial,
+               bool caseSensitiveInitial,
+               bool messageOnlyInitial,
+               bool unicodeAwareInitial,
+               QWidget* parent = nullptr);
     void setStatus(std::string status);
     void setSearchButtonTitle(SearchButtonTitle title);
     void setProgress(int progress);
@@ -34,6 +35,7 @@ signals:
     void searchRequested(std::string string,
                          bool regex,
                          bool caseSensitive,
+                         bool unicodeAware,
                          bool messageOnly);
     void regexChanged(bool regex);
     void caseSensitiveChanged(bool caseSensitive);

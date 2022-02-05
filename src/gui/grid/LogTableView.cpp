@@ -78,10 +78,10 @@ void LogTableView::paintRow(QPainter* painter, int row, int y) {
         painter->fillRect(r, b);
     }
 
-    std::unique_ptr<seer::ISearcher> selectionSearcher;
+    std::unique_ptr<seer::IHighlightSearcher> selectionSearcher;
     if (columnSelection) {
         auto text = getSelectionText(*columnSelection);
-        selectionSearcher = seer::createSearcher(text, false, false);
+        selectionSearcher = seer::createHighlightSearcher(text, false, false, true);
     }
 
     const int regularGrapheme = 0;
@@ -486,10 +486,13 @@ float LogTableView::textWidth(const QString& text) const {
 void LogTableView::setSearchHighlight(std::string text,
                                       bool regex,
                                       bool caseSensitive,
+                                      bool unicodeAware,
                                       bool messageOnly) {
     _messageOnlyHighlight = messageOnly;
     auto qText = QString::fromStdString(text);
-    _searcher = text.empty() ? nullptr : seer::createSearcher(qText, regex, caseSensitive);
+    _searcher = text.empty()
+                    ? nullptr
+                    : seer::createHighlightSearcher(qText, regex, caseSensitive, unicodeAware);
     update();
 }
 

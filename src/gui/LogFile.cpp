@@ -52,6 +52,7 @@ void LogFile::searchFromComplete(sm::SearchEvent event) {
                                                      event.text,
                                                      event.regex,
                                                      event.caseSensitive,
+                                                     event.unicodeAware,
                                                      event.messageOnly);
     _searchingTask->setStateChanged([this](auto state) {
         _dispatcher.postToUIThread([=, this] {

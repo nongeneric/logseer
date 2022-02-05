@@ -37,6 +37,7 @@ public:
     void setSearchHighlight(std::string text,
                             bool regex,
                             bool caseSensitive,
+                            bool unicodeAware,
                             bool messageOnly);
     void updateMessageWidth(int width);
 

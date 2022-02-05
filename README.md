@@ -62,7 +62,8 @@ The config is stored in the home directory ``~/.logseer/logseer.json``. It is cr
         "search": {
             "caseSensitive": false,
             "messageOnly": false,
-            "regex": false
+            "regex": false,
+            "unicode": false
         }
     }
 
