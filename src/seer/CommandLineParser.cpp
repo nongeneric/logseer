@@ -22,6 +22,7 @@ bool CommandLineParser::parse(int argc, const char* const argv[]) {
             (logName, po::value(&_paths), "log file path")
             ("version,v", "print version")
             ("verbose", "enable logging")
+            ("file-logging", "log to file in addition to console")
             ;
 
         po::variables_map console_vm;
@@ -50,6 +51,7 @@ bool CommandLineParser::parse(int argc, const char* const argv[]) {
         }
 
         _verbose = console_vm.count("verbose");
+        _fileLog = console_vm.count("file-logging");
 
         po::notify(console_vm);
 
@@ -83,6 +85,10 @@ std::vector<std::string> CommandLineParser::paths() const {
 
 bool CommandLineParser::verbose() const {
     return _verbose;
+}
+
+bool CommandLineParser::fileLog() const {
+    return _fileLog;
 }
 
 } // namespace seer

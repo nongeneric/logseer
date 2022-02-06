@@ -1,7 +1,9 @@
 #include "Log.h"
+#include "version.h"
 
-#ifndef __MINGW32__
-
+#ifdef __MINGW32__
+#include "windows.h"
+#endif
 #include <spdlog/version.h>
 
 #if SPDLOG_VERSION > 10200
@@ -29,17 +31,24 @@ std::string getLogPath() {
     return (boost::filesystem::temp_directory_path() / ss.str()).string();
 }
 
-void log_init() {
+void log_init(bool file) {
     if (g_logger)
         return;
-    std::vector<spdlog::sink_ptr> sinks = {
-        std::make_shared<spdlog::sinks::basic_file_sink_mt>(getLogPath(), true),
+
+    std::vector<spdlog::sink_ptr> sinks {
         std::make_shared<spdlog::sinks::stdout_sink_mt>()
     };
+
+    std::string logFilePath;
+    if (file) {
+        logFilePath = getLogPath();
+        sinks.push_back(std::make_shared<spdlog::sinks::basic_file_sink_mt>(logFilePath, true));
+    }
+
     g_logger = std::make_shared<spdlog::logger>("name", begin(sinks), end(sinks));
     spdlog::register_logger(g_logger);
     spdlog::set_pattern("%v");
-    g_logger->info("logseer log");
+    seer::log_infof("{} {}{}", g_name, g_version, file ? fmt::format(" (file {})", logFilePath) : "");
     spdlog::set_pattern("%H:%M:%S.%f [%t] %v");
     spdlog::flush_every(std::chrono::seconds(3));
 }
@@ -52,25 +61,14 @@ void seer::log_info(const char* message) {
     g_logger->info(message);
 }
 
-void seer::log_enable() {
-    log_init();
+void seer::log_enable(bool file) {
     g_enabled = true;
-}
-
-#else
-#include <windows.h>
-#include <iostream>
-#include <fstream>
-
-void seer::log_info(const char* message) {
-    std::cout << message << std::endl;
-}
-
-void seer::log_enable() {
+#ifdef __MINGW32__
     if (AttachConsole(ATTACH_PARENT_PROCESS))
     {
         freopen("CON", "w", stdout);
         freopen("CON", "w", stderr);
     }
-}
 #endif
+    log_init(file);
+}

@@ -1,6 +1,6 @@
 {
     "description": "logseer log",
-    "magic": "logseer log",
+    "magic": "logseer",
     "regex": "([^ ]+) \\[(\\d+)\\] (.*)",
     "columns": [
         {

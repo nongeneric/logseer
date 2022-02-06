@@ -126,6 +126,7 @@ TEST_CASE("command_line_parser_9") {
     REQUIRE( parser.help().empty() );
     REQUIRE( parser.paths().empty() );
     REQUIRE( !parser.verbose() );
+    REQUIRE( !parser.fileLog() );
 }
 
 TEST_CASE("command_line_parser_10") {
@@ -140,6 +141,22 @@ TEST_CASE("command_line_parser_10") {
     REQUIRE( parser.help().empty() );
     REQUIRE( parser.paths().empty() );
     REQUIRE( parser.verbose() );
+    REQUIRE( !parser.fileLog() );
+}
+
+TEST_CASE("command_line_parser_11") {
+    seer::CommandLineParser parser;
+    std::vector<const char*> args {
+        "path",
+        "--file-log"
+    };
+
+    REQUIRE( parser.parse(args.size(), &args[0]) );
+    REQUIRE( parser.version().empty() );
+    REQUIRE( parser.help().empty() );
+    REQUIRE( parser.paths().empty() );
+    REQUIRE( !parser.verbose() );
+    REQUIRE( parser.fileLog() );
 }
 
 TEST_CASE("command_line_parser_make_absolute_paths") {

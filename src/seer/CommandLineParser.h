@@ -11,6 +11,7 @@ class CommandLineParser {
     std::string _version;
     std::vector<std::string> _paths;
     bool _verbose = false;
+    bool _fileLog = false;
 
 public:
     bool parse(int argc, const char* const argv[]);
@@ -19,6 +20,7 @@ public:
     std::string version() const;
     std::vector<std::string> paths() const;
     bool verbose() const;
+    bool fileLog() const;
 };
 
 } // namespace seer

@@ -7,7 +7,7 @@
 namespace seer {
 
 void log_info(const char* message);
-void log_enable();
+void log_enable(bool file);
 
 template <class... Args>
 void log_infof(fmt::format_string<Args...> format, Args&&... args) {

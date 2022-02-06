@@ -13,7 +13,7 @@ int main(int argc, char *argv[]) {
     seer::CommandLineParser parser;
     if (parser.parse(argc, argv)) {
         if (parser.verbose()) {
-            seer::log_enable();
+            seer::log_enable(parser.fileLog());
         }
         gui::g_Config.init();
 
