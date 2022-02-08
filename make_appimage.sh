@@ -5,7 +5,7 @@
 
 set -e
 
-SRC=../logseer
+SRC=../logseer/src
 
 rm -rf /tmp/AppDir
 rm -f *.AppImage
