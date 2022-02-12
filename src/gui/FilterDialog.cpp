@@ -5,10 +5,12 @@
 #include <QHeaderView>
 #include <QKeyEvent>
 
+#include "seer/Log.h"
+
 namespace gui {
 
-FilterDialog::FilterDialog(std::shared_ptr<FilterTableModel> model, QWidget* parent)
-    : QDialog(parent), _model(model)
+FilterDialog::FilterDialog(QWidget* parent)
+    : QDialog(parent)
 {
     auto vbox = new QVBoxLayout(this);
     auto hbox = new QHBoxLayout(this);
@@ -16,11 +18,9 @@ FilterDialog::FilterDialog(std::shared_ptr<FilterTableModel> model, QWidget* par
     _selectAll = new QPushButton(this);
     _selectNone = new QPushButton(this);
     _selectFound = new QPushButton(this);
-    _table = new QTableView(this);
 
-    _table->setModel(model.get());
+    _table = new QTableView(this);
     _table->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-    _table->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
     _table->setSelectionBehavior(QAbstractItemView::SelectRows);
     _table->installEventFilter(this);
 
@@ -37,22 +37,38 @@ FilterDialog::FilterDialog(std::shared_ptr<FilterTableModel> model, QWidget* par
 
     setLayout(vbox);
 
-    connect(_selectAll, &QPushButton::clicked, this, [=] {
-        model->selectAll();
+    connect(_selectAll, &QPushButton::clicked, this, [this] {
+        _model->selectAll();
     });
-    connect(_selectNone, &QPushButton::clicked, this, [=] {
-        model->selectNone();
+    connect(_selectNone, &QPushButton::clicked, this, [this] {
+        _model->selectNone();
     });
-    connect(_selectFound, &QPushButton::clicked, this, [=] {
-        model->selectFound();
+    connect(_selectFound, &QPushButton::clicked, this, [this] {
+        _model->selectFound();
     });
-    connect(_search, &QLineEdit::textEdited, this, [=](QString text) {
-        model->search(text.toStdString());
+    connect(_search, &QLineEdit::textEdited, this, [this](QString text) {
+        _model->search(text.toStdString());
     });
 }
 
+void FilterDialog::setModel(std::shared_ptr<FilterTableModel> model) {
+    assert(model);
+    if (_model) {
+        _model->disconnect(this);
+    }
+    connect(model.get(), &FilterTableModel::searchReset, this, [this] {
+        _search->clear();
+    });
+    _search->clear();
+    _model = model;
+    _table->setModel(model.get());
+    if (_model) {
+        _table->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
+    }
+}
+
 bool FilterDialog::event(QEvent* event) {
-    if (event->type() == QEvent::KeyRelease && _table->hasFocus()) {
+    if (_model && event->type() == QEvent::KeyRelease && _table->hasFocus()) {
         auto keyEvent = dynamic_cast<QKeyEvent*>(event);
         if (keyEvent->key() == Qt::Key_Space) {
             auto selectionModel = _table->selectionModel();

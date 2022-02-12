@@ -42,6 +42,7 @@ class LogFile : public QObject, sm::IStateHandler {
     ThreadDispatcher _dispatcher;
     bool _indexingComplete = false;
     std::optional<sm::ReloadEvent> _scheduledReload;
+    std::map<int, std::shared_ptr<FilterTableModel>> _filterModels;
 
     void enterIndexing() override;
     void interruptIndexing() override;
@@ -71,7 +72,7 @@ protected:
         seer::ILineParser* lineParser);
 
 public:
-    LogFile(std::unique_ptr<std::istream>&& stream,
+    LogFile(std::unique_ptr<std::istream> stream,
             std::shared_ptr<seer::ILineParser> lineParser);
     ~LogFile() = default;
 
@@ -80,12 +81,11 @@ public:
     }
 
     void search(std::string text,
-                       bool regex,
-                       bool caseSensitive,
-                       bool unicodeAware,
-                       bool messageOnly) {
-        _sm.process_event(
-            sm::SearchEvent{text, regex, caseSensitive, unicodeAware, messageOnly});
+                bool regex,
+                bool caseSensitive,
+                bool unicodeAware,
+                bool messageOnly) {
+        _sm.process_event(sm::SearchEvent{text, regex, caseSensitive, unicodeAware, messageOnly});
     }
 
     void interrupt() {
@@ -93,18 +93,9 @@ public:
     }
 
     void reload(std::shared_ptr<std::istream> stream,
-                       std::shared_ptr<seer::ILineParser> parser = {}) {
-        _scheduledReload = {stream, parser};
-        interrupt();
-    }
+                std::shared_ptr<seer::ILineParser> parser = {});
 
-    std::string dbgStateName() {
-        std::string name;
-        _sm.visit_current_states([&](auto state) {
-            name = state.c_str();
-        });
-        return name;
-    }
+    std::string dbgStateName() const;
 
     void requestFilter(int column);
     void setColumnFilter(int column, std::set<std::string> values);

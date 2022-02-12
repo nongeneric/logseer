@@ -32,6 +32,7 @@ class MainWindow : public QMainWindow {
     std::function<void()> _updateMenu;
     seer::InstanceTracker* _tracker;
     std::thread _trackerThread;
+    FilterDialog _filterDialog{this};
 
     void updateTabWidgetVisibility();
     void closeTab(int index);

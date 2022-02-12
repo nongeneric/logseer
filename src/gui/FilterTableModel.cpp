@@ -1,5 +1,7 @@
 #include "FilterTableModel.h"
 
+#include <ranges>
+
 namespace gui {
 
 void FilterTableModel::updateVisibleVec() {
@@ -14,14 +16,10 @@ void FilterTableModel::emitAllChanged() {
     emit checkedChanged();
 }
 
-FilterTableModel::FilterTableModel(const std::vector<seer::ColumnIndexInfo>& values)
-    : _infos(values)
+FilterTableModel::FilterTableModel(GetColumnIndexInfos getInfos)
+    : _getInfos(getInfos)
 {
-    std::stable_partition(begin(_infos), end(_infos), [&](auto& info) { return info.count > 0; });
-    for (auto i = 0u; i < _infos.size(); ++i) {
-        _visibleSet.insert(i);
-    }
-    updateVisibleVec();
+    refresh();
 }
 
 void FilterTableModel::selectAll() {
@@ -127,6 +125,21 @@ Qt::ItemFlags FilterTableModel::flags(const QModelIndex &index) const {
         baseFlags |= Qt::ItemIsUserCheckable;
     }
     return baseFlags;
+}
+
+void FilterTableModel::refresh() {
+    auto newInfos = _getInfos();
+    std::ranges::stable_partition(newInfos, [&](auto& info) { return info.count > 0; });
+    if (newInfos == _infos)
+        return;
+    _infos = std::move(newInfos);
+    _visibleSet.clear();
+    for (auto i = 0u; i < _infos.size(); ++i) {
+        _visibleSet.insert(i);
+    }
+    updateVisibleVec();
+    endResetModel();
+    emit searchReset();
 }
 
 std::set<std::string> FilterTableModel::checkedValues() const {

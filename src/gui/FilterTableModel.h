@@ -11,14 +11,19 @@ namespace gui {
 
 class FilterTableModel : public QAbstractTableModel {
     Q_OBJECT
+
+    using GetColumnIndexInfos = std::function<std::vector<seer::ColumnIndexInfo>()>;
+
+    GetColumnIndexInfos _getInfos;
     std::vector<seer::ColumnIndexInfo> _infos;
     std::vector<size_t> _visibleVec;
     std::set<size_t> _visibleSet;
+
     void updateVisibleVec();
     void emitAllChanged();
 
 public:
-    FilterTableModel(std::vector<seer::ColumnIndexInfo> const& values);
+    FilterTableModel(GetColumnIndexInfos getInfos);
     void selectAll();
     void selectNone();
     void selectFound();
@@ -31,9 +36,11 @@ public:
     QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
     std::set<std::string> checkedValues() const;
     Qt::ItemFlags flags(const QModelIndex &index) const override;
+    void refresh();
 
 signals:
     void checkedChanged();
+    void searchReset();
 };
 
 } // namespace gui

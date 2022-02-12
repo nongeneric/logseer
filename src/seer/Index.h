@@ -23,6 +23,8 @@ struct ColumnIndexInfo {
     std::string value;
     bool checked;
     uint64_t count;
+
+    bool operator==(const ColumnIndexInfo&) const = default;
 };
 
 struct ColumnFilter {

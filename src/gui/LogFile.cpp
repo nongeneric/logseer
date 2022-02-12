@@ -6,7 +6,7 @@ using namespace seer::task;
 
 namespace gui {
 
-LogFile::LogFile(std::unique_ptr<std::istream>&& stream,
+LogFile::LogFile(std::unique_ptr<std::istream> stream,
                  std::shared_ptr<seer::ILineParser> lineParser)
     : _lineParser(lineParser),
       _stream(std::move(stream)),
@@ -155,6 +155,10 @@ void LogFile::applyFilter() {
 
     auto selectedRow = _logTableModel->findRow(selectedLineOffset);
     _logTableModel->setSelection(selectedRow, 0, 0);
+
+    for (auto& [_, model] : _filterModels) {
+        model->refresh();
+    }
 }
 
 void LogFile::adaptFilter() {
@@ -233,13 +237,35 @@ void LogFile::includeOnlyValue(int column, const std::string& value) {
     applyFilter();
 }
 
+void LogFile::reload(std::shared_ptr<std::istream> stream,
+                     std::shared_ptr<seer::ILineParser> parser) {
+    _scheduledReload = {stream, parser};
+    _filterModels.clear();
+    interrupt();
+}
+
+std::string LogFile::dbgStateName() const {
+    std::string name;
+    _sm.visit_current_states([&](auto state) {
+        name = state.c_str();
+    });
+    return name;
+}
+
 void LogFile::requestFilter(int column) {
     if (column == 0 || !_indexingComplete)
         return;
     auto format = _lineParser->getColumnFormats().at(column - 1);
     if (!format.indexed)
         return;
-    auto filterModel = std::make_shared<FilterTableModel>(_index->getValues(column - 1));
+
+    auto it = _filterModels.find(column - 1);
+    if (it == end(_filterModels)) {
+        auto model = std::make_shared<FilterTableModel>([=, this] { return _index->getValues(column - 1); });
+        std::tie(it, std::ignore) = _filterModels.emplace(column - 1, model);
+    }
+
+    auto& filterModel = it->second;
     emit filterRequested(filterModel, column, format.header);
 }
 

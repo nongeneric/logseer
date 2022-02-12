@@ -119,6 +119,7 @@ void MainWindow::createMenu() {
         auto index = _tabWidget->currentIndex();
         auto& log = _logs[index];
         auto stream = std::make_shared<std::ifstream>(log.path, std::ios_base::binary);
+        _filterDialog.close();
         log.file->reload(stream);
     });
     editMenu->addAction(reloadAction);
@@ -137,12 +138,12 @@ void MainWindow::createMenu() {
     for (const auto& [priority, parser] : _repository.parsers()) {
         auto action = new QAction(QString::fromStdString(parser->name()), this);
         action->setCheckable(true);
-        //action->setToolTip(QString::fromStdString(parser->description()));
         connect(action, &QAction::triggered, this, [this, parser = parser] {
             auto index = _tabWidget->currentIndex();
             auto& log = _logs[index];
             auto stream = std::make_shared<std::ifstream>(log.path, std::ios_base::binary);
             auto lineParser = resolveByName(&_repository, parser->name());
+            _filterDialog.close();
             log.file->reload(stream, lineParser);
         });
         parsersMenu->addAction(action);
@@ -389,6 +390,9 @@ void MainWindow::openLog(std::string path, std::string parser) {
     splitter->addWidget(searchTable);
     splitter->setSizes({height() * 2/3, height() * 1/3});
 
+    _filterDialog.setSizeGripEnabled(true);
+    _filterDialog.resize(450, 450);
+
     connect(searchLine,
             &SearchLine::caseSensitiveChanged,
             this,
@@ -441,11 +445,9 @@ void MainWindow::openLog(std::string path, std::string parser) {
             connect(filterModel.get(), &FilterTableModel::checkedChanged, this, [=] {
                 file->setColumnFilter(column, filterModel->checkedValues());
             });
-            FilterDialog filterDialog(filterModel, this);
-            filterDialog.setWindowTitle(QString::fromStdString(fmt::format("[{}] filter", header)));
-            filterDialog.setSizeGripEnabled(true);
-            filterDialog.resize(450, 450);
-            filterDialog.exec();
+            _filterDialog.setModel(filterModel);
+            _filterDialog.setWindowTitle(QString::fromStdString(fmt::format("[{}] filter", header)));
+            _filterDialog.show();
         });
 
     connect(table,

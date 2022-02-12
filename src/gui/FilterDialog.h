@@ -22,7 +22,8 @@ class FilterDialog : public QDialog {
     std::shared_ptr<FilterTableModel> _model;
 
 public:
-    explicit FilterDialog(std::shared_ptr<FilterTableModel> model, QWidget* parent = nullptr);
+    explicit FilterDialog(QWidget* parent);
+    void setModel(std::shared_ptr<FilterTableModel> model);
 
 protected:
     bool event(QEvent* event) override;
