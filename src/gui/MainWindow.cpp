@@ -80,6 +80,7 @@ void MainWindow::updateTabWidgetVisibility() {
 }
 
 void MainWindow::closeTab(int index) {
+    _filterDialog.close();
     addRecentFileToConfig(_logs[index].path);
     _tabWidget->removeTab(index);
     _logs.erase(begin(_logs) + index);
@@ -282,10 +283,10 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), _dispatcher(this)
             this,
             &MainWindow::interrupt);
 
-    connect(_tabWidget,
-            &QTabWidget::currentChanged,
-            this,
-            [this] { _updateMenu(); });
+    connect(_tabWidget, &QTabWidget::currentChanged, this, [this] {
+        _filterDialog.close();
+        _updateMenu();
+    });
 
     connect(_tabWidget->tabBar(), &QTabBar::tabMoved, this, [this](int from, int to) {
         std::swap(_logs[from], _logs[to]);
