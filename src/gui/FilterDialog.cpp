@@ -61,6 +61,7 @@ void FilterDialog::setModel(std::shared_ptr<FilterTableModel> model) {
     });
     _search->clear();
     _model = model;
+    _model->search({});
     _table->setModel(model.get());
     if (_model) {
         _table->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
