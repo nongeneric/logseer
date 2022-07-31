@@ -4,6 +4,7 @@
 #include <string>
 #include <boost/filesystem.hpp>
 #include <stdint.h>
+#include <memory>
 
 namespace gui {
 
