@@ -4,8 +4,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-find_package(Qt5Widgets)
-find_package(Qt5Core)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
 
 if(WIN32)
     set(CMAKE_CXX_FLAGS "-Wl,-subsystem,windows ${CMAKE_CXX_FLAGS}")
@@ -48,8 +47,8 @@ add_library(gui STATIC
 
 target_link_libraries(gui
     PUBLIC
-    Qt5::Core
-    Qt5::Widgets
+    Qt6::Core
+    Qt6::Widgets
     seer
 )
 

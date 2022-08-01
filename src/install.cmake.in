@@ -2,20 +2,20 @@ include(GetPrerequisites)
 set(MINGW_ROOT /usr/x86_64-w64-mingw32/sys-root/mingw)
 set(gp_tool objdump)
 
-file(COPY "${MINGW_ROOT}/lib/qt5/plugins/platforms/qwindows.dll" DESTINATION ${CMAKE_INSTALL_PREFIX}/platforms)
+file(COPY "${MINGW_ROOT}/lib/qt6/plugins/platforms/qwindows.dll" DESTINATION ${CMAKE_INSTALL_PREFIX}/platforms)
 execute_process(COMMAND strip ${CMAKE_INSTALL_PREFIX}/platforms/qwindows.dll)
 
-file(COPY "${MINGW_ROOT}/lib/qt5/plugins/imageformats/qsvg.dll" DESTINATION ${CMAKE_INSTALL_PREFIX}/imageformats)
+file(COPY "${MINGW_ROOT}/lib/qt6/plugins/imageformats/qsvg.dll" DESTINATION ${CMAKE_INSTALL_PREFIX}/imageformats)
 execute_process(COMMAND strip ${CMAKE_INSTALL_PREFIX}/imageformats/qsvg.dll)
 
-file(COPY "${MINGW_ROOT}/bin/Qt5Svg.dll" DESTINATION ${CMAKE_INSTALL_PREFIX})
-execute_process(COMMAND strip ${CMAKE_INSTALL_PREFIX}/Qt5Svg.dll)
+file(COPY "${MINGW_ROOT}/bin/Qt6Svg.dll" DESTINATION ${CMAKE_INSTALL_PREFIX})
+execute_process(COMMAND strip ${CMAKE_INSTALL_PREFIX}/Qt6Svg.dll)
 
 file(COPY "@CMAKE_BINARY_DIR@/gui/logseer.exe" DESTINATION ${CMAKE_INSTALL_PREFIX})
 execute_process(COMMAND strip ${CMAKE_INSTALL_PREFIX}/logseer.exe)
 
 get_prerequisites("${CMAKE_INSTALL_PREFIX}/logseer.exe" prereq 0 1 "" "${MINGW_ROOT}/bin")
-get_prerequisites("${MINGW_ROOT}/lib/qt5/plugins/platforms/qwindows.dll" prereq 0 1 "" "${MINGW_ROOT}/bin")
+get_prerequisites("${MINGW_ROOT}/lib/qt6/plugins/platforms/qwindows.dll" prereq 0 1 "" "${MINGW_ROOT}/bin")
 foreach(dll IN LISTS prereq)
     set(path "${MINGW_ROOT}/bin/${dll}")
     if(EXISTS ${path})

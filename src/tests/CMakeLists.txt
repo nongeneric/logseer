@@ -4,9 +4,6 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-find_package(Qt5Widgets)
-find_package(Qt5Core)
-
 add_executable(tests
     main.cpp
     ParserTests.cpp

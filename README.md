@@ -21,7 +21,7 @@ Filtering:
 
 Install the dependencies
 
-    $ dnf install git gcc-c++ cmake boost-devel qt5-devel spdlog-devel fmt-devel pcre2-devel
+    $ dnf install git gcc-c++ cmake boost-devel qt6-devel spdlog-devel fmt-devel pcre2-devel
 
 Clone the repository recursively
 
@@ -31,15 +31,17 @@ Configure and build
 
     $ mkdir /path/to/build-dir
     $ cd /path/to/build-dir
-    $ cmake /path/to/repo
+    $ cmake /path/to/repo/src
     $ make
     $ make install
 
 To cross-compile for windows you need MinGW
 
-    $ dnf install mingw64-gcc-c++ mingw64-boost mingw64-qt5-qtbase-devel mingw64-qt5-qtsvg
+    $ dnf install mingw64-gcc-c++ mingw64-boost mingw64-qt6-qtbase mingw64-qt6-qtsvg
 
-Now configure and build
+Build and install fmt. Build and install spdlog (SPDLOG_BUILD_EXAMPLE=0).
+
+Now configure and build.
 
     $ mingw64-cmake \
         -D CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES="/usr/x86_64-w64-mingw32/sys-root/mingw/include" \

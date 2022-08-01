@@ -65,8 +65,8 @@ std::tuple<int, int> GraphemeMap::extendToWordBoundary(int left, int right) cons
     if (left == -1 || right == -1 || _graphemeToIndex.empty())
         return {-1, -1};
 
-    left = std::min(left, (int)_graphemeToIndex.size() - 1); // TODO: ssize
-    right = std::min(right, (int)_graphemeToIndex.size() - 1); // TODO: ssize
+    left = std::min<int>(left, std::ssize(_graphemeToIndex) - 1);
+    right = std::min<int>(right, std::ssize(_graphemeToIndex) - 1);
 
     auto leftValue = _graphemeWords[left];
     auto rightValue = _graphemeWords[right];
@@ -74,8 +74,8 @@ std::tuple<int, int> GraphemeMap::extendToWordBoundary(int left, int right) cons
     while (left && _graphemeWords[left - 1] == leftValue) {
         --left;
     }
-    while (right < (int)_graphemeWords.size() - 1 &&
-           _graphemeWords[right + 1] == rightValue) { // TODO: ssize
+    while (right < std::ssize(_graphemeWords) - 1 &&
+           _graphemeWords[right + 1] == rightValue) {
         ++right;
     }
 
@@ -85,7 +85,7 @@ std::tuple<int, int> GraphemeMap::extendToWordBoundary(int left, int right) cons
 float GraphemeMap::getPosition(int grapheme) const {
     if (grapheme == -1 || _graphemePositions.empty())
         return 0;
-    grapheme = std::min(grapheme, (int)_graphemePositions.size() - 1); // TODO: ssize
+    grapheme = std::min<int>(grapheme, std::ssize(_graphemePositions) - 1);
     return _graphemePositions[grapheme];
 }
 
@@ -107,14 +107,14 @@ int GraphemeMap::graphemeSize() const {
 }
 
 int GraphemeMap::indexToGrapheme(int index) const {
-    assert(index < (int)_indexToGrapheme.size()); // TODO: ssize
+    assert(index < std::ssize(_indexToGrapheme));
     return _indexToGrapheme[index];
 }
 
 std::tuple<int, int> GraphemeMap::graphemeToIndexRange(int grapheme) const {
-    assert(grapheme < (int)_graphemeToIndex.size()); // TODO: ssize
-    int left = _graphemeToIndex[grapheme];
-    if (grapheme + 1 == (int)_graphemeToIndex.size()) { // TODO: ssize
+    assert(grapheme < std::ssize(_graphemeToIndex));
+    auto left = _graphemeToIndex[grapheme];
+    if (grapheme + 1 == std::ssize(_graphemeToIndex)) {
         return {left, _indexToGrapheme.size() - 1};
     }
     return {left, std::max(left, _graphemeToIndex[grapheme + 1] - 1)};
