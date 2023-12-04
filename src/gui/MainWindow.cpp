@@ -20,7 +20,7 @@
 #include <QActionGroup>
 #include <QFileDialog>
 #include <QShortcut>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <fmt/format.h>
 #include <fstream>
 
@@ -105,7 +105,7 @@ void MainWindow::addRecentFileToConfig(std::string path) {
     config.recentFiles.erase(
         std::remove_if(begin(config.recentFiles),
                        end(config.recentFiles),
-                       [&](auto& p) { return p == path || !boost::filesystem::exists(p); }),
+                       [&](auto& p) { return p == path || !std::filesystem::exists(p); }),
         end(config.recentFiles));
     config.recentFiles.insert(begin(config.recentFiles), path);
     g_Config.save(config);
@@ -231,7 +231,7 @@ void MainWindow::openFile() {
     dialog.setFileMode(QFileDialog::ExistingFiles);
     auto index = _tabWidget->currentIndex();
     if (index != -1) {
-        auto directory = boost::filesystem::path(_logs[index].path).parent_path().string();
+        auto directory = std::filesystem::path(_logs[index].path).parent_path().string();
         dialog.setDirectory(QString::fromStdString(directory));
     }
     if (dialog.exec()) {
@@ -329,12 +329,12 @@ MainWindow::~MainWindow() {
 void MainWindow::openLog(std::string path, std::string parser) {
     seer::log_infof("opening [{}]", path);
 
-    if (boost::filesystem::is_directory(path)) {
+    if (std::filesystem::is_directory(path)) {
         seer::log_info("attempted to open a directory, ignoring");
         return;
     }
 
-    if (!boost::filesystem::exists(path)) {
+    if (!std::filesystem::exists(path)) {
         seer::log_info("attempted to open a nonexisting file, ignoring");
         return;
     }
@@ -458,9 +458,9 @@ void MainWindow::openLog(std::string path, std::string parser) {
 
     _logs.push_back({path, std::move(file)});
 
-    auto fileName = boost::filesystem::path(path).stem().string();
+    auto fileName = std::filesystem::path(path).stem().string();
     if (fileName.empty()) {
-        fileName = boost::filesystem::path(path).filename().string();
+        fileName = std::filesystem::path(path).filename().string();
     }
     auto index = _tabWidget->addTab(splitter, QString::fromStdString(fileName));
     _tabWidget->setCurrentIndex(index);

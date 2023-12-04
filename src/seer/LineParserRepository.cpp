@@ -3,11 +3,11 @@
 #include "FileParser.h"
 
 #include "Log.h"
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <regex>
 #include <limits>
 
-using namespace boost::filesystem;
+using namespace std::filesystem;
 
 namespace seer {
 

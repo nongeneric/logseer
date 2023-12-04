@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 
 #include "seer/InstanceTracker.h"
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 TEST_CASE("instance_tracker_simple") {
     auto socket = "logseer_tests.socket";
@@ -15,14 +15,14 @@ TEST_CASE("instance_tracker_simple") {
     secondTracker.send("message");
     std::string message;
     message = *primaryTracker.waitMessage();
-    REQUIRE( boost::filesystem::basename(message) == "message" );
+    REQUIRE( std::filesystem::path(message).stem() == "message" );
 
     seer::InstanceTracker thirdTracker(socket);
     REQUIRE( thirdTracker.connected() );
 
     thirdTracker.send("another message");
     message = *primaryTracker.waitMessage();
-    REQUIRE( boost::filesystem::basename(message) == "another message" );
+    REQUIRE( std::filesystem::path(message).stem() == "another message" );
 
     primaryTracker.stop();
     REQUIRE( !primaryTracker.waitMessage().has_value() );
@@ -39,8 +39,8 @@ TEST_CASE("instance_tracker_make_absolute_filepath") {
 
     secondTracker.send("file");
     auto message = *primaryTracker.waitMessage();
-    REQUIRE( boost::filesystem::path(message).is_absolute() );
-    REQUIRE( boost::filesystem::basename(message) == "file" );
+    REQUIRE( std::filesystem::path(message).is_absolute() );
+    REQUIRE( std::filesystem::path(message).stem() == "file" );
 
     primaryTracker.stop();
 }

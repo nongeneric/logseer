@@ -8,7 +8,7 @@
 #include <sstream>
 #include <fstream>
 
-using namespace boost::filesystem;
+using namespace std::filesystem;
 using namespace nlohmann;
 
 namespace {
@@ -39,7 +39,7 @@ namespace gui {
 path Config::getConfigDirectory() {
     auto home = getHomeDirectory();
     if (home.empty()) {
-        home = boost::filesystem::current_path();
+        home = current_path();
     }
     return home / ".logseer";
 }

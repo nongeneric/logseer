@@ -1,6 +1,6 @@
 #include "CommandLineParser.h"
 #include <boost/program_options.hpp>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include "seer/Log.h"
 #include "version.h"
 #include <sstream>
@@ -56,7 +56,7 @@ bool CommandLineParser::parse(int argc, const char* const argv[]) {
         po::notify(console_vm);
 
         for (auto& path : _paths) {
-            path = boost::filesystem::absolute(path).string();
+            path = std::filesystem::absolute(path).string();
         }
     } catch(std::exception& e) {
         _error = fmt::format(

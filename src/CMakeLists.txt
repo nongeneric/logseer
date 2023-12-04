@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 3.15)
 
-project(logseer VERSION 0.1.4 LANGUAGES CXX C)
+project(logseer VERSION 0.1.5 LANGUAGES CXX C)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -30,7 +30,7 @@ endif()
 set(Boost_USE_STATIC_LIBS       OFF)
 set(Boost_USE_MULTITHREADED      ON)
 set(Boost_USE_STATIC_RUNTIME    OFF)
-find_package(Boost 1.56 COMPONENTS system program_options filesystem REQUIRED)
+find_package(Boost 1.56 COMPONENTS system program_options REQUIRED)
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 find_library(FMT fmt)

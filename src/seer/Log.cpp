@@ -13,7 +13,7 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_sinks.h>
 #include <spdlog/sinks/basic_file_sink.h>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <chrono>
 #include <sstream>
 #include <string>
@@ -28,7 +28,7 @@ std::string getLogPath() {
     auto now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
     std::ostringstream ss;
     ss << "logseer_" << std::put_time(std::localtime(&now), "%m-%d.%H-%M-%S") << ".log";
-    return (boost::filesystem::temp_directory_path() / ss.str()).string();
+    return (std::filesystem::temp_directory_path() / ss.str()).string();
 }
 
 void log_init(bool file) {

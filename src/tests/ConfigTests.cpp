@@ -5,7 +5,7 @@
 #include "seer/RegexLineParser.h"
 #include <map>
 
-using namespace boost::filesystem;
+using namespace std::filesystem;
 using namespace gui;
 
 class TestFileSystem : public gui::IFileSystem {

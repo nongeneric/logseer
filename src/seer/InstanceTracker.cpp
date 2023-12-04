@@ -1,7 +1,7 @@
 #include "InstanceTracker.h"
 
 #include <seer/Log.h>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <assert.h>
 #include <unistd.h>
 
@@ -9,7 +9,7 @@ namespace seer {
 
 InstanceTracker::InstanceTracker(std::string socketName) {
     LOGSEER_SOCKET_INIT();
-    socketName = (boost::filesystem::temp_directory_path() / socketName).string();
+    socketName = (std::filesystem::temp_directory_path() / socketName).string();
 
     _socket = socket(AF_UNIX, SOCK_STREAM, 0);
     if (_socket == LOGSEER_INVALID_SOCKET) {
@@ -87,7 +87,7 @@ bool InstanceTracker::connected() const {
 
 void InstanceTracker::send(std::string path) {
     assert(connected());
-    auto message = boost::filesystem::absolute(path).string() + '\n';
+    auto message = std::filesystem::absolute(path).string() + '\n';
     auto ret = LOGSEER_SOCKET_WRITE(_socket, message.c_str(), message.size() + 1);
     if (ret == 0) {
         log_infof("{}: could not write to socket, error {}", __func__, LOGSEER_ERRNO);

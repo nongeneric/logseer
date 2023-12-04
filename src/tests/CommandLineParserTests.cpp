@@ -1,6 +1,6 @@
 #include <catch2/catch.hpp>
 #include "seer/CommandLineParser.h"
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 TEST_CASE("command_line_parser_1") {
     seer::CommandLineParser parser;
@@ -169,8 +169,8 @@ TEST_CASE("command_line_parser_make_absolute_paths") {
 
     REQUIRE( parser.parse(args.size(), &args[0]) );
     REQUIRE( parser.paths().size() == 2 );
-    REQUIRE( boost::filesystem::path(parser.paths()[0]).is_absolute() );
-    REQUIRE( boost::filesystem::path(parser.paths()[1]).is_absolute() );
+    REQUIRE( std::filesystem::path(parser.paths()[0]).is_absolute() );
+    REQUIRE( std::filesystem::path(parser.paths()[1]).is_absolute() );
 }
 
 TEST_CASE("command_line_parser_make_absolute_paths_2") {
@@ -182,5 +182,5 @@ TEST_CASE("command_line_parser_make_absolute_paths_2") {
 
     REQUIRE( parser.parse(args.size(), &args[0]) );
     REQUIRE( parser.paths().size() == 1 );
-    REQUIRE( boost::filesystem::path(parser.paths()[0]).is_absolute() );
+    REQUIRE( std::filesystem::path(parser.paths()[0]).is_absolute() );
 }

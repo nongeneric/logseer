@@ -2,7 +2,7 @@
 
 #include <vector>
 #include <string>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <stdint.h>
 #include <memory>
 
@@ -53,17 +53,17 @@ struct GeneralConfig {
 class IFileSystem {
 public:
     virtual ~IFileSystem() = default;
-    virtual std::string readFile(boost::filesystem::path path) = 0;
-    virtual void writeFile(boost::filesystem::path path, const void* content, unsigned size) = 0;
-    virtual std::vector<boost::filesystem::path> files(boost::filesystem::path directory) = 0;
+    virtual std::string readFile(std::filesystem::path path) = 0;
+    virtual void writeFile(std::filesystem::path path, const void* content, unsigned size) = 0;
+    virtual std::vector<std::filesystem::path> files(std::filesystem::path directory) = 0;
     virtual std::string getenv(const char* name) = 0;
 };
 
 class RuntimeFileSystem : public IFileSystem {
 public:
-    std::string readFile(boost::filesystem::path path) override;
-    void writeFile(boost::filesystem::path path, const void* content, unsigned size) override;
-    std::vector<boost::filesystem::path> files(boost::filesystem::path directory) override;
+    std::string readFile(std::filesystem::path path) override;
+    void writeFile(std::filesystem::path path, const void* content, unsigned size) override;
+    std::vector<std::filesystem::path> files(std::filesystem::path directory) override;
     std::string getenv(const char* name) override;
 };
 
@@ -75,8 +75,8 @@ class Config {
     GeneralConfig _generalConfig;
     std::shared_ptr<IFileSystem> _fileSystem;
 
-    boost::filesystem::path getHomeDirectory();
-    boost::filesystem::path getConfigJsonPath();
+    std::filesystem::path getHomeDirectory();
+    std::filesystem::path getConfigJsonPath();
     void initRegexConfigs();
     void save();
 
@@ -90,7 +90,7 @@ public:
     void save(FontConfig const& config);
     void save(SearchConfig const& config);
     void save(SessionConfig const& config);
-    boost::filesystem::path getConfigDirectory();
+    std::filesystem::path getConfigDirectory();
 };
 
 extern Config g_Config;
