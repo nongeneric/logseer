@@ -49,9 +49,9 @@ public:
                 auto icon = QIcon(isFilterActive ? ":/filter-fill.svg" : ":/filter.svg");
                 int iconExtent = proxy()->pixelMetric(PM_SmallIconSize);
                 auto pixmap = icon.pixmap(QSize(iconExtent, iconExtent), QIcon::Normal);
-                auto y = rect.top() + (rect.height() - pixmap.height()) / 2;
+                auto y = rect.top() + (rect.height() - pixmap.deviceIndependentSize().height()) / 2;
                 p->drawPixmap(rect.left(), y, pixmap);
-                rect.setX(rect.x() + pixmap.width());
+                rect.setX(rect.x() + pixmap.deviceIndependentSize().width());
             }
 
             proxy()->drawItemText(p,
