@@ -7,7 +7,7 @@
 #include "seer/ILineParser.h"
 #include "seer/Index.h"
 #include "seer/task/Task.h"
-#include "seer/StriingLiterals.h"
+#include "seer/StringLiterals.h"
 #include <QApplication>
 #include <condition_variable>
 #include <mutex>

@@ -4,7 +4,7 @@
 #include "seer/ILineParserRepository.h"
 #include "seer/LineParserRepository.h"
 #include "seer/RegexLineParser.h"
-#include "seer/StriingLiterals.h"
+#include "seer/StringLiterals.h"
 #include <sstream>
 
 inline std::string unstructuredLog = "message1\n"

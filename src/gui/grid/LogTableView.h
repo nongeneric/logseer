@@ -2,9 +2,12 @@
 
 #include <QWidget>
 #include <QRect>
+#include <memory>
 #include <seer/Searcher.h>
 #include <gui/GraphemeMap.h>
 #include <gui/grid/LruCache.h>
+#include <gui/grid/RowColumn.h>
+#include <gui/grid/CachedHighlightSearcher.h>
 
 class QMenu;
 
@@ -28,13 +31,6 @@ struct LogicalPosition {
 class LogTableView : public QWidget {
     Q_OBJECT
 
-    struct TupleHash {
-        int operator()(const std::tuple<int, int>& tuple) const {
-            auto [a, b] = tuple;
-            return a ^ b;
-        }
-    };
-
     struct CacheEntry {
         std::shared_ptr<gui::GraphemeMap> gmap;
         QColor foreground;
@@ -43,11 +39,11 @@ class LogTableView : public QWidget {
     LogTable* _table;
     int _rowHeight;
     int _firstRow = 0;
-    std::unique_ptr<seer::IHighlightSearcher> _searcher;
+    std::optional<CachedHighlightSearcher> _cachedSearcher;
     bool _messageOnlyHighlight = false;
     bool _selectWords = false;
     std::unique_ptr<IFontMetrics> _gmapFontMetrics;
-    LruCache<std::tuple<int, int>, CacheEntry, TupleHash> _gmapCache;
+    LruCache<RowColumn, CacheEntry, RowColumnHash> _gmapCache;
 
     void paintRow(QPainter* painter, int row, int y);
     LogicalPosition getLogicalPosition(int x, int y);

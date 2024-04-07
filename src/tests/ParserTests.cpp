@@ -5,7 +5,7 @@
 #include "seer/FileParser.h"
 #include "seer/Index.h"
 #include "seer/LineParserRepository.h"
-#include "seer/StriingLiterals.h"
+#include "seer/StringLiterals.h"
 #include <sstream>
 
 using namespace seer;

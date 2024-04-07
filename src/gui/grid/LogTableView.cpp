@@ -131,12 +131,16 @@ void LogTableView::paintRow(QPainter* painter, int row, int y) {
 
         auto isMessageColumn = column == columns - 1;
         bool shouldApplySearcher =
-            (_searcher && (isMessageColumn || !_messageOnlyHighlight)) || selectionSearcher;
+            (_cachedSearcher && (isMessageColumn || !_messageOnlyHighlight)) || selectionSearcher;
         if (shouldApplySearcher) {
-            auto searcher = selectionSearcher ? selectionSearcher.get() : _searcher.get();
+            auto search = [&] (int index) {
+                if (selectionSearcher)
+                    return selectionSearcher->search(text, index);
+                return _cachedSearcher->search(text, index, row, column);
+            };
             int currentIndex = std::get<0>(gmap->graphemeToIndexRange(searchRange.first));
             while (currentIndex < searchRange.last) {
-                auto [first, len] = searcher->search(text, currentIndex);
+                auto [first, len] = search(currentIndex);
                 if (first == -1 || len == 0)
                     break;
 
@@ -486,9 +490,12 @@ void LogTableView::setSearchHighlight(std::string text,
                                       bool messageOnly) {
     _messageOnlyHighlight = messageOnly;
     auto qText = QString::fromStdString(text);
-    _searcher = text.empty()
-                    ? nullptr
-                    : seer::createHighlightSearcher(qText, regex, caseSensitive, unicodeAware);
+    if (text.empty())
+        _cachedSearcher.reset();
+    else
+        _cachedSearcher.emplace(
+            seer::createHighlightSearcher(qText, regex, caseSensitive, unicodeAware),
+            g_gmapCacheSize);
     update();
 }
 
@@ -515,6 +522,8 @@ QString LogTableView::getSelectionText(const ColumnSelection& columnSelection) {
 
 void LogTableView::invalidateCache() {
     _gmapCache.clear();
+    if (_cachedSearcher)
+        _cachedSearcher->invalidateCache();
 }
 
 } // namespace gui::grid

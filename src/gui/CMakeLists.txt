@@ -11,37 +11,21 @@ if(WIN32)
 endif()
 
 add_library(gui STATIC
-    MainWindow.h
     MainWindow.cpp
-    LogTableModel.h
     LogTableModel.cpp
-    FilterDialog.h
     FilterDialog.cpp
-    FilterTableModel.h
     FilterTableModel.cpp
-    LogFile.h
     LogFile.cpp
-    SearchLine.h
     SearchLine.cpp
-    grid/FilterHeaderView.h
     grid/FilterHeaderView.cpp
-    grid/LogTable.h
     grid/LogTable.cpp
-    grid/LogTableView.h
     grid/LogTableView.cpp
-    grid/LogScrollArea.h
     grid/LogScrollArea.cpp
-    grid/HistMap.h
     grid/HistMap.cpp
-    grid/GotoLineDialog.h
     grid/GotoLineDialog.cpp
-    sm/Logger.h
-    sm/StateMachine.h
-    ThreadDispatcher.h
+    grid/CachedHighlightSearcher.cpp
     ThreadDispatcher.cpp
-    Config.h
     Config.cpp
-    GraphemeMap.h
     GraphemeMap.cpp
 )
 

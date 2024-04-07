@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 
 #include <fmt/format.h>
-#include <seer/StriingLiterals.h>
+#include <seer/StringLiterals.h>
 #include <gui/GraphemeMap.h>
 
 using namespace gui;

@@ -118,7 +118,7 @@ public:
             return {-1, -1};
 
         if (!_re)
-            return {-1,-1};
+            return {-1, -1};
 
         auto rc = Traits<S>::JitMatch(_re,
                                       reinterpret_cast<typename Traits<S>::CharPtr>(text.data()),
