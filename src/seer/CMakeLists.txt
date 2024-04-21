@@ -46,7 +46,6 @@ set(LIBS PUBLIC
     Qt6::Core
     ${PCRE2}
     ${PCRE2_16}
-    pthread
     ${Boost_LIBRARIES}
     lua
 )

@@ -46,7 +46,7 @@ class LogTableView : public QWidget {
     LruCache<RowColumn, CacheEntry, RowColumnHash> _gmapCache;
 
     void paintRow(QPainter* painter, int row, int y);
-    LogicalPosition getLogicalPosition(int x, int y);
+    LogicalPosition getLogicalPosition(QPointF point);
     void copyToClipboard(bool raw);
     void addColumnExcludeActions(int column, int row, QMenu& menu);
     void addClearAllFiltersAction(QMenu& menu);

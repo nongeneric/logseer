@@ -1,11 +1,11 @@
 #pragma once
 
-#ifdef __MINGW32__
+#ifdef WIN32
 #include <winsock2.h>
 #include <mutex>
 
 #define LOGSEER_SOCKET_TYPE SOCKET
-#define LOGSEER_CLOSE_SOCKET closesocket
+#define LOGSEER_SOCKET_CLOSE closesocket
 #define LOGSEER_SHUTDOWN_RDWR SD_BOTH
 #define LOGSEER_UNLINK DeleteFileA
 #define LOGSEER_ERRNO WSAGetLastError()
@@ -40,7 +40,7 @@ inline int LOGSEER_SOCKET_WRITE(SOCKET s, const void* buff, int count) {
 #include <sys/un.h>
 
 #define LOGSEER_SOCKET_TYPE int
-#define LOGSEER_CLOSE_SOCKET close
+#define LOGSEER_SOCKET_CLOSE close
 constexpr int LOGSEER_INVALID_SOCKET = -1;
 #define LOGSEER_SHUTDOWN_RDWR SHUT_RDWR
 #define LOGSEER_UNLINK unlink

@@ -20,7 +20,7 @@ struct RegexConfig {
 
 struct FontConfig {
     std::string name =
-#if __MINGW32__
+#ifdef WIN32
         "Courier";
 #else
         "Mono";

@@ -80,9 +80,9 @@ void LogTableView::paintRow(QPainter* painter, int row, int y) {
         selectionSearcher = seer::createHighlightSearcher(text, false, false, true);
     }
 
-    const int regularGrapheme = 0;
-    const int selectedGrapheme = 1;
-    const int highlightedGrapheme = 2;
+    constexpr int regularGrapheme = 0;
+    constexpr int selectedGrapheme = 1;
+    constexpr int highlightedGrapheme = 2;
 
     std::vector<int> graphemes;
 
@@ -215,7 +215,8 @@ void LogTableView::paintRow(QPainter* painter, int row, int y) {
     }
 }
 
-LogicalPosition LogTableView::getLogicalPosition(int x, int y) {
+LogicalPosition LogTableView::getLogicalPosition(QPointF point) {
+    auto [x, y] = point;
     auto model = _table->model();
     if (!model)
         return {};
@@ -373,7 +374,7 @@ LogTableView::LogTableView(QFont font, LogTable* parent)
 
         QMenu menu(this);
 
-        auto position = getLogicalPosition(pos.x(), pos.y());
+        auto position = getLogicalPosition(pos);
         auto columnCount = model->columnCount({});
         if (position.row != -1 && 1 <= position.column && position.column < columnCount - 1) {
             addColumnExcludeActions(position.column, position.row, menu);
@@ -436,7 +437,7 @@ void LogTableView::paintEvent(QPaintEvent* event) {
 void LogTableView::mousePressEvent(QMouseEvent *event) {
     if (event->button() != Qt::LeftButton)
         return;
-    auto position = getLogicalPosition(event->x(), event->y());
+    auto position = getLogicalPosition(event->position());
     if (position.row != -1 && position.row < _table->model()->rowCount({})) {
         if (QApplication::keyboardModifiers() & Qt::ShiftModifier) {
             _table->model()->extendSelection(position.row, position.column, position.grapheme);
@@ -450,7 +451,7 @@ void LogTableView::mousePressEvent(QMouseEvent *event) {
 void LogTableView::mouseMoveEvent(QMouseEvent* event) {
     if (!(event->buttons() & Qt::LeftButton))
         return;
-    auto position = getLogicalPosition(event->x(), event->y());
+    auto position = getLogicalPosition(event->position());
     if (position.column == -1)
         return;
     if (_table->model()->extendSelection(position.row, position.column, position.grapheme)) {
@@ -459,7 +460,7 @@ void LogTableView::mouseMoveEvent(QMouseEvent* event) {
 }
 
 void LogTableView::mouseDoubleClickEvent(QMouseEvent* event) {
-    auto p = getLogicalPosition(event->x(), event->y());
+    auto p = getLogicalPosition(event->position());
     if (p.row == -1)
         return;
     auto model = _table->model();

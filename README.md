@@ -35,19 +35,6 @@ Configure and build
     $ make
     $ make install
 
-To cross-compile for windows you need MinGW
-
-    $ dnf install mingw64-gcc-c++ mingw64-boost mingw64-qt6-qtbase mingw64-qt6-qtsvg
-
-Build and install fmt. Build and install spdlog (SPDLOG_BUILD_EXAMPLE=0).
-
-Now configure and build.
-
-    $ mingw64-cmake \
-        -D CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES="/usr/x86_64-w64-mingw32/sys-root/mingw/include" \
-        .
-    $ make package
-
 ## General settings
 
 The config is stored in the home directory ``~/.logseer/logseer.json``. It is created on startup if it doesn't exist.

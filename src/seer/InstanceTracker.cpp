@@ -3,7 +3,6 @@
 #include <seer/Log.h>
 #include <filesystem>
 #include <assert.h>
-#include <unistd.h>
 
 namespace seer {
 
@@ -27,8 +26,8 @@ InstanceTracker::InstanceTracker(std::string socketName) {
         return;
     }
 
-#if __MINGW32__
-    LOGSEER_CLOSE_SOCKET(_socket);
+#ifdef WIN32
+    LOGSEER_SOCKET_CLOSE(_socket);
     _socket = socket(AF_UNIX, SOCK_STREAM, 0);
     if (_socket == LOGSEER_INVALID_SOCKET) {
         log_infof("{}: failed to create AF_UNIX socket after failed connect(), error {}", __func__, LOGSEER_ERRNO);
@@ -75,7 +74,7 @@ InstanceTracker::InstanceTracker(std::string socketName) {
                 message += ch;
             }
 
-            close(data);
+            LOGSEER_SOCKET_CLOSE(data);
             _queue.enqueue(message);
         }
     });
@@ -98,7 +97,7 @@ void InstanceTracker::send(std::string path) {
 void InstanceTracker::stop() {
     if (_socket != LOGSEER_INVALID_SOCKET) {
         shutdown(_socket, LOGSEER_SHUTDOWN_RDWR);
-        LOGSEER_CLOSE_SOCKET(_socket);
+        LOGSEER_SOCKET_CLOSE(_socket);
         _socket = LOGSEER_INVALID_SOCKET;
     }
 

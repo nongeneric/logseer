@@ -23,10 +23,6 @@ file(GLOB LUA_SOURCES ../thirdparty/lua/*.c)
 add_library(lua STATIC $<FILTER:${LUA_SOURCES},EXCLUDE,onelua.c>)
 target_include_directories(lua INTERFACE SYSTEM ../thirdparty/lua)
 
-if(WIN32)
-    set(Boost_ARCHITECTURE "-x64")
-endif()
-
 set(Boost_USE_STATIC_LIBS       OFF)
 set(Boost_USE_MULTITHREADED      ON)
 set(Boost_USE_STATIC_RUNTIME    OFF)
@@ -39,10 +35,11 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE RelWithDebInfo)
 endif()
 
-add_compile_options(-march=skylake -Werror -Werror=return-type -Wall -Wextra -Wno-implicit-fallthrough)
-if(CMAKE_BUILD_TYPE MATCHES Debug)
-    add_compile_options(-Wno-error=unused-parameter)
-    add_compile_options(-Wno-error=unused-variable)
+add_compile_options($<$<COMPILE_LANG_AND_ID:CXX,GNU,Clang>:-Werror>)
+add_compile_options($<$<COMPILE_LANG_AND_ID:CXX,GNU,Clang>:-Wall>)
+
+if(WIN32)
+    add_compile_definitions(WIN32)
 endif()
 
 add_subdirectory(gui)

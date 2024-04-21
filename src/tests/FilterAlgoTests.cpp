@@ -2,6 +2,7 @@
 #include <seer/FilterAlgo.h>
 #include <random>
 #include <set>
+#include <numeric>
 
 using namespace seer;
 

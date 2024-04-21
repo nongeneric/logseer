@@ -1,7 +1,7 @@
 #include "Log.h"
 #include "version.h"
 
-#ifdef __MINGW32__
+#ifdef WIN32
 #include "windows.h"
 #endif
 #include <spdlog/version.h>
@@ -63,7 +63,7 @@ void seer::log_info(const char* message) {
 
 void seer::log_enable(bool file) {
     g_enabled = true;
-#ifdef __MINGW32__
+#ifdef WIN32
     if (AttachConsole(ATTACH_PARENT_PROCESS))
     {
         freopen("CON", "w", stdout);
