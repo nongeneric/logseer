@@ -64,3 +64,16 @@ TEST_CASE("cached_highlight_searcher") {
         REQUIRE( len == -1 );
     }
 }
+
+TEST_CASE("cached_highlight_searcher_empty_length_regex_result") {
+    auto searcher = createHighlightSearcher("|||", true, false, false);
+    gui::grid::CachedHighlightSearcher cachedSearcher(std::move(searcher), 100);
+    QString text = "11aa22aa33bbcc44dd";
+
+    {
+        auto [first, len] = cachedSearcher.search(text, 0, 0, 0);
+        REQUIRE( first == -1 );
+        REQUIRE( len == -1 );
+    }
+}
+

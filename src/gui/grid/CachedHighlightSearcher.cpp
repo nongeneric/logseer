@@ -15,7 +15,7 @@ std::tuple<int, int> CachedHighlightSearcher::search(QString text, size_t start,
         int index = 0;
         for (;;) {
             auto [start, len] = _searcher->search(text, index);
-            if (start == -1)
+            if (start == -1 || len == 0)
                 break;
             entry->set.insert(Set::interval_type::right_open(start, start + len));
             index = start + len;
